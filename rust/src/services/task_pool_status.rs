@@ -166,7 +166,7 @@ mod tests {
             project_id: 1,
             template_id: 1,
             status: TaskStatus::Running,
-            message: "Test task".to_string(),
+            message: Some("Test task".to_string()),
             commit_hash: None,
             commit_message: None,
             version: Some("1.0.0".to_string()),
@@ -174,12 +174,20 @@ mod tests {
             repository_id: None,
             environment_id: None,
             arguments: None,
-            params: String::new(),
-            playbook: String::new(),
+            params: None,
+            playbook: None,
             start: Some(Utc::now()),
             end: None,
+            created: Utc::now(),
+            user_id: None,
+            integration_id: None,
+            schedule_id: None,
+            git_branch: None,
+            secret: None,
+            environment: None,
+            build_task_id: None,
         };
-        
+
         let message = TaskStatusMessage::new(&task);
         assert_eq!(message.task_id, 1);
         assert_eq!(message.status, TaskStatus::Running);
@@ -193,7 +201,7 @@ mod tests {
             project_id: 1,
             template_id: 1,
             status: TaskStatus::Success,
-            message: "Test task".to_string(),
+            message: Some("Test task".to_string()),
             commit_hash: None,
             commit_message: None,
             version: None,
@@ -201,12 +209,20 @@ mod tests {
             repository_id: None,
             environment_id: None,
             arguments: None,
-            params: String::new(),
-            playbook: String::new(),
+            params: None,
+            playbook: None,
             start: Some(Utc::now()),
             end: Some(Utc::now()),
+            created: Utc::now(),
+            user_id: None,
+            integration_id: None,
+            schedule_id: None,
+            git_branch: None,
+            secret: None,
+            environment: None,
+            build_task_id: None,
         };
-        
+
         let message = TaskStatusMessage::new(&task);
         let json = message.to_json();
         
