@@ -204,12 +204,65 @@ tracing-subscriber = "0.3"
 
 ## 📖 Документация
 
-- [API документация](API.md) - описание REST API endpoints
-- [Конфигурация](CONFIG.md) - подробное руководство по настройке
-- [Миграция с Go](MIGRATION.md) - руководство по переходу с Go-версии
-- [Статус миграции](rust/MIGRATION_VERIFICATION_REPORT.md) - детальный отчёт
-- [Changelog](CHANGELOG.md) - история изменений
-- [Security Audit](rust/SECURITY_AUDIT_REPORT.md) - отчёт о безопасности
+### 📘 Основная Документация
+
+- **[API документация](API.md)** - описание REST API endpoints
+- **[Конфигурация](CONFIG.md)** - подробное руководство по настройке
+- **[Аутентификация](AUTH.md)** - руководство по аутентификации и авторизации
+- **[Middleware](MIDDLEWARE.md)** - описание middleware компонентов
+- **[CRUD операции](CRUD_COMPLETE.md)** - статус CRUD операций
+
+### 🔒 Безопасность
+
+- **[Security](SECURITY.md)** - политика безопасности проекта
+- **[Security Audit](SECURITY_AUDIT_2026_02_28.md)** - полный отчёт о проверке безопасности
+- **[Security Advisory](SECURITY_ADVISORY.md)** - краткая сводка по уязвимостям
+
+### 🚀 Миграция с Go
+
+- **[Миграция](MIGRATION.md)** - общий руководство по переходу с Go-версии
+- **[План миграции](rust/FINAL_MIGRATION_PLAN.md)** - детальный план миграции
+- **[Статус миграции](rust/FINAL_RUST_MIGRATION_STATUS.md)** - текущий статус
+- **[Отчёт о миграции](rust/MIGRATION_VERIFICATION_REPORT.md)** - отчёт о проверке
+- **[Завершение миграции](rust/RUST_MIGRATION_COMPLETE.md)** - финальный отчёт
+
+### 📊 Отчёты о Сборке
+
+- **[BUILD_ERRORS.md](BUILD_ERRORS.md)** - текущие ошибки компиляции (585 → 557)
+- **[BUILD_FIX_PLAN.md](BUILD_FIX_PLAN.md)** - план исправления ошибок
+- **[CHANGELOG.md](CHANGELOG.md)** - история изменений проекта
+
+### 📝 Отчёты о Сессиях
+
+- **[SESSION_REPORT_2026_02_27.md](SESSION_REPORT_2026_02_27.md)** - отчёт о сессии 27.02.2026
+- **[SESSION_FINAL_REPORT_2026_02_27.md](SESSION_FINAL_REPORT_2026_02_27.md)** - финальный отчёт
+
+### 🗺 Планы и Анализ
+
+- **[FULL_MIGRATION_PLAN.md](FULL_MIGRATION_PLAN.md)** - полный план миграции
+- **[FULL_MIGRATION_ANALYSIS.md](FULL_MIGRATION_ANALYSIS.md)** - анализ миграции
+- **[GO_MODULES_REMOVAL_PLAN.md](GO_MODULES_REMOVAL_PLAN.md)** - план удаления Go модулей
+- **[GO_MODULES_REMOVAL.md](GO_MODULES_REMOVAL.md)** - удаление Go модулей
+
+### 🎯 Release Информация
+
+- **[RELEASE_v2.0.0.md](RELEASE_v2.0.0.md)** - информация о релизе v2.0.0
+- **[PUBLISH_RELEASE_INSTRUCTION.md](PUBLISH_RELEASE_INSTRUCTION.md)** - инструкция по публикации
+
+### 📚 Rust Документация
+
+- **[API Migration](rust/API_MIGRATION_COMPLETE.md)** - миграция API
+- **[BoltDB Migration](rust/BOLTDB_DECOMPOSITION.md)** - миграция BoltDB
+- **[CLI Migration](rust/CLI_MIGRATION_COMPLETE_FINAL.md)** - миграция CLI
+- **[Config Migration](rust/CONFIG_DECOMPOSITION_FINAL.md)** - миграция конфигурации
+- **[Handlers Decomposition](rust/HANDLERS_DECOMPOSITION.md)** - декомпозиция handlers
+- **[Local Job](rust/LOCAL_JOB_RUST_COMPLETE.md)** - реализация Local Job
+- **[PRO Migration](rust/PRO_MIGRATION_PLAN.md)** - миграция PRO функций
+
+### 🔧 Инструкция по Разработке
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - руководство для контрибьюторов
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - кодекс поведения
 
 ## 🤝 Вклад в Проект
 
