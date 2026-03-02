@@ -67,7 +67,7 @@ pub struct Inventory {
     pub name: String,
 
     /// Тип инвентаря
-    pub inventory: InventoryType,
+    pub inventory_type: InventoryType,
 
     /// Содержимое инвентаря (для static)
     pub inventory_data: String,
@@ -88,15 +88,15 @@ pub struct Inventory {
     /// Дополнительные параметры
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extra_vars: Option<String>,
-    
+
     /// ID SSH ключа
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssh_key_id: Option<i32>,
-    
+
     /// ID ключа become
     #[serde(skip_serializing_if = "Option::is_none")]
     pub become_key_id: Option<i32>,
-    
+
     /// Хранилища секретов
     #[sqlx(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -110,13 +110,16 @@ impl Inventory {
             id: 0,
             project_id,
             name,
-            inventory: inventory_type,
+            inventory_type,
             inventory_data: String::new(),
             key_id: 0,
             secret_storage_id: None,
             ssh_login: "root".to_string(),
             ssh_port: 22,
             extra_vars: None,
+            ssh_key_id: None,
+            become_key_id: None,
+            vaults: None,
         }
     }
 }
