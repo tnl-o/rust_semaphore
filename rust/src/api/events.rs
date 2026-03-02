@@ -13,7 +13,7 @@ use crate::models::Event;
 use crate::error::{Error, Result};
 use crate::api::middleware::ErrorResponse;
 use crate::api::extractors::AuthUser;
-use crate::db::store::RetrieveQueryParams;
+use crate::db::store::{RetrieveQueryParams, EventManager};
 
 /// Получает последние события
 pub async fn get_last_events(

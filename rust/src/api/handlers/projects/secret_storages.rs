@@ -12,6 +12,7 @@ use crate::api::state::AppState;
 use crate::models::SecretStorage;
 use crate::error::{Error, Result};
 use crate::api::middleware::ErrorResponse;
+use crate::db::store::SecretStorageManager;
 
 /// Получает хранилища секретов проекта
 pub async fn get_secret_storages(

@@ -15,6 +15,7 @@ use crate::models::Template;
 use crate::models::template::{TemplateType, TemplateApp};
 use crate::error::Error;
 use crate::api::middleware::ErrorResponse;
+use crate::db::store::{TemplateManager, ProjectStore};
 
 /// Получить список шаблонов проекта
 ///

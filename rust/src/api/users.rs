@@ -14,6 +14,7 @@ use crate::api::state::AppState;
 use crate::api::extractors::AuthUser;
 use crate::error::{Error, Result};
 use crate::models::User;
+use crate::db::store::UserManager;
 
 /// Контроллер пользователей
 pub struct UsersController {

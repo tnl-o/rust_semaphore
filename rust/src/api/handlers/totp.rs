@@ -14,6 +14,7 @@ use crate::api::state::AppState;
 use crate::models::user::UserTotp;
 use crate::error::Error;
 use crate::api::middleware::ErrorResponse;
+use crate::db::store::UserManager;
 
 /// Начать настройку TOTP
 ///

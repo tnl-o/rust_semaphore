@@ -12,6 +12,7 @@ use crate::api::state::AppState;
 use crate::models::View;
 use crate::error::{Error, Result};
 use crate::api::middleware::ErrorResponse;
+use crate::db::store::ViewManager;
 
 /// Получает представления проекта
 pub async fn get_views(

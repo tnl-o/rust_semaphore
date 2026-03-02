@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::api::state::AppState;
 use crate::error::Error;
 use crate::api::middleware::ErrorResponse;
+use crate::db::store::UserManager;
 
 /// Health check endpoint
 pub async fn health() -> &'static str {

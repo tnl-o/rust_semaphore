@@ -12,6 +12,7 @@ use crate::api::state::AppState;
 use crate::models::Project;
 use crate::error::{Error, Result};
 use crate::api::middleware::ErrorResponse;
+use crate::db::store::ProjectStore;
 
 /// Получает проекты пользователя
 pub async fn get_projects(
