@@ -33,17 +33,20 @@ impl std::fmt::Display for TemplateType {
 
 impl<DB: Database> Type<DB> for TemplateType {
     fn type_info() -> DB::TypeInfo {
-        <String as Type<DB>>::type_info()
+        <&str as Type<DB>>::type_info()
     }
 
     fn compatible(ty: &DB::TypeInfo) -> bool {
-        <String as Type<DB>>::compatible(ty)
+        <&str as Type<DB>>::compatible(ty)
     }
 }
 
-impl<'r, DB: Database> Decode<'r, DB> for TemplateType {
+impl<'r, DB: Database> Decode<'r, DB> for TemplateType
+where
+    &'r str: Decode<'r, DB>,
+{
     fn decode(value: <DB as Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
-        let s = <String as Decode<'r, DB>>::decode(value)?;
+        let s = <&str as Decode<'r, DB>>::decode(value)?;
         Ok(match s.as_str() {
             "build" => TemplateType::Build,
             "deploy" => TemplateType::Deploy,
@@ -59,9 +62,10 @@ impl<'r, DB: Database> Decode<'r, DB> for TemplateType {
 impl<'q, DB: Database> Encode<'q, DB> for TemplateType
 where
     DB: 'q,
+    for<'a> &'a str: Encode<'q, DB>,
 {
     fn encode_by_ref(&self, buf: &mut <DB as Database>::ArgumentBuffer<'q>) -> Result<sqlx::encode::IsNull, Box<dyn std::error::Error + Send + Sync>> {
-        let s: String = match self {
+        let s = match self {
             TemplateType::Build => "build",
             TemplateType::Deploy => "deploy",
             TemplateType::Task => "task",
@@ -69,8 +73,8 @@ where
             TemplateType::Terraform => "terraform",
             TemplateType::Shell => "shell",
             TemplateType::Default => "default",
-        }.to_string();
-        <String as Encode<'q, DB>>::encode(s, buf)
+        };
+        <&str as Encode<'q, DB>>::encode(&s, buf)
     }
 }
 
