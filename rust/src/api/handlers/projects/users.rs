@@ -13,7 +13,7 @@ use crate::api::state::AppState;
 use crate::models::{User, ProjectUser, ProjectUserRole};
 use crate::error::{Error, Result};
 use crate::api::middleware::ErrorResponse;
-use crate::db::store::RetrieveQueryParams;
+use crate::db::store::{RetrieveQueryParams, UserManager, ProjectStore};
 
 /// Проектный пользователь
 #[derive(Debug, Serialize, Deserialize)]

@@ -13,7 +13,7 @@ use crate::api::state::AppState;
 use crate::models::{Task, TaskWithTpl};
 use crate::error::{Error, Result};
 use crate::api::middleware::ErrorResponse;
-use crate::db::store::RetrieveQueryParams;
+use crate::db::store::{RetrieveQueryParams, TaskManager};
 use crate::services::task_logger::TaskStatus;
 
 /// Получает задачи проекта

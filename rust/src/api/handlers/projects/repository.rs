@@ -12,7 +12,7 @@ use crate::api::state::AppState;
 use crate::models::Repository;
 use crate::error::{Error, Result};
 use crate::api::middleware::ErrorResponse;
-use crate::db::store::RetrieveQueryParams;
+use crate::db::store::{RetrieveQueryParams, RepositoryManager};
 
 /// Получает репозитории проекта
 pub async fn get_repositories(

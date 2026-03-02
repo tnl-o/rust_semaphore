@@ -12,7 +12,7 @@ use crate::api::state::AppState;
 use crate::models::Inventory;
 use crate::error::{Error, Result};
 use crate::api::middleware::ErrorResponse;
-use crate::db::store::RetrieveQueryParams;
+use crate::db::store::{RetrieveQueryParams, InventoryManager};
 
 /// Получает инвентари проекта
 pub async fn get_inventories(

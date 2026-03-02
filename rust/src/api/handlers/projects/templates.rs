@@ -13,7 +13,7 @@ use crate::api::state::AppState;
 use crate::models::{Template, TemplateWithPerms, TemplateFilter};
 use crate::error::{Error, Result};
 use crate::api::middleware::ErrorResponse;
-use crate::db::store::RetrieveQueryParams;
+use crate::db::store::{RetrieveQueryParams, TemplateManager};
 
 /// Получает шаблоны проекта
 pub async fn get_templates(

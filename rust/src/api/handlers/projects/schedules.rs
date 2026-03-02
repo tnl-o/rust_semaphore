@@ -12,7 +12,7 @@ use crate::api::state::AppState;
 use crate::models::Schedule;
 use crate::error::{Error, Result};
 use crate::api::middleware::ErrorResponse;
-use crate::db::store::RetrieveQueryParams;
+use crate::db::store::{RetrieveQueryParams, ScheduleManager};
 
 /// Получает расписания проекта
 pub async fn get_project_schedules(
