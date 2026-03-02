@@ -24,24 +24,24 @@ pub struct BoltStore {
 pub trait BoltDbOperations {
     fn update<F, T>(&self, f: F) -> Result<T>
     where
-        F: FnOnce(&sled::Transaction) -> Result<T>;
+        F: FnOnce(&sled::TransactionalTree) -> Result<T>;
 
     fn view<F, T>(&self, f: F) -> Result<T>
     where
-        F: FnOnce(&sled::Transaction) -> Result<T>;
+        F: FnOnce(&sled::TransactionalTree) -> Result<T>;
 }
 
 impl BoltDbOperations for BoltStore {
     fn update<F, T>(&self, f: F) -> Result<T>
     where
-        F: FnOnce(&sled::Transaction) -> Result<T>,
+        F: FnOnce(&sled::TransactionalTree) -> Result<T>,
     {
         self.db.transaction(|tx| f(tx)).map_err(|e| Error::Other(e.to_string()))
     }
 
     fn view<F, T>(&self, f: F) -> Result<T>
     where
-        F: FnOnce(&sled::Transaction) -> Result<T>,
+        F: FnOnce(&sled::TransactionalTree) -> Result<T>,
     {
         self.db.transaction(|tx| f(tx)).map_err(|e| Error::Other(e.to_string()))
     }
