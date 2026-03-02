@@ -1,53 +1,72 @@
 # Детальный отчёт об ошибках компиляции Semaphore Rust
-**Дата:** 2026-03-02  
-**Всего ошибок:** ~867  
-**Предупреждений:** ~280
+**Дата:** 2026-03-02 (обновлено: 2026-03-02, сессия 3)  
+**Всего ошибок:** 625  
+**Предупреждений:** ~200
 
 ---
 
 ## 📊 Статистика по категориям
 
-| Категория | Количество ошибок | Приоритет |
-|-----------|------------------|-----------|
-| StoreWrapper trait implementations | ~50 | 🔴 Критический |
-| SQLx Type/Decode trait bounds | ~80 | 🔴 Критический |
-| BoltDB transaction methods | ~60 | 🔴 Критический |
-| Config methods vs fields | ~15 | 🟡 Высокий |
-| Missing struct fields | ~40 | 🟡 Высокий |
-| TemplateType Option handling | ~30 | 🟡 Высокий |
-| Exporter trait implementations | ~20 | 🟡 Высокий |
-| GitClient lifetime parameters | ~8 | 🟡 Высокий |
-| LocalJob/Clone traits | ~15 | 🟡 Высокий |
-| Missing crate dependencies | ~10 | 🟢 Средний |
-| Type mismatches (Option/String) | ~50 | 🟢 Средний |
-| Async/sync restore methods | ~30 | 🟢 Средний |
-| Unused imports/variables | ~280 | ⚪ Низкий |
+| Категория | Количество ошибок | Приоритет | Статус |
+|-----------|------------------|-----------|--------|
+| StoreWrapper trait implementations | ~50 | 🔴 Критический | ✅ Исправлено |
+| SQLx Type/Decode trait bounds | ~80 | 🔴 Критический | ⏳ В работе |
+| BoltDB transaction methods | ~60 | 🔴 Критический | ⏳ В работе |
+| Config methods vs fields | ~15 | 🟡 Высокий | ⏳ В работе |
+| Missing struct fields | ~40 | 🟡 Высокий | ⏳ В работе |
+| TemplateType Option handling | ~30 | 🟡 Высокий | ⏳ В работе |
+| Exporter trait implementations | ~20 | 🟡 Высокий | ⏳ В работе |
+| GitClient lifetime parameters | ~8 | 🟡 Высокий | ✅ Исправлено |
+| LocalJob/Clone traits | ~15 | 🟡 Высокий | ✅ Исправлено |
+| Missing crate dependencies | ~10 | 🟢 Средний | ⏳ В работе |
+| Type mismatches (Option/String) | ~50 | 🟢 Средний | ⏳ В работе |
+| Async/sync restore methods | ~30 | 🟢 Средний | ⏳ В работе |
+| Unused imports/variables | ~200 | ⚪ Низкий | ⏳ В работе |
 
 ---
 
-## 🔴 КРИТИЧЕСКИЕ ОШИБКИ (Блокируют компиляцию)
+## ✅ ИСПРАВЛЕНО (242 ошибки)
 
-### 1. StoreWrapper Trait Implementation (~50 ошибок)
+### Этап 1: StoreWrapper и импорты трейтов
 
-**Файлы:** `src/api/store_wrapper.rs`, `src/api/handlers/**/*.rs`
+**Исправлено ошибок:** ~150
 
-**Проблема:** Методы StoreWrapper не соответствуют сигнатурам трейтов Store
+**Выполненные задачи:**
+1. ✅ Исправлены сигнатуры методов StoreWrapper:
+   - TaskManager: get_tasks, get_task_outputs
+   - ScheduleManager: set_schedule_active, set_schedule_commit_hash
+   - SessionManager: get_session, expire_session, verify_session, touch_session
+   - TokenManager: get_api_token, expire_api_token, delete_api_token
+   - EventManager: get_events
+   - RunnerManager: get_runners
+   - Добавлен Clone для StoreWrapper
 
-**Примеры ошибок:**
-```
-error[E0053]: method `get_tasks` has an incompatible type for trait
-   --> src/api/store_wrapper.rs:254:56
-    | expected `std::option::Option<i32>`, found `store::RetrieveQueryParams`
+2. ✅ Добавлен #[async_trait] для impl GitClient for GoGitClient
 
-error[E0050]: method `get_task_outputs` has 3 parameters but the declaration in trait has 2
-   --> src/api/store_wrapper.rs:274:31
-```
+3. ✅ Добавлены импорты трейтов во все API handlers:
+   - users.rs, user.rs, auth.rs, totp.rs: UserManager
+   - events.rs: EventManager
+   - access_key.rs: AccessKeyManager, ProjectStore
+   - templates.rs: TemplateManager, ProjectStore
+   - tasks.rs: TaskManager
+   - schedules.rs: ScheduleManager
+   - inventory.rs: InventoryManager
+   - repository.rs: RepositoryManager
+   - environment.rs: EnvironmentManager
+   - integration.rs: IntegrationManager
+   - views.rs: ViewManager
+   - secret_storages.rs: SecretStorageManager
+   - project.rs: ProjectStore
 
-**Решение:** Исправить сигнатуры всех методов в StoreWrapper согласно трейтам в `src/db/store.rs`
+4. ✅ Исправлены mismatched types:
+   - events.rs: get_events (None, limit) вместо (None, params)
+   - tasks.rs: get_tasks (project_id, None) вместо (project_id, params)
+   - users.rs: update_user (возвращает user_to_update)
+   - user.rs: update_user (возвращает current_user)
 
-**Затронутые методы:**
-- `get_tasks` (params: RetrieveQueryParams → template_id: Option<i32>)
-- `get_task_outputs` (убрать лишний параметр params)
+5. ✅ Удалено дублирующееся определение RetrieveQueryParams в users.rs
+
+**Коммиты:** 9
 - `set_schedule_active` (добавить project_id)
 - `set_schedule_commit_hash` (добавить project_id, изменить тип hash на &str)
 - `get_session` (изменить параметры на user_id, session_id: i32)
