@@ -330,7 +330,7 @@ impl Cli {
                 "bolt" => DbDialect::Bolt,
                 "sqlite" => DbDialect::SQLite,
                 "mysql" => DbDialect::MySQL,
-                "postgres" => DbDialect::PostgreSQL,
+                "postgres" => DbDialect::Postgres,
                 _ => DbDialect::Bolt,
             };
         }
@@ -537,7 +537,7 @@ fn create_store(config: &Config) -> anyhow::Result<Box<dyn crate::db::Store + Se
                 .ok_or_else(|| anyhow::anyhow!("Путь к базе данных не указан"))?;
             Box::new(BoltStore::new(path).map_err(|e| anyhow::anyhow!("{}", e))?)
         }
-        DbDialect::SQLite | DbDialect::MySQL | DbDialect::PostgreSQL => {
+        DbDialect::SQLite | DbDialect::MySQL | DbDialect::Postgres => {
             Box::new(
                 tokio::runtime::Builder::new_current_thread()
                     .enable_all()

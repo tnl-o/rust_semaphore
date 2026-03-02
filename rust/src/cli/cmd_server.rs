@@ -54,7 +54,7 @@ impl ServerCommand {
         match config.db_dialect {
             crate::config::DbDialect::SQLite |
             crate::config::DbDialect::MySQL |
-            crate::config::DbDialect::PostgreSQL => {
+            crate::config::DbDialect::Postgres => {
                 let url = config.database_url()?;
                 let store = tokio::runtime::Builder::new_current_thread()
                     .enable_all()
