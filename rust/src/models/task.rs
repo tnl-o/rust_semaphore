@@ -115,18 +115,22 @@ pub struct TaskWithTpl {
 
     /// Тип шаблона
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[sqlx(default)]
     pub tpl_type: Option<TemplateType>,
 
     /// Приложение шаблона
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[sqlx(default)]
     pub tpl_app: Option<TemplateApp>,
 
     /// Имя пользователя
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[sqlx(default)]
     pub user_name: Option<String>,
 
-    /// Задача сборки
+    /// Задача сборки (игнорируется для SQLx)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[sqlx(skip)]
     pub build_task: Option<Box<Task>>,
 }
 

@@ -14,22 +14,22 @@ impl SqlDb {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
                 let mut query = String::from(
-                    "SELECT t.*, tpl.name as template_name 
-                     FROM task t 
-                     LEFT JOIN template tpl ON t.template_id = tpl.id 
+                    "SELECT t.*, tpl.name as template_name
+                     FROM task t
+                     LEFT JOIN template tpl ON t.template_id = tpl.id
                      WHERE t.project_id = ?"
                 );
-                
+
                 if let Some(tpl_id) = template_id {
                     query.push_str(" AND t.template_id = ?");
-                    
+
                     let tasks = sqlx::query_as::<_, TaskWithTpl>(&query)
                         .bind(project_id)
                         .bind(tpl_id)
                         .fetch_all(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
                         .await
                         .map_err(|e| Error::Database(e))?;
-                    
+
                     Ok(tasks)
                 } else {
                     let tasks = sqlx::query_as::<_, TaskWithTpl>(&query)
@@ -37,7 +37,7 @@ impl SqlDb {
                         .fetch_all(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
                         .await
                         .map_err(|e| Error::Database(e))?;
-                    
+
                     Ok(tasks)
                 }
             }
