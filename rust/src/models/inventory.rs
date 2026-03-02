@@ -41,7 +41,10 @@ impl std::str::FromStr for InventoryType {
     }
 }
 
-impl<DB: Database> Type<DB> for InventoryType {
+impl<DB: Database> Type<DB> for InventoryType
+where
+    String: Type<DB>,
+{
     fn type_info() -> DB::TypeInfo {
         <String as Type<DB>>::type_info()
     }

@@ -52,7 +52,10 @@ impl std::str::FromStr for AccessKeyType {
     }
 }
 
-impl<DB: Database> Type<DB> for AccessKeyType {
+impl<DB: Database> Type<DB> for AccessKeyType
+where
+    String: Type<DB>,
+{
     fn type_info() -> DB::TypeInfo {
         <String as Type<DB>>::type_info()
     }

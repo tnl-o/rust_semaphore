@@ -31,7 +31,10 @@ impl std::fmt::Display for TemplateType {
     }
 }
 
-impl<DB: Database> Type<DB> for TemplateType {
+impl<DB: Database> Type<DB> for TemplateType
+where
+    String: Type<DB>,
+{
     fn type_info() -> DB::TypeInfo {
         <String as Type<DB>>::type_info()
     }
@@ -109,7 +112,10 @@ impl std::fmt::Display for TemplateApp {
     }
 }
 
-impl<DB: Database> Type<DB> for TemplateApp {
+impl<DB: Database> Type<DB> for TemplateApp
+where
+    String: Type<DB>,
+{
     fn type_info() -> DB::TypeInfo {
         <String as Type<DB>>::type_info()
     }

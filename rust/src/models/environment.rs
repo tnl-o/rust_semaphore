@@ -13,7 +13,10 @@ pub enum EnvironmentSecretType {
     Var,
 }
 
-impl<DB: Database> Type<DB> for EnvironmentSecretType {
+impl<DB: Database> Type<DB> for EnvironmentSecretType
+where
+    String: Type<DB>,
+{
     fn type_info() -> DB::TypeInfo {
         <String as Type<DB>>::type_info()
     }
