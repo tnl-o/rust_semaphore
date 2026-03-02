@@ -69,6 +69,10 @@ pub struct Repository {
     /// Тип репозитория
     pub git_type: RepositoryType,
 
+    /// Ветка Git
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub git_branch: Option<String>,
+
     /// ID ключа доступа
     pub key_id: i32,
 
@@ -86,6 +90,7 @@ impl Repository {
             name,
             git_url,
             git_type: RepositoryType::Git,
+            git_branch: None,
             key_id: 0,
             git_path: None,
         }
