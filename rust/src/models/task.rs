@@ -157,6 +157,7 @@ pub enum TaskStageType {
 pub struct TaskStage {
     pub id: i32,
     pub task_id: i32,
+    pub project_id: i32,
     pub start: Option<DateTime<Utc>>,
     pub end: Option<DateTime<Utc>>,
     pub r#type: TaskStageType,

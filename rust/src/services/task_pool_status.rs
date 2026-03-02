@@ -120,21 +120,21 @@ impl TaskPool {
     /// Логирует задачу
     pub async fn log_task(&self, task_id: i32, output: &str) -> Result<(), String> {
         use crate::models::TaskOutput;
-        
+
         let task_output = TaskOutput {
             id: 0,
             task_id,
-            project_id: self.project.id,
             output: output.to_string(),
             time: Utc::now(),
+            stage_id: None,
         };
-        
+
         self.store.create_task_output(task_output)
             .await
             .map_err(|e| format!("Failed to create task output: {}", e))?;
-        
+
         info!("Task {} output logged", task_id);
-        
+
         Ok(())
     }
     

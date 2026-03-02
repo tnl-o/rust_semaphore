@@ -41,18 +41,19 @@ impl TaskRunner {
         use tracing::info;
         
         info!("[Task {}] {}", self.task.id, msg);
-        
+
         // Запись в БД
         let task_output = crate::models::TaskOutput {
             id: 0,
             task_id: self.task.id,
             output: msg.to_string(),
             time: Utc::now(),
+            stage_id: None,
         };
-        
+
         // TODO: Асинхронная запись в БД
         // let _ = self.pool.store.create_task_output(task_output).await;
-        
+
         // Уведомление слушателей логов
         let now = Utc::now();
         for listener in &self.log_listeners {

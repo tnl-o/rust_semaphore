@@ -36,20 +36,20 @@ impl SqlDb {
                 )
                 .bind(stage.task_id)
                 .bind(stage.project_id)
-                .bind(stage.stage_type.to_string())
+                .bind(stage.r#type.to_string())
                 .bind(stage.start)
                 .bind(stage.end)
                 .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
                 .await
                 .map_err(|e| Error::Database(e))?;
-                
+
                 stage.id = result.last_insert_rowid() as i32;
                 Ok(stage)
             }
             _ => Err(Error::Other("Only SQLite supported for now".to_string()))
         }
     }
-    
+
     /// Обновляет стадию задачи
     pub async fn update_task_stage(&self, stage: TaskStage) -> Result<()> {
         match self.get_dialect() {
@@ -57,7 +57,7 @@ impl SqlDb {
                 sqlx::query(
                     "UPDATE task_stage SET type = ?, start = ?, end = ? WHERE id = ? AND task_id = ? AND project_id = ?"
                 )
-                .bind(stage.stage_type.to_string())
+                .bind(stage.r#type.to_string())
                 .bind(stage.start)
                 .bind(stage.end)
                 .bind(stage.id)
@@ -66,7 +66,7 @@ impl SqlDb {
                 .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
                 .await
                 .map_err(|e| Error::Database(e))?;
-                
+
                 Ok(())
             }
             _ => Err(Error::Other("Only SQLite supported for now".to_string()))
