@@ -247,6 +247,16 @@ pub trait TerraformInventoryManager: Send + Sync {
     async fn get_terraform_state_count(&self) -> Result<i32>;
 }
 
+/// Менеджер хранилищ секретов
+#[async_trait]
+pub trait SecretStorageManager: Send + Sync {
+    async fn get_secret_storages(&self, project_id: i32) -> Result<Vec<SecretStorage>>;
+    async fn get_secret_storage(&self, project_id: i32, storage_id: i32) -> Result<SecretStorage>;
+    async fn create_secret_storage(&self, storage: SecretStorage) -> Result<SecretStorage>;
+    async fn update_secret_storage(&self, storage: SecretStorage) -> Result<()>;
+    async fn delete_secret_storage(&self, project_id: i32, storage_id: i32) -> Result<()>;
+}
+
 /// Основной трейт хранилища - агрегирует все менеджеры
 #[async_trait]
 pub trait Store:
@@ -270,5 +280,6 @@ pub trait Store:
     + IntegrationManager
     + ProjectInviteManager
     + TerraformInventoryManager
+    + SecretStorageManager
 {
 }
