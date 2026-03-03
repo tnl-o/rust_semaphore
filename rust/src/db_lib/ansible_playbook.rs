@@ -5,8 +5,6 @@
 use std::process::{Command, Stdio};
 use std::io::{Read, Write};
 use std::sync::Arc;
-use tokio::process::Command as TokioCommand;
-use tokio::sync::Mutex;
 
 use crate::error::{Error, Result};
 use crate::models::Repository;
@@ -35,8 +33,8 @@ impl AnsiblePlaybook {
     }
 
     /// Создаёт команду для выполнения
-    fn make_command(&self, command: &str, args: &[&str], environment_vars: &[String]) -> TokioCommand {
-        let mut cmd = TokioCommand::new(command);
+    fn make_command(&self, command: &str, args: &[&str], environment_vars: &[String]) -> Command {
+        let mut cmd = Command::new(command);
         cmd.args(args);
         cmd.current_dir(self.get_full_path());
 
@@ -59,7 +57,7 @@ impl AnsiblePlaybook {
     }
 
     /// Запускает playbook
-    pub async fn run_playbook(
+    pub fn run_playbook(
         &self,
         args: &[String],
         environment_vars: &[String],
@@ -67,21 +65,21 @@ impl AnsiblePlaybook {
         callback: impl FnOnce(u32) + Send + 'static,
     ) -> Result<()> {
         let mut cmd = self.make_command("ansible-playbook", &args.iter().map(|s| s.as_str()).collect::<Vec<_>>(), environment_vars);
-        
+
         self.logger.log_cmd(&cmd);
-        
+
         let mut child = cmd.spawn()
             .map_err(|e| Error::Other(format!("Failed to start ansible-playbook: {}", e)))?;
-        
+
         let pid = child.id().unwrap_or(0);
         callback(pid);
-        
-        let status = child.wait().await
+
+        let status = child.wait()
             .map_err(|e| Error::Other(format!("ansible-playbook failed: {}", e)))?;
-        
+
         // Ждём завершения обработки логов
         self.logger.wait_log();
-        
+
         if status.success() {
             Ok(())
         } else {
@@ -90,17 +88,17 @@ impl AnsiblePlaybook {
     }
 
     /// Запускает ansible-galaxy
-    pub async fn run_galaxy(&self, args: &[String], environment_vars: &[String]) -> Result<()> {
+    pub fn run_galaxy(&self, args: &[String], environment_vars: &[String]) -> Result<()> {
         let mut cmd = self.make_command("ansible-galaxy", &args.iter().map(|s| s.as_str()).collect::<Vec<_>>(), environment_vars);
-        
+
         self.logger.log_cmd(&cmd);
-        
-        let status = cmd.status().await
+
+        let status = cmd.status()
             .map_err(|e| Error::Other(format!("ansible-galaxy failed: {}", e)))?;
-        
+
         // Ждём завершения обработки логов
         self.logger.wait_log();
-        
+
         if status.success() {
             Ok(())
         } else {

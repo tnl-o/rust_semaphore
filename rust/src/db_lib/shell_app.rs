@@ -2,9 +2,8 @@
 //!
 //! Выполнение shell скриптов (Bash, PowerShell, Python)
 
-use std::process::Stdio;
+use std::process::{Command, Stdio};
 use std::sync::Arc;
-use tokio::process::Command as TokioCommand;
 use tokio::io::AsyncReadExt;
 
 use crate::error::{Error, Result};
@@ -40,10 +39,10 @@ impl ShellApp {
     }
 
     /// Создаёт команду для выполнения
-    fn make_command(&self, args: &[String], environment_vars: &[String]) -> TokioCommand {
+    fn make_command(&self, args: &[String], environment_vars: &[String]) -> Command {
         let (command, app_args) = self.get_shell_command();
 
-        let mut cmd = TokioCommand::new(command);
+        let mut cmd = Command::new(command);
         cmd.args(&app_args);
         cmd.args(args);
         cmd.current_dir(self.get_full_path());
@@ -113,7 +112,7 @@ impl LocalApp for ShellApp {
         (args.callback)(pid);
 
         // Ждём завершения
-        let status = futures::executor::block_on(child.wait())
+        let status = child.wait()
             .map_err(|e| Error::Other(format!("Shell command failed: {}", e)))?;
 
         // Ждём завершения обработки логов
