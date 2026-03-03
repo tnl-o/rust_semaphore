@@ -99,6 +99,30 @@ impl std::fmt::Display for ProjectUserRole {
     }
 }
 
+impl sqlx::Type<sqlx::Sqlite> for ProjectUserRole {
+    fn type_info() -> sqlx::sqlite::SqliteTypeInfo {
+        <String as sqlx::Type<sqlx::Sqlite>>::type_info()
+    }
+
+    fn compatible(ty: &sqlx::sqlite::SqliteTypeInfo) -> bool {
+        <String as sqlx::Type<sqlx::Sqlite>>::compatible(ty)
+    }
+}
+
+impl<'r> sqlx::Decode<'r, sqlx::Sqlite> for ProjectUserRole {
+    fn decode(value: sqlx::sqlite::SqliteValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let s = <String as sqlx::Decode<'r, sqlx::Sqlite>>::decode(value)?;
+        Ok(match s.as_str() {
+            "owner" => ProjectUserRole::Owner,
+            "manager" => ProjectUserRole::Manager,
+            "task_runner" => ProjectUserRole::TaskRunner,
+            "guest" => ProjectUserRole::Guest,
+            "none" => ProjectUserRole::None,
+            _ => ProjectUserRole::None,
+        })
+    }
+}
+
 /// Пользователь с паролем (для создания/обновления)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserWithPwd {
