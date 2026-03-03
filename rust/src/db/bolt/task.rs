@@ -324,6 +324,7 @@ impl BoltStore {
                 tpl_type: None,
                 tpl_app: None,
                 user_name: None,
+                build_task: None,
             };
 
             tasks_with_tpl.push(task_with_tpl);

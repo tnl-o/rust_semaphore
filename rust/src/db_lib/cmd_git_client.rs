@@ -253,9 +253,7 @@ impl CmdGitClient {
         logger: &dyn TaskLogger,
     ) -> Result<()> {
         // Устанавливаем SSH ключ
-        let ssh_key = r.repository.ssh_key_id.ok_or_else(|| {
-            Error::Validation("SSH key ID is required".to_string())
-        })?;
+        let ssh_key = r.repository.key_id;
 
         // TODO: Получить ключ из БД и установить
         // Пока используем заглушку
@@ -285,9 +283,7 @@ impl CmdGitClient {
         logger: &dyn TaskLogger,
     ) -> Result<String> {
         // Устанавливаем SSH ключ
-        let ssh_key = r.repository.ssh_key_id.ok_or_else(|| {
-            Error::Validation("SSH key ID is required".to_string())
-        })?;
+        let ssh_key = r.repository.key_id;
 
         // TODO: Получить ключ из БД и установить
         let installation = AccessKeyInstallation::new();

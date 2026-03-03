@@ -11,12 +11,12 @@ use tracing::{info, warn, error, debug};
 
 use crate::error::{Error, Result};
 use crate::models::{Template, Repository, Inventory, TerraformTaskParams};
-use crate::services::task_logger::{TaskLogger, TaskStatus};
+use crate::services::task_logger::{TaskLogger, TaskStatus, TaskLoggerArc};
 
 /// TerraformApp представляет приложение для выполнения Terraform команд
 pub struct TerraformApp {
     /// Логгер
-    pub logger: Box<dyn TaskLogger>,
+    pub logger: TaskLoggerArc,
     /// Шаблон
     pub template: Template,
     /// Репозиторий
@@ -36,7 +36,7 @@ pub struct TerraformApp {
 impl TerraformApp {
     /// Создаёт новый TerraformApp
     pub fn new(
-        logger: Box<dyn TaskLogger>,
+        logger: TaskLoggerArc,
         template: Template,
         repository: Repository,
         inventory: Inventory,
@@ -330,12 +330,12 @@ mod tests {
     use std::sync::Arc;
 
     fn create_test_terraform_app() -> TerraformApp {
-        let logger = Box::new(BasicLogger::new());
+        let logger = Arc::new(BasicLogger::new());
         let template = Template::default();
         let repository = Repository::default();
         let inventory = Inventory::default();
         let work_dir = PathBuf::from("/tmp/test_terraform");
-        
+
         TerraformApp::new(logger, template, repository, inventory, "terraform".to_string(), work_dir)
     }
 

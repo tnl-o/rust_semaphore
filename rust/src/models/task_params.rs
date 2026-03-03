@@ -58,6 +58,18 @@ pub struct TerraformTaskParams {
     /// Reconfigure
     #[serde(default)]
     pub reconfigure: bool,
+
+    /// Backend init required
+    #[serde(default)]
+    pub backend_init_required: bool,
+
+    /// Backend config
+    #[serde(default)]
+    pub backend_config: Option<String>,
+
+    /// Workspace
+    #[serde(default)]
+    pub workspace: Option<String>,
 }
 
 /// Параметры задачи по умолчанию

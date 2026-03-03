@@ -658,6 +658,21 @@ impl AccessKey {
             project_id,
         }
     }
+
+    /// Получает тип ключа
+    pub fn get_type(&self) -> &AccessKeyType {
+        &self.key_type
+    }
+
+    /// Получает SSH ключ данные
+    pub fn get_ssh_key_data(&self) -> Option<&SshKeyData> {
+        self.ssh_key.as_ref()
+    }
+
+    /// Получает логин/пароль данные
+    pub fn get_login_password_data(&self) -> Option<&LoginPasswordData> {
+        self.login_password.as_ref()
+    }
 }
 
 // ============================================================================
@@ -692,16 +707,16 @@ impl KeyInstaller {
 
         match role {
             AccessKeyRole::Git => {
-                match &key.key_type {
+                match key.get_type() {
                     AccessKeyType::Ssh => {
-                        if let Some(ssh_key_data) = &key.ssh_key {
+                        if let Some(ssh_key_data) = key.get_ssh_key_data() {
                             // Запускаем SSH агент
                             let ssh_key = SshKey::from_string(
                                 ssh_key_data.private_key.clone(),
-                                if ssh_key_data.passphrase.is_empty() {
+                                if ssh_key_data.passphrase.as_ref().map_or(true, |s| s.is_empty()) {
                                     None
                                 } else {
-                                    Some(ssh_key_data.passphrase.clone())
+                                    ssh_key_data.passphrase.clone()
                                 },
                             );
 
@@ -730,9 +745,9 @@ impl KeyInstaller {
             }
 
             AccessKeyRole::AnsiblePasswordVault => {
-                match &key.key_type {
+                match key.get_type() {
                     AccessKeyType::LoginPassword => {
-                        if let Some(lp) = &key.login_password {
+                        if let Some(lp) = key.get_login_password_data() {
                             installation.password = Some(lp.password.clone());
                             logger.log("Пароль для Ansible vault установлен");
                         } else {
@@ -748,12 +763,12 @@ impl KeyInstaller {
             }
 
             AccessKeyRole::AnsibleBecomeUser => {
-                if key.key_type != AccessKeyType::LoginPassword {
+                if key.get_type() != &AccessKeyType::LoginPassword {
                     return Err(Error::Validation(
                         "Неверный тип ключа для Ansible become user роли".to_string(),
                     ));
                 }
-                if let Some(lp) = &key.login_password {
+                if let Some(lp) = key.get_login_password_data() {
                     installation.login = Some(lp.login.clone());
                     installation.password = Some(lp.password.clone());
                     logger.logf("Ansible become user: {}", format_args!("{}", lp.login));
@@ -763,15 +778,15 @@ impl KeyInstaller {
             }
 
             AccessKeyRole::AnsibleUser => {
-                match &key.key_type {
+                match key.get_type() {
                     AccessKeyType::Ssh => {
-                        if let Some(ssh_key_data) = &key.ssh_key {
+                        if let Some(ssh_key_data) = key.get_ssh_key_data() {
                             let ssh_key = SshKey::from_string(
                                 ssh_key_data.private_key.clone(),
-                                if ssh_key_data.passphrase.is_empty() {
+                                if ssh_key_data.passphrase.as_ref().map_or(true, |s| s.is_empty()) {
                                     None
                                 } else {
-                                    Some(ssh_key_data.passphrase.clone())
+                                    ssh_key_data.passphrase.clone()
                                 },
                             );
 
@@ -790,7 +805,7 @@ impl KeyInstaller {
                         }
                     }
                     AccessKeyType::LoginPassword => {
-                        if let Some(lp) = &key.login_password {
+                        if let Some(lp) = key.get_login_password_data() {
                             installation.login = Some(lp.login.clone());
                             installation.password = Some(lp.password.clone());
                             logger.logf("Ansible user: {} (логин/пароль)", format_args!("{}", lp.login));
@@ -858,7 +873,7 @@ mod key_installer_tests {
             "user".to_string(),
             Some(1),
         );
-        assert_eq!(key.key_type, AccessKeyType::Ssh);
+        assert_eq!(key.get_type(), &AccessKeyType::SSH);
         assert!(key.ssh_key.is_some());
     }
 
@@ -870,8 +885,8 @@ mod key_installer_tests {
             "secret".to_string(),
             Some(1),
         );
-        assert_eq!(key.key_type, AccessKeyType::LoginPassword);
-        assert!(key.login_password.is_some());
+        assert_eq!(key.get_type(), &AccessKeyType::LoginPassword);
+        assert!(key.get_login_password_data().is_some());
     }
 
     #[test]

@@ -139,6 +139,7 @@ pub struct TaskWithTpl {
 pub struct TaskOutput {
     pub id: i32,
     pub task_id: i32,
+    pub project_id: i32,
     pub time: DateTime<Utc>,
     pub output: String,
     #[serde(skip_serializing_if = "Option::is_none")]

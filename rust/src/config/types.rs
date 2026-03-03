@@ -21,21 +21,29 @@ pub enum DbDialect {
 pub struct DbConfig {
     #[serde(skip)]
     pub dialect: Option<DbDialect>,
-    
+
     #[serde(rename = "host", default = "default_db_host")]
     pub hostname: String,
-    
+
     #[serde(rename = "user", default)]
     pub username: String,
-    
+
     #[serde(rename = "pass", default)]
     pub password: String,
-    
+
     #[serde(rename = "name", default = "default_db_name")]
     pub db_name: String,
-    
+
     #[serde(default)]
     pub options: HashMap<String, String>,
+
+    /// Путь к файлу БД (для SQLite)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+
+    /// Строка подключения (для PostgreSQL/MySQL)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub connection_string: Option<String>,
 }
 
 fn default_db_host() -> String {
@@ -55,6 +63,8 @@ impl Default for DbConfig {
             password: String::new(),
             db_name: default_db_name(),
             options: HashMap::new(),
+            path: None,
+            connection_string: None,
         }
     }
 }

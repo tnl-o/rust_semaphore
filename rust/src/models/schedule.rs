@@ -15,6 +15,7 @@ pub struct Schedule {
     pub active: bool,
     pub last_commit_hash: Option<String>,
     pub repository_id: Option<i32>,
+    pub created: Option<String>,
 }
 
 /// Расписание с дополнительными полями

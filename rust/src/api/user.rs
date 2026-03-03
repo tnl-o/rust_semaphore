@@ -7,6 +7,7 @@ use axum::{
     http::StatusCode,
     Json,
 };
+use chrono::Utc;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -77,6 +78,7 @@ impl UserController {
         let token = state.store.create_api_token(APIToken {
             id: token_id.to_lowercase(),
             user_id,
+            created: Utc::now(),
             expired: false,
         }).await?;
 

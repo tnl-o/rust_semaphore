@@ -53,7 +53,7 @@ impl TypeExporter for RepositoryExporter {
 
             // Восстанавливаем ссылки
             old.project_id = exporter.get_new_key_int("Project", "global", old.project_id, self)?;
-            old.ssh_key_id = exporter.get_new_key_int_ref("AccessKey", &val.scope, old.ssh_key_id, self)?;
+            old.key_id = exporter.get_new_key_int_ref("AccessKey", &val.scope, old.key_id, self)?;
 
             let new_repo = store.create_repository(old)
                 .map_err(|e| Error::Other(format!("Failed to create repository: {}", e)))?;

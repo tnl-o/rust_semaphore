@@ -232,4 +232,69 @@ impl AccessKey {
             environment_id: None,
         }
     }
+
+    /// Создаёт новый SSH ключ
+    pub fn new_ssh(project_id: i32, name: String, private_key: String, passphrase: String, login: String, user_id: Option<i32>) -> Self {
+        Self {
+            id: 0,
+            project_id: Some(project_id),
+            name,
+            r#type: AccessKeyType::SSH,
+            user_id,
+            login_password_login: Some(login),
+            login_password_password: None,
+            ssh_key: Some(private_key),
+            ssh_passphrase: if passphrase.is_empty() { None } else { Some(passphrase) },
+            access_key_access_key: None,
+            access_key_secret_key: None,
+            secret_storage_id: None,
+            owner: None,
+            environment_id: None,
+        }
+    }
+
+    /// Создаёт новый ключ логин/пароль
+    pub fn new_login_password(project_id: i32, name: String, login: String, password: String, user_id: Option<i32>) -> Self {
+        Self {
+            id: 0,
+            project_id: Some(project_id),
+            name,
+            r#type: AccessKeyType::LoginPassword,
+            user_id,
+            login_password_login: Some(login),
+            login_password_password: Some(password),
+            ssh_key: None,
+            ssh_passphrase: None,
+            access_key_access_key: None,
+            access_key_secret_key: None,
+            secret_storage_id: None,
+            owner: None,
+            environment_id: None,
+        }
+    }
+
+    /// Получает данные SSH ключа
+    pub fn get_ssh_key_data(&self) -> Option<SshKeyData> {
+        self.ssh_key.as_ref().map(|key| SshKeyData {
+            private_key: key.clone(),
+            passphrase: self.ssh_passphrase.clone(),
+            login: self.login_password_login.clone().unwrap_or_default(),
+        })
+    }
+
+    /// Получает данные логина/пароля
+    pub fn get_login_password_data(&self) -> Option<LoginPasswordData> {
+        match (&self.login_password_login, &self.login_password_password) {
+            (Some(login), Some(password)) => Some(LoginPasswordData {
+                login: login.clone(),
+                password: password.clone(),
+            }),
+            _ => None,
+        }
+    }
+
+    /// Получает тип ключа (алиас для r#type)
+    pub fn get_type(&self) -> &AccessKeyType {
+        &self.r#type
+    }
 }

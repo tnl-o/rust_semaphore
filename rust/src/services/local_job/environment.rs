@@ -35,14 +35,14 @@ impl LocalJob {
         details.insert("repository_name".to_string(), Value::String(self.repository.name.clone()));
         details.insert("repository_id".to_string(), Value::Number(self.repository.id.into()));
 
-        if self.template.template_type != crate::models::TemplateType::Task {
-            details.insert("type".to_string(), Value::String(self.template.template_type.to_string()));
+        if self.template.template_type != Some(crate::models::TemplateType::Task) {
+            details.insert("type".to_string(), Value::String(self.template.template_type.as_ref().map(|t| t.to_string()).unwrap_or_default()));
 
             if let Some(ver) = incoming_version {
                 details.insert("incoming_version".to_string(), Value::String(ver.to_string()));
             }
 
-            if self.template.template_type == crate::models::TemplateType::Build {
+            if self.template.template_type == Some(crate::models::TemplateType::Build) {
                 if let Some(ref ver) = self.task.version {
                     details.insert("target_version".to_string(), Value::String(ver.clone()));
                 }

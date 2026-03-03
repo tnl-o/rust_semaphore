@@ -235,10 +235,18 @@ pub struct Template {
     #[sqlx(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vaults: Option<String>,
-    
+
     /// Количество задач
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tasks: Option<i32>,
+
+    /// ID ключа vault
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vault_key_id: Option<i32>,
+
+    /// ID ключа become
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub become_key_id: Option<i32>,
 }
 
 /// Шаблон с правами доступа
@@ -267,4 +275,41 @@ pub struct TemplateFilter {
     pub r#type: Option<TemplateType>,
     pub app: Option<TemplateApp>,
     pub deleted: Option<bool>,
+    pub view_id: Option<i32>,
+}
+
+impl Template {
+    /// Создаёт новый шаблон с значениями по умолчанию
+    pub fn default_template(project_id: i32, name: String, playbook: String) -> Self {
+        Self {
+            id: 0,
+            project_id,
+            name,
+            playbook,
+            description: String::new(),
+            inventory_id: 0,
+            repository_id: 0,
+            environment_id: 0,
+            r#type: TemplateType::Default,
+            app: TemplateApp::Default,
+            git_branch: String::new(),
+            deleted: false,
+            created: Utc::now(),
+            arguments: None,
+            template_type: None,
+            start_version: None,
+            build_version: None,
+            survey_vars: None,
+            vaults: None,
+            tasks: None,
+            vault_key_id: None,
+            become_key_id: None,
+        }
+    }
+}
+
+impl Default for Template {
+    fn default() -> Self {
+        Self::default_template(0, String::new(), String::new())
+    }
 }

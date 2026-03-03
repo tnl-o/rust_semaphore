@@ -326,7 +326,7 @@ impl Cli {
 
         // Переопределение из аргументов командной строки
         if let Some(db_dialect) = self.db_dialect {
-            config.db_dialect = match db_dialect.as_str() {
+            config.database.dialect = match db_dialect.as_str() {
                 "bolt" => DbDialect::Bolt,
                 "sqlite" => DbDialect::SQLite,
                 "mysql" => DbDialect::MySQL,
@@ -336,12 +336,10 @@ impl Cli {
         }
 
         if let Some(db_path) = self.db_path {
-            config.db_path = Some(db_path);
+            config.database.path = Some(db_path);
         }
 
-        if let Some(http_port) = self.http_port {
-            config.http_port = http_port;
-        }
+        // http_port is handled via tcp_address
 
         match self.command {
             Commands::Server(cmd) => cmd.run(Arc::new(config)),
@@ -531,9 +529,9 @@ fn cmd_version() -> anyhow::Result<()> {
 fn create_store(config: &Config) -> anyhow::Result<Box<dyn crate::db::Store + Send + Sync>> {
     let database_url = config.database_url().map_err(|e| anyhow::anyhow!("{}", e))?;
 
-    let store: Box<dyn crate::db::Store + Send + Sync> = match config.db_dialect {
+    let store: Box<dyn crate::db::Store + Send + Sync> = match config.database.dialect.unwrap_or(DbDialect::SQLite) {
         DbDialect::Bolt => {
-            let path = config.db_path.as_ref()
+            let path = config.database.path.as_ref()
                 .ok_or_else(|| anyhow::anyhow!("Путь к базе данных не указан"))?;
             Box::new(BoltStore::new(path).map_err(|e| anyhow::anyhow!("{}", e))?)
         }

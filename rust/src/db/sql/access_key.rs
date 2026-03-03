@@ -49,16 +49,16 @@ impl SqlDb {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
                 let result = sqlx::query(
-                    "INSERT INTO access_key (project_id, name, type, user_id, login_password, ssh_key, access_key, environment_id)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO access_key (project_id, name, type, user_id, login_password_login, login_password_password, ssh_key, access_key_access_key, environment_id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 )
                 .bind(key.project_id)
                 .bind(&key.name)
-                .bind(&key.key_type)
+                .bind(&key.r#type)
                 .bind(key.user_id)
-                .bind(&key.login_password)
+                .bind(&key.login_password_login)
                 .bind(&key.ssh_key)
-                .bind(&key.access_key)
+                .bind(&key.access_key_access_key)
                 .bind(key.environment_id)
                 .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
                 .await
@@ -76,18 +76,19 @@ impl SqlDb {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
                 sqlx::query(
-                    "UPDATE access_key SET name = ?, type = ?, user_id = ?, login_password = ?, ssh_key = ?, access_key = ?, environment_id = ?
+                    "UPDATE access_key SET name = ?, type = ?, user_id = ?, login_password_login = ?, login_password_password = ?, ssh_key = ?, access_key_access_key = ?, environment_id = ?
                      WHERE id = ? AND project_id = ?"
                 )
                 .bind(&key.name)
-                .bind(&key.key_type)
+                .bind(&key.r#type)
                 .bind(key.user_id)
-                .bind(&key.login_password)
+                .bind(&key.login_password_login)
+                .bind(&key.login_password_password)
                 .bind(&key.ssh_key)
-                .bind(&key.access_key)
+                .bind(&key.access_key_access_key)
                 .bind(key.environment_id)
                 .bind(key.id)
-                .bind(key.project_id)
+                .bind(key.project_id.unwrap_or(0))
                 .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
                 .await
                 .map_err(|e| Error::Database(e))?;

@@ -46,5 +46,6 @@ pub struct IntegrationMatcher {
 pub struct IntegrationAlias {
     pub id: i32,
     pub integration_id: i32,
+    pub project_id: i32,
     pub alias: String,
 }

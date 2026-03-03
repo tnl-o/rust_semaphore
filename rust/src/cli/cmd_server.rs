@@ -51,7 +51,7 @@ impl ServerCommand {
 
     /// Создаёт хранилище
     fn create_store(config: &Config) -> CliResult<Box<dyn crate::db::Store + Send + Sync>> {
-        match config.db_dialect {
+        match config.database.dialect.unwrap_or(crate::config::DbDialect::SQLite) {
             crate::config::DbDialect::SQLite |
             crate::config::DbDialect::MySQL |
             crate::config::DbDialect::Postgres => {
@@ -63,7 +63,7 @@ impl ServerCommand {
                 Ok(Box::new(store))
             }
             crate::config::DbDialect::Bolt => {
-                let path = config.db_path.as_ref()
+                let path = config.database.path.as_ref()
                     .ok_or("DB path not specified")?;
                 let store = BoltStore::new(path)?;
                 Ok(Box::new(store))

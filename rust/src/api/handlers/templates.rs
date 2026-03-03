@@ -63,6 +63,8 @@ pub async fn create_template(
         survey_vars: None,
         vaults: None,
         tasks: None,
+        vault_key_id: None,
+        become_key_id: None,
     };
 
     let created = state.store.create_template(template)

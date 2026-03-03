@@ -49,13 +49,13 @@ impl SqlDb {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
                 let result = sqlx::query(
-                    "INSERT INTO repository (project_id, name, git_url, ssh_key_id)
+                    "INSERT INTO repository (project_id, name, git_url, key_id)
                      VALUES (?, ?, ?, ?)"
                 )
                 .bind(repo.project_id)
                 .bind(&repo.name)
                 .bind(&repo.git_url)
-                .bind(repo.ssh_key_id)
+                .bind(repo.key_id)
                 .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
                 .await
                 .map_err(|e| Error::Database(e))?;
@@ -72,12 +72,12 @@ impl SqlDb {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
                 sqlx::query(
-                    "UPDATE repository SET name = ?, git_url = ?, ssh_key_id = ?
+                    "UPDATE repository SET name = ?, git_url = ?, key_id = ?
                      WHERE id = ? AND project_id = ?"
                 )
                 .bind(&repo.name)
                 .bind(&repo.git_url)
-                .bind(repo.ssh_key_id)
+                .bind(repo.key_id)
                 .bind(repo.id)
                 .bind(repo.project_id)
                 .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)

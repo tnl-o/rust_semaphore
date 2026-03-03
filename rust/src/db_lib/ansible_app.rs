@@ -13,7 +13,7 @@ use md5::{Md5, Digest};
 
 use crate::error::{Error, Result};
 use crate::models::{Template, Repository};
-use crate::services::task_logger::{TaskLogger, TaskStatus};
+use crate::services::task_logger::{TaskLogger, TaskStatus, TaskLoggerArc};
 
 /// Тип требований Galaxy
 #[derive(Debug, Clone, Copy)]
@@ -34,7 +34,7 @@ impl GalaxyRequirementsType {
 /// AnsibleApp представляет приложение для выполнения Ansible playbook
 pub struct AnsibleApp {
     /// Логгер
-    pub logger: Box<dyn TaskLogger>,
+    pub logger: TaskLoggerArc,
     /// Playbook
     pub playbook: AnsiblePlaybook,
     /// Шаблон
@@ -46,7 +46,7 @@ pub struct AnsibleApp {
 /// AnsiblePlaybook для выполнения команд
 pub struct AnsiblePlaybook {
     /// Логгер
-    pub logger: Box<dyn TaskLogger>,
+    pub logger: TaskLoggerArc,
     /// Репозиторий
     pub repository: Repository,
     /// Шаблон
@@ -58,7 +58,7 @@ pub struct AnsiblePlaybook {
 impl AnsiblePlaybook {
     /// Создаёт новый AnsiblePlaybook
     pub fn new(
-        logger: Box<dyn TaskLogger>,
+        logger: TaskLoggerArc,
         repository: Repository,
         template: Template,
         work_dir: PathBuf,
@@ -192,18 +192,18 @@ impl AnsiblePlaybook {
 impl AnsibleApp {
     /// Создаёт новый AnsibleApp
     pub fn new(
-        logger: Box<dyn TaskLogger>,
+        logger: TaskLoggerArc,
         template: Template,
         repository: Repository,
         work_dir: PathBuf,
     ) -> Self {
         let playbook = AnsiblePlaybook::new(
-            Box::new(logger.clone()),
+            logger.clone(),
             repository.clone(),
             template.clone(),
             work_dir,
         );
-        
+
         Self {
             logger,
             playbook,
@@ -213,10 +213,10 @@ impl AnsibleApp {
     }
 
     /// Устанавливает логгер
-    pub fn set_logger(&mut self, logger: Box<dyn TaskLogger>) -> Box<dyn TaskLogger> {
-        let old_logger = Box::new(self.logger.clone());
+    pub fn set_logger(&mut self, logger: TaskLoggerArc) -> TaskLoggerArc {
+        let old_logger = self.logger.clone();
         self.logger = logger;
-        self.playbook.logger = Box::new(self.logger.clone());
+        self.playbook.logger = self.logger.clone();
         old_logger
     }
 
@@ -418,11 +418,11 @@ mod tests {
     use std::sync::Arc;
 
     fn create_test_ansible_app() -> AnsibleApp {
-        let logger = Box::new(BasicLogger::new());
+        let logger = Arc::new(BasicLogger::new());
         let template = Template::default();
         let repository = Repository::default();
         let work_dir = PathBuf::from("/tmp/test_ansible");
-        
+
         AnsibleApp::new(logger, template, repository, work_dir)
     }
 
