@@ -127,7 +127,6 @@ pub struct TaskWithTpl {
 
     /// Задача сборки (игнорируется для SQLx)
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[sqlx(skip)]
     pub build_task: Option<Box<Task>>,
 }
 
@@ -236,37 +235,40 @@ pub struct DefaultTaskParams {}
 // SQLx реализации для TaskStatus
 // ============================================================================
 
-impl<DB: Database> Type<DB> for TaskStatus
+#[cfg(feature = "sqlx")]
+impl<DB: sqlx::database::Database> sqlx::Type<DB> for TaskStatus
 where
-    String: Type<DB>,
+    String: sqlx::Type<DB>,
 {
     fn type_info() -> DB::TypeInfo {
-        <String as Type<DB>>::type_info()
+        <String as sqlx::Type<DB>>::type_info()
     }
 
     fn compatible(ty: &DB::TypeInfo) -> bool {
-        <String as Type<DB>>::compatible(ty)
+        <String as sqlx::Type<DB>>::compatible(ty)
     }
 }
 
-impl<'r, DB: Database> Decode<'r, DB> for TaskStatus
+#[cfg(feature = "sqlx")]
+impl<'r, DB: sqlx::database::Database> sqlx::Decode<'r, DB> for TaskStatus
 where
-    String: Decode<'r, DB>,
+    String: sqlx::Decode<'r, DB>,
 {
-    fn decode(value: <DB as Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
-        let s = <String as Decode<'r, DB>>::decode(value)?;
+    fn decode(value: <DB as sqlx::database::Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let s = <String as sqlx::Decode<'r, DB>>::decode(value)?;
         Ok(s.parse().unwrap_or(TaskStatus::Waiting))
     }
 }
 
-impl<'q, DB: Database> Encode<'q, DB> for TaskStatus
+#[cfg(feature = "sqlx")]
+impl<'q, DB: sqlx::database::Database> sqlx::Encode<'q, DB> for TaskStatus
 where
     DB: 'q,
-    String: Encode<'q, DB>,
+    String: sqlx::Encode<'q, DB>,
 {
-    fn encode_by_ref(&self, buf: &mut <DB as Database>::ArgumentBuffer<'q>) -> Result<sqlx::encode::IsNull, Box<dyn std::error::Error + Send + Sync>> {
+    fn encode_by_ref(&self, buf: &mut <DB as sqlx::database::Database>::ArgumentBuffer<'q>) -> Result<sqlx::encode::IsNull, Box<dyn std::error::Error + Send + Sync>> {
         let s = self.to_string();
-        <String as Encode<'q, DB>>::encode(s, buf)
+        <String as sqlx::Encode<'q, DB>>::encode(s, buf)
     }
 }
 
