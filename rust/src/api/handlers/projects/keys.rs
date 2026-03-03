@@ -19,7 +19,7 @@ pub async fn get_keys(
     State(state): State<Arc<AppState>>,
     Path(project_id): Path<i32>,
 ) -> std::result::Result<Json<Vec<AccessKey>>, (StatusCode, Json<ErrorResponse>)> {
-    let keys = state.store.get_access_keys(project_id, crate::db::store::RetrieveQueryParams::default())
+    let keys = state.store.get_access_keys(project_id)
         .await
         .map_err(|e| (
             StatusCode::INTERNAL_SERVER_ERROR,

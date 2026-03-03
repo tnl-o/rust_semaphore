@@ -9,7 +9,7 @@ impl TaskRunner {
     /// populate_details загружает детали задачи из БД
     pub async fn populate_details(&mut self) -> Result<()> {
         // Загрузка шаблона
-        self.template = self.pool.store.get_template(self.task.template_id).await?;
+        self.template = self.pool.store.get_template(self.task.project_id, self.task.template_id).await?;
         
         // Загрузка инвентаря
         if let Some(inventory_id) = self.task.inventory_id {

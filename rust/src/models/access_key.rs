@@ -131,7 +131,7 @@ where
 {
     fn decode(value: <DB as Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
         let s = <&str as Decode<'r, DB>>::decode(value)?;
-        Ok(match s.as_str() {
+        Ok(match s {
             "user" => AccessKeyOwner::User,
             "project" => AccessKeyOwner::Project,
             "shared" => AccessKeyOwner::Shared,

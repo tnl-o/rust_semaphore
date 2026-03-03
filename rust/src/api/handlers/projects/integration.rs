@@ -20,7 +20,7 @@ pub async fn get_integrations(
     Path(project_id): Path<i32>,
     Query(params): Query<RetrieveQueryParams>,
 ) -> std::result::Result<Json<Vec<Integration>>, (StatusCode, Json<ErrorResponse>)> {
-    let integrations = state.store.get_integrations(project_id, params)
+    let integrations = state.store.get_integrations(project_id)
         .await
         .map_err(|e| (
             StatusCode::INTERNAL_SERVER_ERROR,

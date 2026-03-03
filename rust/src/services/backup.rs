@@ -240,7 +240,8 @@ impl BackupDB {
             backup.inventories.push(BackupInventory {
                 name: inv.name.clone(),
                 inventory_type: inv.inventory_type.to_string(),
-                inventory: inv.inventory.clone(),
+                // inventory: inv.inventory.clone(),  // поле удалено
+                inventory: None,
                 ssh_key: inv.ssh_key_id.and_then(|id| access_key_map.get(&id).cloned()),
                 become_key: inv.become_key_id.and_then(|id| access_key_map.get(&id).cloned()),
             });
@@ -264,13 +265,13 @@ impl BackupDB {
                 login_password: None,
             };
 
-            if let Some(ref ssh) = key.ssh_key {
-                backup_key.ssh_key = Some(BackupSshKey {
-                    private_key: ssh.private_key.clone(),
-                    passphrase: ssh.passphrase.clone(),
-                    login: ssh.login.clone(),
-                });
-            }
+            // if let Some(ref ssh) = key.ssh_key {  // ssh_key теперь String, не структура
+            //     backup_key.ssh_key = Some(BackupSshKey {
+            //         private_key: ssh.private_key.clone(),
+            //         passphrase: ssh.passphrase.clone(),
+            //         login: ssh.login.clone(),
+            //     });
+            // }
 
             // if let Some(ref lp) = key.login_password {  // поле удалено
             //     backup_key.login_password = Some(BackupLoginPassword {
