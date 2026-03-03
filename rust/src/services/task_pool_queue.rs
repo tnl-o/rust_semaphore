@@ -81,38 +81,29 @@ mod tests {
     use chrono::Utc;
 
     fn create_test_task(id: i32) -> Task {
-        Task {
-            id,
-            project_id: 1,
-            template_id: 1,
-            status: TaskStatus::Waiting,
-            message: format!("Task {}", id),
-            commit_hash: None,
-            commit_message: None,
-            version: None,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            arguments: None,
-            params: String::new(),
-            playbook: String::new(),
-            start: None,
-            end: None,
-        }
+        let mut task = Task::default();
+        task.id = id;
+        task.project_id = 1;
+        task.template_id = 1;
+        task.status = TaskStatus::Waiting;
+        task.message = Some(format!("Task {}", id));
+        task
     }
 
     async fn create_test_pool() -> TaskPool {
         use crate::db::sql::SqlStore;
         use crate::models::Project;
         
-        let store = Arc::new(SqlStore::new(":memory:").unwrap());
+        let store = Arc::new(SqlStore::new(":memory:").await.unwrap());
         let project = Project {
             id: 1,
             name: "Test Project".to_string(),
             created: Utc::now(),
-            alert: false,
+            alert: None,
             alert_chat: None,
-            max_parallel_tasks: 5,
+            max_parallel_tasks: Some(5),
+            r#type: None,
+            default_secret_storage_id: None,
         };
         
         TaskPool::new(store, project)

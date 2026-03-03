@@ -156,7 +156,7 @@ mod tests {
             template_id: 1,
             project_id: 1,
             vault_id: 1,
-            vault_key_id: None,
+            vault_key_id: 0,
             name: "Test Vault".to_string(),
         };
         
@@ -180,7 +180,7 @@ mod tests {
             template_id: 1,
             project_id: 1,
             vault_id: 1,
-            vault_key_id: None,
+            vault_key_id: 0,
             name: "Test Vault".to_string(),
         };
         
@@ -207,7 +207,7 @@ mod tests {
             template_id: 1,
             project_id: 1,
             vault_id: 1,
-            vault_key_id: None,
+            vault_key_id: 0,
             name: "Test Vault".to_string(),
         };
         
@@ -233,7 +233,7 @@ mod tests {
                 template_id: 1,
                 project_id: 1,
                 vault_id: 1,
-                vault_key_id: None,
+                vault_key_id: 0,
                 name: "Vault 1".to_string(),
             },
             TemplateVault {
@@ -241,7 +241,7 @@ mod tests {
                 template_id: 1,
                 project_id: 1,
                 vault_id: 2,
-                vault_key_id: None,
+                vault_key_id: 0,
                 name: "Vault 2".to_string(),
             },
         ];

@@ -9,7 +9,7 @@ use tokio::sync::{RwLock, Mutex};
 use tracing::{info, warn, error};
 
 use crate::error::Result;
-use crate::models::{Task, Project, TaskStatus};
+use crate::models::{Task, Project};
 use crate::services::task_logger::{TaskLogger, TaskStatus, BasicLogger};
 use crate::services::local_job::LocalJob;
 use crate::db_lib::AccessKeyInstallerImpl;
@@ -192,9 +192,10 @@ impl TaskPool {
             std::path::PathBuf::from("/tmp/work"),
             std::path::PathBuf::from("/tmp/tmp"),
         );
+        job.set_run_params(String::new(), None, String::new());
 
-        // Запускаем задачу
-        if let Err(e) = job.run().await {
+        // Запускаем задачу (используем Job trait)
+        if let Err(e) = job.run(&job.username, job.incoming_version.as_deref(), &job.alias).await {
             error!("Task {} failed: {}", task_id, e);
             return Err(e);
         }

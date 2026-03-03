@@ -306,30 +306,18 @@ mod tests {
     async fn test_create_and_get_task() {
         let db = create_test_db().await;
         
-        let task = Task {
-            id: 0,
-            project_id: 1,
-            template_id: 1,
-            status: TaskStatus::Waiting,
-            message: "Test task".to_string(),
-            commit_hash: None,
-            commit_message: None,
-            version: None,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            arguments: None,
-            params: String::new(),
-            playbook: String::new(),
-            start: None,
-            end: None,
-        };
+        let mut task = Task::default();
+        task.project_id = 1;
+        task.template_id = 1;
+        task.status = TaskStatus::Waiting;
+        task.message = Some("Test task".to_string());
+        task.created = Utc::now();
         
         let created = db.create_task(task.clone()).await.unwrap();
         assert!(created.id > 0);
         
         let retrieved = db.get_task(1, created.id).await.unwrap();
-        assert_eq!(retrieved.message, "Test task");
+        assert_eq!(retrieved.message, Some("Test task".to_string()));
         
         // Cleanup
         let _ = db.close().await;
@@ -341,24 +329,12 @@ mod tests {
         
         // Создаём несколько задач
         for i in 0..5 {
-            let task = Task {
-                id: 0,
-                project_id: 1,
-                template_id: 1,
-                status: TaskStatus::Waiting,
-                message: format!("Task {}", i),
-                commit_hash: None,
-                commit_message: None,
-                version: None,
-                inventory_id: None,
-                repository_id: None,
-                environment_id: None,
-                arguments: None,
-                params: String::new(),
-                playbook: String::new(),
-                start: None,
-                end: None,
-            };
+            let mut task = Task::default();
+            task.project_id = 1;
+            task.template_id = 1;
+            task.status = TaskStatus::Waiting;
+            task.message = Some(format!("Task {}", i));
+            task.created = Utc::now();
             db.create_task(task).await.unwrap();
         }
         
@@ -373,24 +349,12 @@ mod tests {
     async fn test_update_task_status() {
         let db = create_test_db().await;
         
-        let task = Task {
-            id: 0,
-            project_id: 1,
-            template_id: 1,
-            status: TaskStatus::Waiting,
-            message: "Test task".to_string(),
-            commit_hash: None,
-            commit_message: None,
-            version: None,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            arguments: None,
-            params: String::new(),
-            playbook: String::new(),
-            start: None,
-            end: None,
-        };
+        let mut task = Task::default();
+        task.project_id = 1;
+        task.template_id = 1;
+        task.status = TaskStatus::Waiting;
+        task.message = Some("Test task".to_string());
+        task.created = Utc::now();
         
         let created = db.create_task(task).await.unwrap();
         
@@ -407,24 +371,12 @@ mod tests {
     async fn test_delete_task() {
         let db = create_test_db().await;
         
-        let task = Task {
-            id: 0,
-            project_id: 1,
-            template_id: 1,
-            status: TaskStatus::Waiting,
-            message: "Test task".to_string(),
-            commit_hash: None,
-            commit_message: None,
-            version: None,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            arguments: None,
-            params: String::new(),
-            playbook: String::new(),
-            start: None,
-            end: None,
-        };
+        let mut task = Task::default();
+        task.project_id = 1;
+        task.template_id = 1;
+        task.status = TaskStatus::Waiting;
+        task.message = Some("Test task".to_string());
+        task.created = Utc::now();
         
         let created = db.create_task(task).await.unwrap();
         

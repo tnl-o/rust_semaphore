@@ -140,7 +140,7 @@ mod tests {
             id: 0,
             project_id: 1,
             name: "Test Integration".to_string(),
-            template_id: Some(1),
+            template_id: 1,
         };
         
         let created = db.create_integration(integration.clone()).await.unwrap();
@@ -163,7 +163,7 @@ mod tests {
                 id: 0,
                 project_id: 1,
                 name: format!("Integration {}", i),
-                template_id: Some(1),
+                template_id: 1,
             };
             db.create_integration(integration).await.unwrap();
         }
@@ -183,7 +183,7 @@ mod tests {
             id: 0,
             project_id: 1,
             name: "Test Integration".to_string(),
-            template_id: Some(1),
+            template_id: 1,
         };
         
         let created = db.create_integration(integration).await.unwrap();
@@ -208,7 +208,7 @@ mod tests {
             id: 0,
             project_id: 1,
             name: "Test Integration".to_string(),
-            template_id: Some(1),
+            template_id: 1,
         };
         
         let created = db.create_integration(integration).await.unwrap();

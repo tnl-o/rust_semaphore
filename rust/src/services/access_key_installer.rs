@@ -243,6 +243,7 @@ mod tests {
     use super::*;
 
     fn create_test_ssh_key() -> AccessKey {
+        use crate::models::AccessKeyOwner;
         AccessKey {
             id: 1,
             project_id: Some(1),
@@ -256,6 +257,8 @@ mod tests {
             access_key_access_key: None,
             access_key_secret_key: None,
             secret_storage_id: None,
+            environment_id: None,
+            owner: Some(AccessKeyOwner::Project),
         }
     }
 
@@ -321,6 +324,7 @@ mod tests {
 
     #[test]
     fn test_install_for_non_ssh_key() {
+        use crate::models::AccessKeyOwner;
         let key = AccessKey {
             id: 1,
             project_id: Some(1),
@@ -334,6 +338,8 @@ mod tests {
             access_key_access_key: None,
             access_key_secret_key: None,
             secret_storage_id: None,
+            environment_id: None,
+            owner: Some(AccessKeyOwner::Project),
         };
 
         let installer = AccessKeyInstaller::default();

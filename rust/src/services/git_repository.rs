@@ -376,6 +376,7 @@ mod tests {
             name: "Test Repo".to_string(),
             git_url: "https://github.com/test/repo.git".to_string(),
             git_type: RepositoryType::Git,
+            git_branch: None,
             key_id: 1,
             git_path: None,
         };
@@ -394,6 +395,7 @@ mod tests {
             name: "Test Repo".to_string(),
             git_url: "https://github.com/test/repo.git".to_string(),
             git_type: RepositoryType::Git,
+            git_branch: None,
             key_id: 1,
             git_path: None,
         };
@@ -413,6 +415,7 @@ mod tests {
             name: "Test Repo".to_string(),
             git_url: "https://github.com/test/repo.git".to_string(),
             git_type: RepositoryType::Git,
+            git_branch: None,
             key_id: 1,
             git_path: None,
         };
@@ -431,6 +434,7 @@ mod tests {
             name: "Test Repo".to_string(),
             git_url: "https://github.com/test/repo.git".to_string(),
             git_type: RepositoryType::Git,
+            git_branch: None,
             key_id: 1,
             git_path: None,
         };

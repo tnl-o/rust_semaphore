@@ -381,6 +381,8 @@ mod tests {
             build_task_id: None,
             version: None,
             inventory_id: None,
+            repository_id: None,
+            environment_id: None,
             params: None,
         });
         
@@ -417,6 +419,8 @@ mod tests {
             build_task_id: None,
             version: None,
             inventory_id: None,
+            repository_id: None,
+            environment_id: None,
             params: None,
         };
 

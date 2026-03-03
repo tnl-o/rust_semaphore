@@ -1,12 +1,13 @@
 //! Mock-реализация Store для тестов
 
 use crate::db::store::*;
+use crate::error::{Error, Result};
 use crate::models::*;
-use crate::error::Result;
+use crate::services::task_logger::TaskStatus;
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 
 /// Mock-хранилище для тестов
 pub struct MockStore {
@@ -34,317 +35,527 @@ impl MockStore {
 }
 
 #[async_trait]
-impl Store for MockStore {
-    fn connection_manager(&self) -> Arc<dyn ConnectionManager> {
-        Arc::new(MockConnectionManager)
+impl ConnectionManager for MockStore {
+    async fn connect(&self) -> Result<()> {
+        Ok(())
     }
-
-    fn migration_manager(&self) -> Arc<dyn MigrationManager> {
-        Arc::new(MockMigrationManager)
+    async fn close(&self) -> Result<()> {
+        Ok(())
     }
-
-    fn options_manager(&self) -> Arc<dyn OptionsManager> {
-        Arc::new(MockOptionsManager)
-    }
-
-    fn user_manager(&self) -> Arc<dyn UserManager> {
-        Arc::new(MockUserManager {
-            users: self.users.clone(),
-        })
-    }
-
-    fn project_store(&self) -> Arc<dyn ProjectStore> {
-        Arc::new(MockProjectStore {
-            projects: self.projects.clone(),
-        })
-    }
-
-    fn template_manager(&self) -> Arc<dyn TemplateManager> {
-        Arc::new(MockTemplateManager {
-            templates: self.templates.clone(),
-        })
-    }
-
-    fn inventory_manager(&self) -> Arc<dyn InventoryManager> {
-        Arc::new(MockInventoryManager)
-    }
-
-    fn repository_manager(&self) -> Arc<dyn RepositoryManager> {
-        Arc::new(MockRepositoryManager)
-    }
-
-    fn environment_manager(&self) -> Arc<dyn EnvironmentManager> {
-        Arc::new(MockEnvironmentManager)
-    }
-
-    fn access_key_manager(&self) -> Arc<dyn AccessKeyManager> {
-        Arc::new(MockAccessKeyManager)
-    }
-
-    fn task_manager(&self) -> Arc<dyn TaskManager> {
-        Arc::new(MockTaskManager {
-            tasks: self.tasks.clone(),
-        })
-    }
-
-    fn schedule_manager(&self) -> Arc<dyn ScheduleManager> {
-        Arc::new(MockScheduleManager)
-    }
-
-    fn session_manager(&self) -> Arc<dyn SessionManager> {
-        Arc::new(MockSessionManager)
-    }
-
-    fn token_manager(&self) -> Arc<dyn TokenManager> {
-        Arc::new(MockTokenManager)
-    }
-
-    fn event_manager(&self) -> Arc<dyn EventManager> {
-        Arc::new(MockEventManager)
-    }
-
-    fn runner_manager(&self) -> Arc<dyn RunnerManager> {
-        Arc::new(MockRunnerManager)
-    }
-
-    fn view_manager(&self) -> Arc<dyn ViewManager> {
-        Arc::new(MockViewManager)
-    }
-
-    fn integration_manager(&self) -> Arc<dyn IntegrationManager> {
-        Arc::new(MockIntegrationManager)
+    fn is_permanent(&self) -> bool {
+        true
     }
 }
 
-// Mock реализации для всех менеджеров
-
-struct MockConnectionManager;
 #[async_trait]
-impl ConnectionManager for MockConnectionManager {
-    async fn connect(&self) -> Result<()> { Ok(()) }
-    async fn close(&self) -> Result<()> { Ok(()) }
-    fn is_permanent(&self) -> bool { true }
+impl MigrationManager for MockStore {
+    fn get_dialect(&self) -> &str {
+        "mock"
+    }
+    async fn is_initialized(&self) -> Result<bool> {
+        Ok(true)
+    }
+    async fn apply_migration(&self, _version: i64, _name: String) -> Result<()> {
+        Ok(())
+    }
+    async fn is_migration_applied(&self, _version: i64) -> Result<bool> {
+        Ok(true)
+    }
 }
 
-struct MockMigrationManager;
 #[async_trait]
-impl MigrationManager for MockMigrationManager {
-    fn get_dialect(&self) -> &str { "mock" }
-    async fn is_initialized(&self) -> Result<bool> { Ok(true) }
-    async fn initialize(&self) -> Result<()> { Ok(()) }
-    async fn verify(&self) -> Result<bool> { Ok(true) }
-    async fn migrate(&self) -> Result<bool> { Ok(true) }
-    async fn rollback(&self) -> Result<bool> { Ok(true) }
+impl OptionsManager for MockStore {
+    async fn get_options(&self) -> Result<HashMap<String, String>> {
+        Ok(HashMap::new())
+    }
+    async fn get_option(&self, _key: &str) -> Result<Option<String>> {
+        Ok(None)
+    }
+    async fn set_option(&self, _key: &str, _value: &str) -> Result<()> {
+        Ok(())
+    }
+    async fn delete_option(&self, _key: &str) -> Result<()> {
+        Ok(())
+    }
 }
 
-struct MockOptionsManager;
 #[async_trait]
-impl OptionsManager for MockOptionsManager {
-    async fn get_option(&self, _key: &str) -> Result<Option<String>> { Ok(None) }
-    async fn set_option(&self, _key: &str, _value: &str) -> Result<()> { Ok(()) }
-    async fn delete_option(&self, _key: &str) -> Result<bool> { Ok(false) }
-}
-
-struct MockUserManager {
-    users: RwLock<HashMap<i32, User>>,
-}
-#[async_trait]
-impl UserManager for MockUserManager {
+impl UserManager for MockStore {
     async fn get_users(&self, _params: RetrieveQueryParams) -> Result<Vec<User>> {
         Ok(self.users.read().unwrap().values().cloned().collect())
     }
-    async fn get_user(&self, id: i32) -> Result<Option<User>> {
-        Ok(self.users.read().unwrap().get(&id).cloned())
+    async fn get_user(&self, id: i32) -> Result<User> {
+        self.users
+            .read()
+            .unwrap()
+            .get(&id)
+            .cloned()
+            .ok_or_else(|| Error::NotFound(format!("User {} not found", id)))
     }
-    async fn get_user_by_username(&self, username: &str) -> Result<Option<User>> {
-        Ok(self.users.read().unwrap().values().find(|u| u.username == username).cloned())
+    async fn get_user_by_login_or_email(&self, login: &str, email: &str) -> Result<User> {
+        self.users
+            .read()
+            .unwrap()
+            .values()
+            .find(|u| u.username == login || u.email == email)
+            .cloned()
+            .ok_or_else(|| Error::NotFound("User not found".to_string()))
     }
-    async fn get_user_by_email(&self, email: &str) -> Result<Option<User>> {
-        Ok(self.users.read().unwrap().values().find(|u| u.email == email).cloned())
-    }
-    async fn create_user(&self, user: User) -> Result<User> {
+    async fn create_user(&self, user: User, _password: &str) -> Result<User> {
         self.users.write().unwrap().insert(user.id, user.clone());
         Ok(user)
     }
-    async fn update_user(&self, user: User) -> Result<User> {
+    async fn update_user(&self, user: User) -> Result<()> {
         self.users.write().unwrap().insert(user.id, user.clone());
-        Ok(user)
+        Ok(())
     }
-    async fn delete_user(&self, _id: i32) -> Result<bool> { Ok(true) }
+    async fn delete_user(&self, id: i32) -> Result<()> {
+        self.users.write().unwrap().remove(&id);
+        Ok(())
+    }
+    async fn set_user_password(&self, _user_id: i32, _password: &str) -> Result<()> {
+        Ok(())
+    }
+    async fn get_all_admins(&self) -> Result<Vec<User>> {
+        Ok(self
+            .users
+            .read()
+            .unwrap()
+            .values()
+            .filter(|u| u.admin)
+            .cloned()
+            .collect())
+    }
     async fn get_user_count(&self) -> Result<usize> {
         Ok(self.users.read().unwrap().len())
     }
+    async fn get_project_users(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<ProjectUser>> {
+        Ok(vec![])
+    }
 }
 
-struct MockProjectStore {
-    projects: RwLock<HashMap<i32, Project>>,
-}
 #[async_trait]
-impl ProjectStore for MockProjectStore {
-    async fn get_projects(&self, _params: RetrieveQueryParams) -> Result<Vec<Project>> {
+impl ProjectStore for MockStore {
+    async fn get_projects(&self, _user_id: Option<i32>) -> Result<Vec<Project>> {
         Ok(self.projects.read().unwrap().values().cloned().collect())
     }
-    async fn get_project(&self, id: i32) -> Result<Option<Project>> {
-        Ok(self.projects.read().unwrap().get(&id).cloned())
+    async fn get_project(&self, project_id: i32) -> Result<Project> {
+        self.projects
+            .read()
+            .unwrap()
+            .get(&project_id)
+            .cloned()
+            .ok_or_else(|| Error::NotFound(format!("Project {} not found", project_id)))
     }
-    async fn create_project(&self, project: Project) -> Result<Project> {
+    async fn create_project(&self, mut project: Project) -> Result<Project> {
+        if project.id == 0 {
+            project.id = (self.projects.read().unwrap().len() as i32) + 1;
+        }
         self.projects.write().unwrap().insert(project.id, project.clone());
         Ok(project)
     }
-    async fn update_project(&self, project: Project) -> Result<Project> {
+    async fn update_project(&self, project: Project) -> Result<()> {
         self.projects.write().unwrap().insert(project.id, project.clone());
-        Ok(project)
+        Ok(())
     }
-    async fn delete_project(&self, _id: i32) -> Result<bool> { Ok(true) }
+    async fn delete_project(&self, project_id: i32) -> Result<()> {
+        self.projects.write().unwrap().remove(&project_id);
+        Ok(())
+    }
 }
 
-struct MockTemplateManager {
-    templates: RwLock<HashMap<i32, Template>>,
-}
 #[async_trait]
-impl TemplateManager for MockTemplateManager {
-    async fn get_templates(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<Template>> {
+impl TemplateManager for MockStore {
+    async fn get_templates(&self, _project_id: i32) -> Result<Vec<Template>> {
         Ok(self.templates.read().unwrap().values().cloned().collect())
     }
-    async fn get_template(&self, id: i32) -> Result<Option<Template>> {
-        Ok(self.templates.read().unwrap().get(&id).cloned())
+    async fn get_template(&self, project_id: i32, template_id: i32) -> Result<Template> {
+        self.templates
+            .read()
+            .unwrap()
+            .get(&template_id)
+            .filter(|t| t.project_id == project_id)
+            .cloned()
+            .ok_or_else(|| Error::NotFound(format!("Template {} not found", template_id)))
     }
-    async fn create_template(&self, template: Template) -> Result<Template> {
+    async fn create_template(&self, mut template: Template) -> Result<Template> {
+        if template.id == 0 {
+            template.id = (self.templates.read().unwrap().len() as i32) + 1;
+        }
         self.templates.write().unwrap().insert(template.id, template.clone());
         Ok(template)
     }
-    async fn update_template(&self, template: Template) -> Result<Template> {
+    async fn update_template(&self, template: Template) -> Result<()> {
         self.templates.write().unwrap().insert(template.id, template.clone());
-        Ok(template)
+        Ok(())
     }
-    async fn delete_template(&self, _id: i32) -> Result<bool> { Ok(true) }
-}
-
-struct MockInventoryManager;
-#[async_trait]
-impl InventoryManager for MockInventoryManager {
-    async fn get_inventories(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<Inventory>> { Ok(vec![]) }
-    async fn get_inventory(&self, _id: i32) -> Result<Option<Inventory>> { Ok(None) }
-    async fn create_inventory(&self, inv: Inventory) -> Result<Inventory> { Ok(inv) }
-    async fn update_inventory(&self, inv: Inventory) -> Result<Inventory> { Ok(inv) }
-    async fn delete_inventory(&self, _id: i32) -> Result<bool> { Ok(true) }
-}
-
-struct MockRepositoryManager;
-#[async_trait]
-impl RepositoryManager for MockRepositoryManager {
-    async fn get_repositories(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<Repository>> { Ok(vec![]) }
-    async fn get_repository(&self, _id: i32) -> Result<Option<Repository>> { Ok(None) }
-    async fn create_repository(&self, repo: Repository) -> Result<Repository> { Ok(repo) }
-    async fn update_repository(&self, repo: Repository) -> Result<Repository> { Ok(repo) }
-    async fn delete_repository(&self, _id: i32) -> Result<bool> { Ok(true) }
-}
-
-struct MockEnvironmentManager;
-#[async_trait]
-impl EnvironmentManager for MockEnvironmentManager {
-    async fn get_environments(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<Environment>> { Ok(vec![]) }
-    async fn get_environment(&self, _id: i32) -> Result<Option<Environment>> { Ok(None) }
-    async fn create_environment(&self, env: Environment) -> Result<Environment> { Ok(env) }
-    async fn update_environment(&self, env: Environment) -> Result<Environment> { Ok(env) }
-    async fn delete_environment(&self, _id: i32) -> Result<bool> { Ok(true) }
-}
-
-struct MockAccessKeyManager;
-#[async_trait]
-impl AccessKeyManager for MockAccessKeyManager {
-    async fn get_access_keys(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<AccessKey>> { Ok(vec![]) }
-    async fn get_access_key(&self, _id: i32) -> Result<Option<AccessKey>> { Ok(None) }
-    async fn create_access_key(&self, key: AccessKey) -> Result<AccessKey> { Ok(key) }
-    async fn update_access_key(&self, key: AccessKey) -> Result<AccessKey> { Ok(key) }
-    async fn delete_access_key(&self, _id: i32) -> Result<bool> { Ok(true) }
-}
-
-struct MockTaskManager {
-    tasks: RwLock<HashMap<i32, Task>>,
-}
-#[async_trait]
-impl TaskManager for MockTaskManager {
-    async fn get_tasks(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<Task>> {
-        Ok(self.tasks.read().unwrap().values().cloned().collect())
+    async fn delete_template(&self, _project_id: i32, template_id: i32) -> Result<()> {
+        self.templates.write().unwrap().remove(&template_id);
+        Ok(())
     }
-    async fn get_task(&self, id: i32) -> Result<Option<Task>> {
-        Ok(self.tasks.read().unwrap().get(&id).cloned())
+}
+
+#[async_trait]
+impl InventoryManager for MockStore {
+    async fn get_inventories(&self, _project_id: i32) -> Result<Vec<Inventory>> {
+        Ok(vec![])
     }
-    async fn create_task(&self, task: Task) -> Result<Task> {
+    async fn get_inventory(&self, _project_id: i32, inventory_id: i32) -> Result<Inventory> {
+        Err(Error::NotFound(format!("Inventory {} not found", inventory_id)))
+    }
+    async fn create_inventory(&self, inventory: Inventory) -> Result<Inventory> {
+        Ok(inventory)
+    }
+    async fn update_inventory(&self, inventory: Inventory) -> Result<()> {
+        let _ = inventory;
+        Ok(())
+    }
+    async fn delete_inventory(&self, _project_id: i32, _inventory_id: i32) -> Result<()> {
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl RepositoryManager for MockStore {
+    async fn get_repositories(&self, _project_id: i32) -> Result<Vec<Repository>> {
+        Ok(vec![])
+    }
+    async fn get_repository(&self, _project_id: i32, repository_id: i32) -> Result<Repository> {
+        Err(Error::NotFound(format!("Repository {} not found", repository_id)))
+    }
+    async fn create_repository(&self, repository: Repository) -> Result<Repository> {
+        Ok(repository)
+    }
+    async fn update_repository(&self, repository: Repository) -> Result<()> {
+        let _ = repository;
+        Ok(())
+    }
+    async fn delete_repository(&self, _project_id: i32, _repository_id: i32) -> Result<()> {
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl EnvironmentManager for MockStore {
+    async fn get_environments(&self, _project_id: i32) -> Result<Vec<Environment>> {
+        Ok(vec![])
+    }
+    async fn get_environment(&self, _project_id: i32, environment_id: i32) -> Result<Environment> {
+        Err(Error::NotFound(format!("Environment {} not found", environment_id)))
+    }
+    async fn create_environment(&self, environment: Environment) -> Result<Environment> {
+        Ok(environment)
+    }
+    async fn update_environment(&self, environment: Environment) -> Result<()> {
+        let _ = environment;
+        Ok(())
+    }
+    async fn delete_environment(&self, _project_id: i32, _environment_id: i32) -> Result<()> {
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl AccessKeyManager for MockStore {
+    async fn get_access_keys(&self, _project_id: i32) -> Result<Vec<AccessKey>> {
+        Ok(vec![])
+    }
+    async fn get_access_key(&self, _project_id: i32, key_id: i32) -> Result<AccessKey> {
+        Err(Error::NotFound(format!("AccessKey {} not found", key_id)))
+    }
+    async fn create_access_key(&self, key: AccessKey) -> Result<AccessKey> {
+        Ok(key)
+    }
+    async fn update_access_key(&self, key: AccessKey) -> Result<()> {
+        let _ = key;
+        Ok(())
+    }
+    async fn delete_access_key(&self, _project_id: i32, _key_id: i32) -> Result<()> {
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl TaskManager for MockStore {
+    async fn get_tasks(&self, _project_id: i32, template_id: Option<i32>) -> Result<Vec<TaskWithTpl>> {
+        let tasks: Vec<Task> = self.tasks.read().unwrap().values().cloned().collect();
+        Ok(tasks
+            .into_iter()
+            .filter(|t| template_id.map_or(true, |tid| t.template_id == tid))
+            .map(|t| TaskWithTpl {
+                task: t,
+                tpl_playbook: String::new(),
+                tpl_alias: String::new(),
+                tpl_type: None,
+                tpl_app: None,
+                user_name: None,
+                build_task: None,
+            })
+            .collect())
+    }
+    async fn get_task(&self, _project_id: i32, task_id: i32) -> Result<Task> {
+        self.tasks
+            .read()
+            .unwrap()
+            .get(&task_id)
+            .cloned()
+            .ok_or_else(|| Error::NotFound(format!("Task {} not found", task_id)))
+    }
+    async fn create_task(&self, mut task: Task) -> Result<Task> {
+        if task.id == 0 {
+            task.id = (self.tasks.read().unwrap().len() as i32) + 1;
+        }
         self.tasks.write().unwrap().insert(task.id, task.clone());
         Ok(task)
     }
-    async fn update_task(&self, task: Task) -> Result<Task> {
+    async fn update_task(&self, task: Task) -> Result<()> {
         self.tasks.write().unwrap().insert(task.id, task.clone());
-        Ok(task)
+        Ok(())
     }
-    async fn delete_task(&self, _id: i32) -> Result<bool> { Ok(true) }
-    async fn get_task_for_template(&self, _template_id: i32, _limit: i64) -> Result<Vec<Task>> { Ok(vec![]) }
-    async fn update_task_status(&self, _project_id: i32, _task_id: i32, _status: TaskStatus) -> Result<()> { Ok(()) }
+    async fn delete_task(&self, _project_id: i32, task_id: i32) -> Result<()> {
+        self.tasks.write().unwrap().remove(&task_id);
+        Ok(())
+    }
+    async fn get_task_outputs(&self, _task_id: i32) -> Result<Vec<TaskOutput>> {
+        Ok(vec![])
+    }
+    async fn create_task_output(&self, output: TaskOutput) -> Result<TaskOutput> {
+        Ok(output)
+    }
+    async fn update_task_status(&self, _project_id: i32, _task_id: i32, _status: TaskStatus) -> Result<()> {
+        Ok(())
+    }
 }
 
-struct MockScheduleManager;
 #[async_trait]
-impl ScheduleManager for MockScheduleManager {
-    async fn get_schedules(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<Schedule>> { Ok(vec![]) }
-    async fn get_schedule(&self, _id: i32) -> Result<Option<Schedule>> { Ok(None) }
-    async fn create_schedule(&self, sched: Schedule) -> Result<Schedule> { Ok(sched) }
-    async fn update_schedule(&self, sched: Schedule) -> Result<Schedule> { Ok(sched) }
-    async fn delete_schedule(&self, _id: i32) -> Result<bool> { Ok(true) }
+impl ScheduleManager for MockStore {
+    async fn get_schedules(&self, _project_id: i32) -> Result<Vec<Schedule>> {
+        Ok(vec![])
+    }
+    async fn get_schedule(&self, _project_id: i32, schedule_id: i32) -> Result<Schedule> {
+        Err(Error::NotFound(format!("Schedule {} not found", schedule_id)))
+    }
+    async fn create_schedule(&self, schedule: Schedule) -> Result<Schedule> {
+        Ok(schedule)
+    }
+    async fn update_schedule(&self, schedule: Schedule) -> Result<()> {
+        let _ = schedule;
+        Ok(())
+    }
+    async fn delete_schedule(&self, _project_id: i32, _schedule_id: i32) -> Result<()> {
+        Ok(())
+    }
+    async fn set_schedule_active(&self, _project_id: i32, _schedule_id: i32, _active: bool) -> Result<()> {
+        Ok(())
+    }
+    async fn set_schedule_commit_hash(&self, _project_id: i32, _schedule_id: i32, _hash: &str) -> Result<()> {
+        Ok(())
+    }
 }
 
-struct MockSessionManager;
 #[async_trait]
-impl SessionManager for MockSessionManager {
-    async fn get_session(&self, _id: i32) -> Result<Option<Session>> { Ok(None) }
-    async fn create_session(&self, sess: Session) -> Result<Session> { Ok(sess) }
-    async fn delete_session(&self, _id: i32) -> Result<bool> { Ok(true) }
-    async fn expire_sessions(&self) -> Result<()> { Ok(()) }
+impl SessionManager for MockStore {
+    async fn get_session(&self, _user_id: i32, session_id: i32) -> Result<Session> {
+        Err(Error::NotFound(format!("Session {} not found", session_id)))
+    }
+    async fn create_session(&self, session: Session) -> Result<Session> {
+        Ok(session)
+    }
+    async fn expire_session(&self, _user_id: i32, _session_id: i32) -> Result<()> {
+        Ok(())
+    }
+    async fn verify_session(&self, _user_id: i32, _session_id: i32) -> Result<()> {
+        Ok(())
+    }
+    async fn touch_session(&self, _user_id: i32, _session_id: i32) -> Result<()> {
+        Ok(())
+    }
 }
 
-struct MockTokenManager;
 #[async_trait]
-impl TokenManager for MockTokenManager {
-    async fn get_token(&self, _id: i32) -> Result<Option<APIToken>> { Ok(None) }
-    async fn get_token_by_key(&self, _key: &str) -> Result<Option<APIToken>> { Ok(None) }
-    async fn create_token(&self, token: APIToken) -> Result<APIToken> { Ok(token) }
-    async fn delete_token(&self, _id: i32) -> Result<bool> { Ok(true) }
+impl TokenManager for MockStore {
+    async fn get_api_tokens(&self, _user_id: i32) -> Result<Vec<APIToken>> {
+        Ok(vec![])
+    }
+    async fn create_api_token(&self, token: APIToken) -> Result<APIToken> {
+        Ok(token)
+    }
+    async fn get_api_token(&self, token_id: &str) -> Result<APIToken> {
+        Err(Error::NotFound(format!("Token {} not found", token_id)))
+    }
+    async fn expire_api_token(&self, _user_id: i32, _token_id: &str) -> Result<()> {
+        Ok(())
+    }
+    async fn delete_api_token(&self, _user_id: i32, _token_id: &str) -> Result<()> {
+        Ok(())
+    }
 }
 
-struct MockEventManager;
 #[async_trait]
-impl EventManager for MockEventManager {
-    async fn get_events(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<Event>> { Ok(vec![]) }
-    async fn create_event(&self, event: Event) -> Result<Event> { Ok(event) }
+impl EventManager for MockStore {
+    async fn get_events(&self, _project_id: Option<i32>, _limit: usize) -> Result<Vec<Event>> {
+        Ok(vec![])
+    }
+    async fn create_event(&self, event: Event) -> Result<Event> {
+        Ok(event)
+    }
 }
 
-struct MockRunnerManager;
 #[async_trait]
-impl RunnerManager for MockRunnerManager {
-    async fn get_runners(&self, _params: RetrieveQueryParams) -> Result<Vec<Runner>> { Ok(vec![]) }
-    async fn get_runner(&self, _id: i32) -> Result<Option<Runner>> { Ok(None) }
-    async fn create_runner(&self, runner: Runner) -> Result<Runner> { Ok(runner) }
-    async fn update_runner(&self, runner: Runner) -> Result<Runner> { Ok(runner) }
-    async fn delete_runner(&self, _id: i32) -> Result<bool> { Ok(true) }
+impl RunnerManager for MockStore {
+    async fn get_runners(&self, _project_id: Option<i32>) -> Result<Vec<Runner>> {
+        Ok(vec![])
+    }
+    async fn get_runner(&self, runner_id: i32) -> Result<Runner> {
+        Err(Error::NotFound(format!("Runner {} not found", runner_id)))
+    }
+    async fn create_runner(&self, runner: Runner) -> Result<Runner> {
+        Ok(runner)
+    }
+    async fn update_runner(&self, runner: Runner) -> Result<()> {
+        let _ = runner;
+        Ok(())
+    }
+    async fn delete_runner(&self, _runner_id: i32) -> Result<()> {
+        Ok(())
+    }
 }
 
-struct MockViewManager;
 #[async_trait]
-impl ViewManager for MockViewManager {
-    async fn get_views(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<View>> { Ok(vec![]) }
-    async fn get_view(&self, _id: i32) -> Result<Option<View>> { Ok(None) }
-    async fn create_view(&self, view: View) -> Result<View> { Ok(view) }
-    async fn update_view(&self, view: View) -> Result<View> { Ok(view) }
-    async fn delete_view(&self, _id: i32) -> Result<bool> { Ok(true) }
+impl ViewManager for MockStore {
+    async fn get_views(&self, _project_id: i32) -> Result<Vec<View>> {
+        Ok(vec![])
+    }
+    async fn get_view(&self, _project_id: i32, view_id: i32) -> Result<View> {
+        Err(Error::NotFound(format!("View {} not found", view_id)))
+    }
+    async fn create_view(&self, view: View) -> Result<View> {
+        Ok(view)
+    }
+    async fn update_view(&self, view: View) -> Result<()> {
+        let _ = view;
+        Ok(())
+    }
+    async fn delete_view(&self, _project_id: i32, _view_id: i32) -> Result<()> {
+        Ok(())
+    }
 }
 
-struct MockIntegrationManager;
 #[async_trait]
-impl IntegrationManager for MockIntegrationManager {
-    async fn get_integrations(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<Integration>> { Ok(vec![]) }
-    async fn get_integration(&self, _id: i32) -> Result<Option<Integration>> { Ok(None) }
-    async fn create_integration(&self, int: Integration) -> Result<Integration> { Ok(int) }
-    async fn update_integration(&self, int: Integration) -> Result<Integration> { Ok(int) }
-    async fn delete_integration(&self, _id: i32) -> Result<bool> { Ok(true) }
+impl IntegrationManager for MockStore {
+    async fn get_integrations(&self, _project_id: i32) -> Result<Vec<Integration>> {
+        Ok(vec![])
+    }
+    async fn get_integration(&self, _project_id: i32, integration_id: i32) -> Result<Integration> {
+        Err(Error::NotFound(format!("Integration {} not found", integration_id)))
+    }
+    async fn create_integration(&self, integration: Integration) -> Result<Integration> {
+        Ok(integration)
+    }
+    async fn update_integration(&self, integration: Integration) -> Result<()> {
+        let _ = integration;
+        Ok(())
+    }
+    async fn delete_integration(&self, _project_id: i32, _integration_id: i32) -> Result<()> {
+        Ok(())
+    }
 }
+
+#[async_trait]
+impl ProjectInviteManager for MockStore {
+    async fn get_project_invites(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<ProjectInviteWithUser>> {
+        Ok(vec![])
+    }
+    async fn create_project_invite(&self, invite: ProjectInvite) -> Result<ProjectInvite> {
+        Ok(invite)
+    }
+    async fn get_project_invite(&self, _project_id: i32, invite_id: i32) -> Result<ProjectInvite> {
+        Err(Error::NotFound(format!("ProjectInvite {} not found", invite_id)))
+    }
+    async fn get_project_invite_by_token(&self, _token: &str) -> Result<ProjectInvite> {
+        Err(Error::NotFound("ProjectInvite not found".to_string()))
+    }
+    async fn update_project_invite(&self, invite: ProjectInvite) -> Result<()> {
+        let _ = invite;
+        Ok(())
+    }
+    async fn delete_project_invite(&self, _project_id: i32, _invite_id: i32) -> Result<()> {
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl TerraformInventoryManager for MockStore {
+    async fn create_terraform_inventory_alias(&self, alias: TerraformInventoryAlias) -> Result<TerraformInventoryAlias> {
+        Ok(alias)
+    }
+    async fn update_terraform_inventory_alias(&self, alias: TerraformInventoryAlias) -> Result<()> {
+        let _ = alias;
+        Ok(())
+    }
+    async fn get_terraform_inventory_alias_by_alias(&self, alias: &str) -> Result<TerraformInventoryAlias> {
+        Err(Error::NotFound(format!("Alias {} not found", alias)))
+    }
+    async fn get_terraform_inventory_alias(
+        &self,
+        _project_id: i32,
+        _inventory_id: i32,
+        alias_id: &str,
+    ) -> Result<TerraformInventoryAlias> {
+        Err(Error::NotFound(format!("Alias {} not found", alias_id)))
+    }
+    async fn get_terraform_inventory_aliases(&self, _project_id: i32, _inventory_id: i32) -> Result<Vec<TerraformInventoryAlias>> {
+        Ok(vec![])
+    }
+    async fn delete_terraform_inventory_alias(&self, _project_id: i32, _inventory_id: i32, _alias_id: &str) -> Result<()> {
+        Ok(())
+    }
+    async fn get_terraform_inventory_states(
+        &self,
+        _project_id: i32,
+        _inventory_id: i32,
+        _params: RetrieveQueryParams,
+    ) -> Result<Vec<TerraformInventoryState>> {
+        Ok(vec![])
+    }
+    async fn create_terraform_inventory_state(&self, state: TerraformInventoryState) -> Result<TerraformInventoryState> {
+        Ok(state)
+    }
+    async fn delete_terraform_inventory_state(&self, _project_id: i32, _inventory_id: i32, _state_id: i32) -> Result<()> {
+        Ok(())
+    }
+    async fn get_terraform_inventory_state(
+        &self,
+        _project_id: i32,
+        _inventory_id: i32,
+        state_id: i32,
+    ) -> Result<TerraformInventoryState> {
+        Err(Error::NotFound(format!("State {} not found", state_id)))
+    }
+    async fn get_terraform_state_count(&self) -> Result<i32> {
+        Ok(0)
+    }
+}
+
+#[async_trait]
+impl SecretStorageManager for MockStore {
+    async fn get_secret_storages(&self, _project_id: i32) -> Result<Vec<SecretStorage>> {
+        Ok(vec![])
+    }
+    async fn get_secret_storage(&self, _project_id: i32, storage_id: i32) -> Result<SecretStorage> {
+        Err(Error::NotFound(format!("SecretStorage {} not found", storage_id)))
+    }
+    async fn create_secret_storage(&self, storage: SecretStorage) -> Result<SecretStorage> {
+        Ok(storage)
+    }
+    async fn update_secret_storage(&self, storage: SecretStorage) -> Result<()> {
+        let _ = storage;
+        Ok(())
+    }
+    async fn delete_secret_storage(&self, _project_id: i32, _storage_id: i32) -> Result<()> {
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl Store for MockStore {}

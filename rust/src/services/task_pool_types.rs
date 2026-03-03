@@ -110,15 +110,28 @@ mod tests {
             id: 1,
             name: "Test Project".to_string(),
             created: Utc::now(),
-            alert: false,
+            alert: None,
             alert_chat: None,
-            max_parallel_tasks: 5,
+            max_parallel_tasks: Some(5),
+            r#type: None,
+            default_secret_storage_id: None,
         }
+    }
+
+    fn create_test_store() -> Arc<crate::db::sql::SqlStore> {
+        Arc::new(
+            tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap()
+                .block_on(crate::db::sql::SqlStore::new(":memory:"))
+                .unwrap()
+        )
     }
 
     #[test]
     fn test_task_pool_creation() {
-        let store = Arc::new(crate::db::sql::SqlStore::new(":memory:").unwrap());
+        let store = create_test_store();
         let project = create_test_project();
         
         let pool = TaskPool::new(store, project);
@@ -127,7 +140,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_task_pool_shutdown() {
-        let store = Arc::new(crate::db::sql::SqlStore::new(":memory:").unwrap());
+        let store = Arc::new(crate::db::sql::SqlStore::new(":memory:").await.unwrap());
         let project = create_test_project();
         
         let pool = TaskPool::new(store, project);
@@ -141,24 +154,11 @@ mod tests {
 
     #[test]
     fn test_running_task_creation() {
-        let task = Task {
-            id: 1,
-            project_id: 1,
-            template_id: 1,
-            status: TaskStatus::Waiting,
-            message: "Test task".to_string(),
-            commit_hash: None,
-            commit_message: None,
-            version: None,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            arguments: None,
-            params: String::new(),
-            playbook: String::new(),
-            start: None,
-            end: None,
-        };
+        let mut task = Task::default();
+        task.id = 1;
+        task.project_id = 1;
+        task.template_id = 1;
+        task.status = TaskStatus::Waiting;
         
         let logger = Arc::new(crate::services::task_logger::BasicLogger::new());
         let template = Template::default();
@@ -169,24 +169,11 @@ mod tests {
 
     #[test]
     fn test_running_task_kill() {
-        let task = Task {
-            id: 1,
-            project_id: 1,
-            template_id: 1,
-            status: TaskStatus::Waiting,
-            message: "Test task".to_string(),
-            commit_hash: None,
-            commit_message: None,
-            version: None,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            arguments: None,
-            params: String::new(),
-            playbook: String::new(),
-            start: None,
-            end: None,
-        };
+        let mut task = Task::default();
+        task.id = 1;
+        task.project_id = 1;
+        task.template_id = 1;
+        task.status = TaskStatus::Waiting;
         
         let logger = Arc::new(crate::services::task_logger::BasicLogger::new());
         let template = Template::default();

@@ -2,10 +2,8 @@
 //!
 //! Git клиент на базе go-git (Rust аналог: git2)
 
-use std::sync::Arc;
-use git2::{Repository, FetchOptions, RemoteCallbacks, Cred};
-use crate::error::{Error, Result};
-use crate::services::task_logger::TaskLogger;
+use git2::{Repository, FetchOptions, RemoteCallbacks};
+use crate::error::Result;
 use super::{GitClient, GitRepository, AccessKeyInstallerTrait};
 
 /// Go Git Client (в Rust используем git2)
@@ -42,7 +40,7 @@ impl GitClient for GoGitClient {
         let mut opts = git2::build::RepoBuilder::new();
         opts.fetch_options(fetch_options);
 
-        opts.clone(&repo.repository.git_url, &repo.get_full_path())?;
+        let _ = opts.clone(&repo.repository.git_url, &repo.get_full_path())?;
         Ok(())
     }
 
@@ -73,7 +71,12 @@ impl GitClient for GoGitClient {
         git_repo.checkout_tree(&object, None)?;
 
         if let Some(reference) = reference {
-            git_repo.set_head(reference.name().unwrap())?;
+            if let Some(name) = reference.name() {
+                git_repo.set_head(name)?;
+            } else {
+                // Ссылка без имени — используем detached HEAD
+                git_repo.set_head_detached(object.id())?;
+            }
         } else {
             // object.id() возвращает Oid, нужно установить HEAD в detached state
             git_repo.set_head_detached(object.id())?;

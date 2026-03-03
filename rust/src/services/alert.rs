@@ -397,23 +397,16 @@ mod tests {
     use chrono::Utc;
 
     fn create_test_task() -> Task {
-        Task {
-            id: 1,
-            created: Utc::now(),
-            project_id: 1,
-            template_id: 1,
-            status: TaskStatus::Success,
-            message: Some("Test message".to_string()),
-            commit_hash: None,
-            commit_message: None,
-            version: Some("1.0.0".to_string()),
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            arguments: None,
-            params: String::new(),
-            end: None,
-        }
+        let mut task = Task::default();
+        task.id = 1;
+        task.created = Utc::now();
+        task.project_id = 1;
+        task.template_id = 1;
+        task.status = TaskStatus::Success;
+        task.message = Some("Test message".to_string());
+        task.version = Some("1.0.0".to_string());
+        task.end = None;
+        task
     }
 
     #[test]

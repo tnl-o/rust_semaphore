@@ -126,8 +126,12 @@ mod tests {
             id: 0,
             integration_id: 1,
             project_id: 1,
+            name: "Test Matcher".to_string(),
+            body_data_type: "json".to_string(),
+            key: None,
             matcher_type: "header".to_string(),
             matcher_value: "Content-Type".to_string(),
+            method: "GET".to_string(),
         };
         
         let created = db.create_integration_matcher(matcher.clone()).await.unwrap();
@@ -149,8 +153,12 @@ mod tests {
             id: 0,
             integration_id: 1,
             project_id: 1,
+            name: "Test Matcher".to_string(),
+            body_data_type: "json".to_string(),
+            key: None,
             matcher_type: "header".to_string(),
             matcher_value: "Content-Type".to_string(),
+            method: "GET".to_string(),
         };
         
         let created = db.create_integration_matcher(matcher).await.unwrap();
@@ -175,8 +183,12 @@ mod tests {
             id: 0,
             integration_id: 1,
             project_id: 1,
+            name: "Test Matcher".to_string(),
+            body_data_type: "json".to_string(),
+            key: None,
             matcher_type: "header".to_string(),
             matcher_value: "Content-Type".to_string(),
+            method: "GET".to_string(),
         };
         
         let created = db.create_integration_matcher(matcher).await.unwrap();

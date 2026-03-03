@@ -136,7 +136,7 @@ impl AnsiblePlaybook {
         cli_args: Vec<String>,
         environment_vars: Vec<String>,
         inputs: HashMap<String, String>,
-        cb: Option<Box<dyn Fn(&Child) + Send>>,
+        cb: Option<Box<dyn FnOnce(u32) + Send + 'static>>,
     ) -> Result<()> {
         self.logger.log("Running Ansible playbook...");
         
@@ -158,10 +158,12 @@ impl AnsiblePlaybook {
         let mut cmd = self.make_cmd("ansible-playbook", args, environment_vars);
         
         let mut child = cmd.spawn()?;
+        // На Windows child.id() возвращает Option<u32>
+        let pid = child.id().unwrap_or(0);
         
-        // Callback для процесса
+        // Callback для процесса (передаём PID)
         if let Some(callback) = cb {
-            callback(&child);
+            callback(pid);
         }
         
         let status = child.wait().await?;
@@ -391,14 +393,11 @@ impl AnsibleApp {
         // Получаем аргументы для "default" ключа
         let cli_args = args.cli_args.get("default").cloned().unwrap_or_default();
 
-        // Callback для получения PID
-        let callback = args.callback;
-        
         self.playbook.run_playbook(
             cli_args,
             args.environment_vars,
             args.inputs,
-            None,  // callback
+            Some(args.callback),
         ).await
     }
 

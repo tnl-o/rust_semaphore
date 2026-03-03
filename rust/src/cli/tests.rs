@@ -35,7 +35,7 @@ mod tests {
         match cli.command {
             crate::cli::Commands::User(args) => {
                 match args.command {
-                    crate::cli::UserCommands::Add(add_args) => {
+                    crate::cli::cmd_user::UserCommands::Add(add_args) => {
                         assert_eq!(add_args.username, "test");
                         assert_eq!(add_args.email, "test@example.com");
                     }
@@ -50,7 +50,7 @@ mod tests {
     fn test_cli_version_command() {
         let cli = Cli::parse_from(["semaphore", "version"]);
         match cli.command {
-            crate::cli::Commands::Version => {}
+            crate::cli::Commands::Version(_cmd) => {}
             _ => panic!("Ожидалась команда version"),
         }
     }

@@ -129,35 +129,31 @@ mod tests {
             id: 1,
             created: Utc::now(),
             template_id: 1,
-            status: crate::models::TaskStatus::Waiting,
-            message: String::new(),
+            status: crate::services::task_logger::TaskStatus::Waiting,
+            message: None,
             commit_hash: None,
             commit_message: None,
             version: None,
             project_id: 1,
             arguments: None,
-            params: r#"{}"#.to_string(),
+            params: Some(serde_json::json!({})),
             ..Default::default()
         };
 
-        let template = crate::models::Template {
-            id: 1,
-            name: String::from("Test Shell"),
-            project_id: 1,
-            playbook: String::from("test.sh"),
-            template_type: crate::models::TemplateType::Shell,
-            arguments: None,
-            params: String::new(),
-            ..Default::default()
-        };
+        let mut template = crate::models::Template::default();
+        template.id = 1;
+        template.name = "Test Shell".to_string();
+        template.project_id = 1;
+        template.playbook = "test.sh".to_string();
+        template.template_type = Some(crate::models::TemplateType::Shell);
 
         let environment = crate::models::Environment {
             id: 1,
-            name: String::from("Test Env"),
             project_id: 1,
+            name: String::from("Test Env"),
             json: String::from(r#"{"var1": "value1"}"#),
-            env: None,
-            secrets: vec![],
+            secret_storage_id: None,
+            secrets: None,
         };
 
         LocalJob::new(

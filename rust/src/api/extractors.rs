@@ -17,7 +17,7 @@ use crate::api::middleware::ErrorResponse;
 use crate::api::state::AppState;
 
 /// Извлекает токен из заголовка Authorization
-fn extract_token_from_header(auth_header: Option<&str>) -> Option<&str> {
+pub fn extract_token_from_header(auth_header: Option<&str>) -> Option<&str> {
     auth_header
         .and_then(|h| h.strip_prefix("Bearer "))
         .or(auth_header) // Если нет префикса Bearer, используем как есть
@@ -176,14 +176,14 @@ mod tests {
     #[test]
     fn test_extract_token_from_header() {
         let header = Some("Bearer token123");
-        let token = crate::api::auth::extract_token_from_header(header);
+        let token = crate::api::extractors::extract_token_from_header(header);
         assert_eq!(token, Some("token123"));
     }
 
     #[test]
     fn test_extract_token_from_invalid_header() {
         let header = Some("Basic token123");
-        let token = crate::api::auth::extract_token_from_header(header);
+        let token = crate::api::extractors::extract_token_from_header(header);
         assert_eq!(token, None);
     }
 

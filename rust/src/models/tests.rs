@@ -66,7 +66,7 @@ mod inventory_tests {
 
         assert_eq!(inventory.project_id, 1);
         assert_eq!(inventory.name, "Test Inventory");
-        assert_eq!(inventory.inventory, InventoryType::Static);
+        assert_eq!(inventory.inventory_type, InventoryType::Static);
         assert_eq!(inventory.id, 0);
         assert_eq!(inventory.ssh_login, "root");
         assert_eq!(inventory.ssh_port, 22);

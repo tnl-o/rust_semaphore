@@ -361,7 +361,9 @@ mod tests {
         
         let params = RetrieveQueryParams {
             offset: 0,
-            count: 10,
+            count: Some(10),
+            sort_by: None,
+            sort_inverted: false,
             filter: None,
         };
         

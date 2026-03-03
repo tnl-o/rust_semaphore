@@ -118,15 +118,27 @@ mod tests {
             id: 1,
             created: Utc::now(),
             template_id: 1,
-            status: crate::models::TaskStatus::Waiting,
-            message: String::new(),
+            project_id: 1,
+            status: crate::services::task_logger::TaskStatus::Waiting,
+            playbook: None,
+            environment: None,
+            secret: None,
+            arguments: None,
+            git_branch: None,
+            user_id: None,
+            integration_id: None,
+            schedule_id: None,
+            start: None,
+            end: None,
+            message: None,
             commit_hash: None,
             commit_message: None,
+            build_task_id: None,
             version: None,
-            project_id: 1,
-            arguments: None,
-            params: String::new(),
-            ..Default::default()
+            inventory_id: None,
+            repository_id: None,
+            environment_id: None,
+            params: None,
         };
 
         LocalJob::new(
@@ -145,8 +157,9 @@ mod tests {
     #[test]
     fn test_run() {
         let mut job = create_test_job();
+        job.set_run_params("testuser".to_string(), None, "default".to_string());
         let result = futures::executor::block_on(
-            job.run()
+            job.run("testuser", None, "default")
         );
         // Пока всегда Ok, так как методы-заглушки возвращают Ok
         assert!(result.is_ok());

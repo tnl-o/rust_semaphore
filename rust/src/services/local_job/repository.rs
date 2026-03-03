@@ -65,14 +65,14 @@ mod tests {
             id: 1,
             created: Utc::now(),
             template_id: 1,
-            status: crate::models::TaskStatus::Waiting,
-            message: String::new(),
+            status: crate::services::task_logger::TaskStatus::Waiting,
+            message: None,
             commit_hash: None,
             commit_message: None,
             version: None,
             project_id: 1,
             arguments: None,
-            params: String::new(),
+            params: None,
             ..Default::default()
         };
 

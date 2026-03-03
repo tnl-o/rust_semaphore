@@ -248,7 +248,7 @@ mod tests {
             stage_id: 1,
             task_id: 1,
             project_id: 1,
-            result: Some("Success".to_string()),
+            result: "Success".to_string(),
         };
         
         let created = db.upsert_task_stage_result(result.clone()).await.unwrap();
@@ -256,7 +256,7 @@ mod tests {
         
         let retrieved = db.get_task_stage_result(1, 1, 1).await.unwrap();
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().result, Some("Success".to_string()));
+        assert_eq!(retrieved.unwrap().result, "Success".to_string());
         
         // Cleanup
         let _ = db.close().await;
@@ -271,7 +271,7 @@ mod tests {
             stage_id: 1,
             task_id: 1,
             project_id: 1,
-            result: Some("Success".to_string()),
+            result: "Success".to_string(),
         };
         
         db.upsert_task_stage_result(result).await.unwrap();

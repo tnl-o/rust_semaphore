@@ -77,30 +77,22 @@ mod tests {
     use super::*;
     use chrono::Utc;
     use crate::services::task_logger::TaskStatus;
-    use crate::models::{Task, Project};
+    use crate::models::Task;
     use crate::services::task_pool::TaskPool;
     use crate::db_lib::AccessKeyInstallerImpl;
     use crate::db::MockStore;
     use std::sync::Arc;
 
     fn create_test_task_runner() -> TaskRunner {
-        let task = Task {
-            id: 1,
-            created: Utc::now(),
-            template_id: 1,
-            status: TaskStatus::Waiting,
-            message: String::new(),
-            commit_hash: None,
-            commit_message: None,
-            version: None,
-            project_id: 1,
-            ..Default::default()
-        };
+        let mut task = Task::default();
+        task.id = 1;
+        task.template_id = 1;
+        task.project_id = 1;
+        task.created = Utc::now();
 
         let pool = Arc::new(TaskPool::new(
-            Project::default(),
-            AccessKeyInstallerImpl::new(),
             Arc::new(MockStore::new()),
+            5,
         ));
 
         TaskRunner::new(task, pool, "testuser".to_string(), AccessKeyInstallerImpl::new())

@@ -126,6 +126,7 @@ mod tests {
             template_id: 1,
             project_id: 1,
             role_id: 2,
+            role_slug: "admin".to_string(),
         };
         
         let created = db.create_template_role(role.clone()).await.unwrap();
@@ -148,6 +149,7 @@ mod tests {
             template_id: 1,
             project_id: 1,
             role_id: 2,
+            role_slug: "admin".to_string(),
         };
         
         let created = db.create_template_role(role).await.unwrap();
@@ -173,6 +175,7 @@ mod tests {
             template_id: 1,
             project_id: 1,
             role_id: 2,
+            role_slug: "admin".to_string(),
         };
         
         let created = db.create_template_role(role).await.unwrap();

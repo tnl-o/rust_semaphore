@@ -281,6 +281,44 @@ impl<T> Default for ValueMap<T> {
     }
 }
 
+impl<T: Clone + Send + 'static> TypeExporter for ValueMap<T> {
+    fn load(&mut self, _store: &dyn Store, _exporter: &dyn DataExporter) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn restore(&mut self, _store: &dyn Store, _exporter: &dyn DataExporter) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn get_loaded_keys(&self, scope: &str) -> Result<Vec<String>, String> {
+        ValueMap::get_loaded_keys(self, scope)
+    }
+
+    fn get_loaded_values(&self, _scope: &str) -> Result<Vec<Box<dyn std::any::Any>>, String> {
+        Ok(Vec::new())
+    }
+
+    fn get_name(&self) -> &str {
+        std::any::type_name::<T>()
+    }
+
+    fn export_depends_on(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn import_depends_on(&self) -> Vec<&str> {
+        Vec::new()
+    }
+
+    fn get_errors(&self) -> Vec<String> {
+        ValueMap::get_errors(self)
+    }
+
+    fn clear(&mut self) {
+        ValueMap::clear(self)
+    }
+}
+
 /// Инициализирует экспортеры проекта
 pub fn init_project_exporters(mapper: &mut TypeKeyMapper, skip_task_output: bool) -> ExporterChain {
     let mut chain = ExporterChain::new();

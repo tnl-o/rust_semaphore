@@ -158,6 +158,7 @@ mod tests {
         let totp = TotpVerification {
             secret: "test_secret".to_string(),
             recovery_hash: "test_hash".to_string(),
+            recovery_codes: None,
         };
         
         db.set_user_totp(created.id, &totp).await.unwrap();
@@ -196,6 +197,7 @@ mod tests {
         let totp = TotpVerification {
             secret: "test_secret".to_string(),
             recovery_hash: "test_hash".to_string(),
+            recovery_codes: None,
         };
         
         db.set_user_totp(created.id, &totp).await.unwrap();
@@ -214,17 +216,35 @@ mod tests {
     #[test]
     fn test_totp_verification() {
         use crate::services::totp;
+        use crate::models::User;
+        use chrono::Utc;
+        
+        // Создаём тестового пользователя
+        let user = User {
+            id: 1,
+            created: Utc::now(),
+            username: "testuser".to_string(),
+            name: "Test".to_string(),
+            email: "test@example.com".to_string(),
+            password: String::new(),
+            admin: false,
+            external: false,
+            alert: false,
+            pro: false,
+            totp: None,
+            email_otp: None,
+        };
         
         // Генерируем секрет
-        let secret = totp::generate_totp_secret();
-        assert!(!secret.is_empty());
+        let totp_secret = totp::generate_totp_secret(&user, "Semaphore").unwrap();
+        assert!(!totp_secret.secret.is_empty());
         
         // Генерируем код
-        let code = totp::generate_totp_code(&secret);
+        let code = totp::generate_totp_code(&totp_secret.secret).unwrap();
         assert!(!code.is_empty());
         
         // Проверяем код
-        let is_valid = totp::verify_totp(&secret, &code);
+        let is_valid = totp::verify_totp(&totp_secret.secret, &code);
         assert!(is_valid);
     }
 
@@ -233,7 +253,7 @@ mod tests {
         use crate::services::totp;
         
         // Генерируем recovery code
-        let (code, hash) = totp::generate_recovery_code();
+        let (code, hash) = totp::generate_recovery_code().unwrap();
         assert!(!code.is_empty());
         assert!(!hash.is_empty());
         
