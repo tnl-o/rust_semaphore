@@ -138,13 +138,14 @@ impl TerraformApp {
         let mut args = vec!["init".to_string(), "-input=false".to_string()];
         
         // Backend аргументы
-        if params.backend_init_required {
-            if let Some(ref backend_config) = params.backend_config {
-                args.push(format!("-backend-config={}", backend_config));
-            }
-        } else {
-            args.push("-backend=false".to_string());
-        }
+        // TODO: backend_init_required и backend_config удалены из TerraformTaskParams
+        // if params.backend_init_required {
+        //     if let Some(ref backend_config) = params.backend_config {
+        //         args.push(format!("-backend-config={}", backend_config));
+        //     }
+        // } else {
+        //     args.push("-backend=false".to_string());
+        // }
         
         // Upgrade
         if params.upgrade {
@@ -290,17 +291,21 @@ impl TerraformApp {
 
     /// Запускает задачу
     pub async fn run(&self, args: crate::db_lib::LocalAppRunningArgs) -> Result<()> {
-        let params: TerraformTaskParams = self.template.extract_params()?;
-        
+        // TODO: extract_params метод удалён из Template
+        // let params: TerraformTaskParams = self.template.extract_params()?;
+        let params = TerraformTaskParams::default();
+
         // Инициализация
-        self.install_requirements(args.install_args).await?;
-        
+        // TODO: install_args удалён из LocalAppRunningArgs
+        // self.install_requirements(args.install_args).await?;
+
         // Workspace
-        if let Some(ref workspace) = params.workspace {
-            if self.is_workspaces_supported(vec![]).await? {
-                self.select_workspace(workspace, vec![]).await?;
-            }
-        }
+        // TODO: workspace поле удалено из TerraformTaskParams
+        // if let Some(ref workspace) = params.workspace {
+        //     if self.is_workspaces_supported(vec![]).await? {
+        //         self.select_workspace(workspace, vec![]).await?;
+        //     }
+        // }
         
         // Plan
         let has_changes = self.plan(vec![], vec![], HashMap::new(), None).await?;

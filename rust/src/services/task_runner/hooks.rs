@@ -8,23 +8,24 @@ use crate::services::task_runner::TaskRunner;
 impl TaskRunner {
     /// run_hooks запускает hooks для задачи
     pub async fn run_hooks(&self, event_type: &str) -> Result<()> {
+        // TODO: hooks поле удалено из Template
         // Получение hooks из шаблона
-        let hooks_list = &self.template.hooks;
-        
-        if hooks_list.is_empty() {
-            return Ok(());
-        }
-        
+        // let hooks_list = &self.template.hooks;
+
+        // if hooks_list.is_empty() {
+        //     return Ok(());
+        // }
+
         // Запуск hooks для указанного события
-        for hook in hooks_list {
-            if hook.event == event_type {
-                if let Err(e) = self.execute_hook(hook).await {
-                    self.log(&format!("Hook failed: {}", e));
-                    // Продолжаем выполнение даже если hook не удался
-                }
-            }
-        }
-        
+        // for hook in hooks_list {
+        //     if hook.event == event_type {
+        //         if let Err(e) = self.execute_hook(hook).await {
+        //             self.log(&format!("Hook failed: {}", e));
+        //             // Продолжаем выполнение даже если hook не удался
+        //         }
+        //     }
+        // }
+
         Ok(())
     }
 

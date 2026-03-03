@@ -429,8 +429,8 @@ impl BackupFormat {
             alert: self.project.alert,
             alert_chat: self.project.alert_chat.clone(),
             max_parallel_tasks: self.project.max_parallel_tasks,
-            r#type: self.project.r#type.clone(),
-            default_secret_storage_id: self.project.default_secret_storage_id,
+            // r#type: self.project.r#type.clone(),  // поле удалено
+            // default_secret_storage_id: self.project.default_secret_storage_id,  // поле удалено
         };
 
         let new_project = store.create_project(project).await?;

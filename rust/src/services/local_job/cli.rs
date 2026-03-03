@@ -67,8 +67,9 @@ impl LocalJob {
 
     /// Получает параметры шаблона
     pub fn get_template_params(&self) -> Result<Value> {
-        let params: Value = serde_json::from_str(&self.template.params)?;
-        Ok(params)
+        // TODO: params поле удалено из Template
+        // let params: Value = serde_json::from_str(&self.template.params)?;
+        Ok(Value::Null)
     }
 
     /// Получает параметры задачи

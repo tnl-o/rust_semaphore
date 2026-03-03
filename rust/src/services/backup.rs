@@ -152,7 +152,7 @@ impl BackupDB {
         self.inventories = store.get_inventories(project_id).await?;
         self.environments = store.get_environments(project_id).await?;
         self.access_keys = store.get_access_keys(project_id).await?;
-        self.schedules = store.get_project_schedules(project_id, false, false).await?;
+        self.schedules = store.get_schedules(project_id).await?;
         self.integrations = store.get_integrations(project_id).await?;
         self.views = store.get_views(project_id).await?;
         
@@ -231,7 +231,7 @@ impl BackupDB {
                 name: repo.name.clone(),
                 git_url: repo.git_url.clone(),
                 git_branch: repo.git_branch.clone().unwrap_or_default(),
-                ssh_key: repo.key_id.map(|id| access_key_map.get(&id).cloned()).flatten(),
+                ssh_key: access_key_map.get(&repo.key_id).cloned(),
             });
         }
 

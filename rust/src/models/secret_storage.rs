@@ -1,6 +1,7 @@
 //! Модель SecretStorage - хранилище секретов
 
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 
 /// Тип хранилища секретов
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -35,7 +36,7 @@ impl std::str::FromStr for SecretStorageType {
 }
 
 /// Хранилище секретов
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct SecretStorage {
     /// Уникальный идентификатор
     pub id: i32,
