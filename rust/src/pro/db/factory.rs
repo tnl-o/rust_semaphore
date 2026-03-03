@@ -6,13 +6,13 @@ use crate::db::store::Store;
 use std::sync::Arc;
 
 /// Создаёт Terraform Store
-pub fn new_terraform_store(store: Arc<dyn Store + Send + Sync>) -> Box<dyn Store + Send + Sync> {
+pub fn new_terraform_store(store: Arc<dyn Store + Send + Sync>) -> Arc<dyn Store + Send + Sync> {
     // PRO функциональность - в базовой версии возвращаем store
     store
 }
 
 /// Создаёт Ansible Task Repository
-pub fn new_ansible_task_repository(store: Arc<dyn Store + Send + Sync>) -> Box<dyn Store + Send + Sync> {
+pub fn new_ansible_task_repository(store: Arc<dyn Store + Send + Sync>) -> Arc<dyn Store + Send + Sync> {
     // PRO функциональность - в базовой версии возвращаем store
     store
 }

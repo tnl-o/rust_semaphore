@@ -103,8 +103,8 @@ impl LocalJob {
         let mut res = Vec::new();
 
         // ENV переменные из окружения
-        if let Some(ref env_json) = self.environment.json {
-            let env_vars: HashMap<String, String> = serde_json::from_str(env_json)?;
+        if !self.environment.json.is_empty() {
+            let env_vars: HashMap<String, String> = serde_json::from_str(&self.environment.json)?;
             for (key, val) in env_vars {
                 res.push(format!("{}={}", key, val));
             }

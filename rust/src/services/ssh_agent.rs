@@ -716,7 +716,7 @@ impl KeyInstaller {
                                 if ssh_key_data.passphrase.as_ref().map_or(true, |s| s.is_empty()) {
                                     None
                                 } else {
-                                    ssh_key_data.passphrase.clone()
+                                    Some(ssh_key_data.passphrase.clone())
                                 },
                             );
 
@@ -786,7 +786,7 @@ impl KeyInstaller {
                                 if ssh_key_data.passphrase.as_ref().map_or(true, |s| s.is_empty()) {
                                     None
                                 } else {
-                                    ssh_key_data.passphrase.clone()
+                                    Some(ssh_key_data.passphrase.clone())
                                 },
                             );
 

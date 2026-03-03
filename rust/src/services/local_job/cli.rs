@@ -73,7 +73,10 @@ impl LocalJob {
 
     /// Получает параметры задачи
     pub fn get_params<T: serde::de::DeserializeOwned>(&self) -> Result<T> {
-        let params: T = serde_json::from_str(&self.task.params)?;
+        let params_str = self.task.params.as_ref()
+            .map(|v| v.to_string())
+            .unwrap_or_default();
+        let params: T = serde_json::from_str(&params_str)?;
         Ok(params)
     }
 }

@@ -42,7 +42,7 @@ impl GitClient for GoGitClient {
         let mut opts = git2::build::RepoBuilder::new();
         opts.fetch_options(fetch_options);
 
-        opts.clone(&repo.repository.git_url, repo.get_full_path())?;
+        opts.clone(&repo.repository.git_url, &repo.get_full_path())?;
         Ok(())
     }
 

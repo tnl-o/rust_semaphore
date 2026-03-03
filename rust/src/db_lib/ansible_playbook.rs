@@ -62,7 +62,7 @@ impl AnsiblePlaybook {
         args: &[String],
         environment_vars: &[String],
         _inputs: std::collections::HashMap<String, String>,
-        callback: impl FnOnce(u32) + Send + 'static,
+        callback: Box<dyn FnOnce(u32) + Send + 'static>,
     ) -> Result<()> {
         let mut cmd = self.make_command("ansible-playbook", &args.iter().map(|s| s.as_str()).collect::<Vec<_>>(), environment_vars);
 

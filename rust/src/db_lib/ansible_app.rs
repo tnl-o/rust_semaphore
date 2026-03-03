@@ -391,11 +391,14 @@ impl AnsibleApp {
         // Получаем аргументы для "default" ключа
         let cli_args = args.cli_args.get("default").cloned().unwrap_or_default();
 
+        // Callback для получения PID
+        let callback = args.callback;
+        
         self.playbook.run_playbook(
             cli_args,
             args.environment_vars,
             args.inputs,
-            args.callback,
+            callback,
         ).await
     }
 
