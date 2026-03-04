@@ -115,11 +115,15 @@ impl SqlDb {
         use std::path::Path;
         use tokio::fs;
         
-        let path = Path::new(database_path);
+        // Убираем ведущие слэши из URL-пути (sqlite:///C:/path -> C:/path)
+        let path_str = database_path.trim_start_matches('/');
+        let path = Path::new(path_str);
         
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).await
-                .map_err(|e| Error::Other(format!("Failed to create database directory: {}", e)))?;
+            if !parent.as_os_str().is_empty() {
+                fs::create_dir_all(parent).await
+                    .map_err(|e| Error::Other(format!("Failed to create database directory: {}", e)))?;
+            }
         }
         
         Ok(())
