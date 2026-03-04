@@ -32,18 +32,23 @@ impl TaskRunner {
         // Создание LocalJob
         let logger = Arc::new(crate::services::task_logger::BasicLogger::new());
         
-        self.job = Some(Box::new(LocalJob::new(
+        let mut local_job = LocalJob::new(
             self.task.clone(),
             self.template.clone(),
             self.inventory.clone(),
             self.repository.clone(),
             self.environment.clone(),
             logger,
-            // self.key_installer.clone(),  // AccessKeyInstallerImpl не реализует Clone
-            crate::db_lib::AccessKeyInstallerImpl::new(),  // Создаём новый экземпляр
+            crate::db_lib::AccessKeyInstallerImpl::new(),
             std::path::PathBuf::from("/tmp/work"),
             std::path::PathBuf::from("/tmp/tmp"),
-        )));
+        );
+        local_job.set_run_params(
+            self.username.clone(),
+            self.incoming_version.clone(),
+            self.alias.clone().unwrap_or_default(),
+        );
+        self.job = Some(Box::new(local_job));
         
         // Запуск задачи
         if let Some(ref mut job) = self.job {
@@ -119,19 +124,32 @@ mod tests {
             id: 1,
             created: Utc::now(),
             template_id: 1,
+            project_id: 1,
             status: TaskStatus::Waiting,
-            message: String::new(),
+            playbook: None,
+            environment: None,
+            secret: None,
+            arguments: None,
+            git_branch: None,
+            user_id: None,
+            integration_id: None,
+            schedule_id: None,
+            start: None,
+            end: None,
+            message: None,
             commit_hash: None,
             commit_message: None,
+            build_task_id: None,
             version: None,
-            project_id: 1,
-            ..Default::default()
+            inventory_id: None,
+            repository_id: None,
+            environment_id: None,
+            params: None,
         };
 
         let pool = Arc::new(TaskPool::new(
-            crate::models::Project::default(),
-            AccessKeyInstallerImpl::new(),
             Arc::new(MockStore::new()),
+            5,
         ));
 
         TaskRunner::new(task, pool, "testuser".to_string(), AccessKeyInstallerImpl::new())
@@ -139,7 +157,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_task_runner_log() {
-        let mut runner = create_test_task_runner();
+        let runner = create_test_task_runner();
         runner.log("Test message");
         // Просто проверяем, что метод вызывается без паники
     }

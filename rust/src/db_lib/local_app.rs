@@ -7,7 +7,6 @@ use crate::services::task_logger::TaskLogger;
 use crate::error::Result;
 
 /// Аргументы для запуска локального приложения
-#[derive(Debug)]
 pub struct LocalAppRunningArgs {
     /// Аргументы командной строки по стадиям
     pub cli_args: std::collections::HashMap<String, Vec<String>>,
@@ -28,6 +27,16 @@ pub struct LocalAppRunningArgs {
     pub callback: Box<dyn FnOnce(u32) + Send + 'static>,
 }
 
+impl std::fmt::Debug for LocalAppRunningArgs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LocalAppRunningArgs")
+            .field("cli_args", &self.cli_args)
+            .field("environment_vars", &self.environment_vars)
+            .field("inputs", &self.inputs)
+            .finish_non_exhaustive()
+    }
+}
+
 impl Default for LocalAppRunningArgs {
     fn default() -> Self {
         Self {
@@ -42,7 +51,6 @@ impl Default for LocalAppRunningArgs {
 }
 
 /// Аргументы для установки зависимостей локального приложения
-#[derive(Debug)]
 pub struct LocalAppInstallingArgs {
     /// Переменные окружения
     pub environment_vars: Vec<String>,
@@ -55,6 +63,14 @@ pub struct LocalAppInstallingArgs {
 
     /// Установщик ключей доступа
     pub installer: Option<Arc<dyn AccessKeyInstaller>>,
+}
+
+impl std::fmt::Debug for LocalAppInstallingArgs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LocalAppInstallingArgs")
+            .field("environment_vars", &self.environment_vars)
+            .finish_non_exhaustive()
+    }
 }
 
 impl Default for LocalAppInstallingArgs {

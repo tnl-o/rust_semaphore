@@ -108,6 +108,38 @@ impl Task {
     }
 }
 
+#[cfg(test)]
+impl Default for Task {
+    fn default() -> Self {
+        Self {
+            id: 0,
+            template_id: 0,
+            project_id: 0,
+            status: TaskStatus::Waiting,
+            created: Utc::now(),
+            playbook: None,
+            environment: None,
+            secret: None,
+            arguments: None,
+            git_branch: None,
+            user_id: None,
+            integration_id: None,
+            schedule_id: None,
+            start: None,
+            end: None,
+            message: None,
+            commit_hash: None,
+            commit_message: None,
+            build_task_id: None,
+            version: None,
+            inventory_id: None,
+            repository_id: None,
+            environment_id: None,
+            params: None,
+        }
+    }
+}
+
 /// Задача с дополнительными полями шаблона
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TaskWithTpl {

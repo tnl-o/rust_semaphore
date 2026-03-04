@@ -148,12 +148,10 @@ impl SqlDb {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
     use chrono::Utc;
 
     async fn create_test_db() -> SqlDb {
-        let temp_db = env::temp_dir().join("test_task_stage.db");
-        let db_path = temp_db.to_string_lossy().to_string();
+        let (db_path, _temp) = crate::db::sql::init::test_sqlite_url();
         
         let db = SqlDb::connect_sqlite(&db_path).await.unwrap();
         
@@ -248,7 +246,7 @@ mod tests {
             stage_id: 1,
             task_id: 1,
             project_id: 1,
-            result: Some("Success".to_string()),
+            result: "Success".to_string(),
         };
         
         let created = db.upsert_task_stage_result(result.clone()).await.unwrap();
@@ -256,7 +254,7 @@ mod tests {
         
         let retrieved = db.get_task_stage_result(1, 1, 1).await.unwrap();
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().result, Some("Success".to_string()));
+        assert_eq!(retrieved.unwrap().result, "Success".to_string());
         
         // Cleanup
         let _ = db.close().await;
@@ -271,7 +269,7 @@ mod tests {
             stage_id: 1,
             task_id: 1,
             project_id: 1,
-            result: Some("Success".to_string()),
+            result: "Success".to_string(),
         };
         
         db.upsert_task_stage_result(result).await.unwrap();

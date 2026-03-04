@@ -163,11 +163,9 @@ pub async fn foreign_keys_enabled(db: &SqlDb) -> Result<bool> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     async fn create_test_db() -> SqlDb {
-        let temp_db = env::temp_dir().join("test_utils.db");
-        let db_path = temp_db.to_string_lossy().to_string();
+        let (db_path, _temp) = crate::db::sql::init::test_sqlite_url();
         
         let db = SqlDb::connect_sqlite(&db_path).await.unwrap();
         

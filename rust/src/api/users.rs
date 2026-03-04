@@ -18,13 +18,16 @@ use crate::db::store::{UserManager, RetrieveQueryParams};
 
 /// Контроллер пользователей
 pub struct UsersController {
-    // TODO: Интеграция с subscription service
+    /// Сервис подписок (опционально)
+    pub subscription_service: Option<()>,
 }
 
 impl UsersController {
     /// Создаёт новый контроллер
     pub fn new() -> Self {
-        Self {}
+        Self {
+            subscription_service: None,
+        }
     }
 
     /// Получает список пользователей

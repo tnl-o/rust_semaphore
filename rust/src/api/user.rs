@@ -166,7 +166,7 @@ pub struct UserResponse {
 }
 
 /// Обновление профиля пользователя
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UserProfileUpdate {
     /// Имя пользователя
     pub name: Option<String>,

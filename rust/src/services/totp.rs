@@ -69,6 +69,11 @@ pub struct TotpSecret {
     pub recovery_hash: String,
 }
 
+/// Проверяет TOTP код (алиас для verify_totp_code)
+pub fn verify_totp(secret: &str, code: &str) -> bool {
+    verify_totp_code(secret, code)
+}
+
 /// Проверяет TOTP код
 pub fn verify_totp_code(secret: &str, code: &str) -> bool {
     // Декодируем секрет из Base32
@@ -85,7 +90,7 @@ pub fn verify_totp_code(secret: &str, code: &str) -> bool {
     // (допускаем небольшое расхождение во времени)
     for offset in [-1i64, 0, 1] {
         let adjusted_time = (time_step as i64 + offset) as u64;
-        if let Some(generated) = generate_totp_code(&secret_bytes, adjusted_time) {
+        if let Some(generated) = generate_totp_code_internal(&secret_bytes, adjusted_time) {
             if generated == code {
                 return true;
             }
@@ -95,8 +100,16 @@ pub fn verify_totp_code(secret: &str, code: &str) -> bool {
     false
 }
 
+/// Генерирует текущий TOTP код для секрета (для тестов)
+pub fn generate_totp_code(secret: &str) -> Option<String> {
+    let secret_bytes = base32::decode(base32::Alphabet::Rfc4648 { padding: true }, secret)?;
+    let now = Utc::now().timestamp() as u64;
+    let time_step = now / TOTP_PERIOD;
+    generate_totp_code_internal(&secret_bytes, time_step)
+}
+
 /// Генерирует TOTP код для данного временного шага
-fn generate_totp_code(secret: &[u8], time_step: u64) -> Option<String> {
+fn generate_totp_code_internal(secret: &[u8], time_step: u64) -> Option<String> {
     // Преобразуем временной шаг в байты (big-endian)
     let time_bytes = time_step.to_be_bytes();
 
@@ -186,7 +199,7 @@ mod tests {
         let now = Utc::now().timestamp() as u64;
         let time_step = now / TOTP_PERIOD;
 
-        let code = generate_totp_code(&secret, time_step);
+        let code = generate_totp_code_internal(&secret, time_step);
         assert!(code.is_some());
         let code = code.unwrap();
         assert_eq!(code.len(), TOTP_CODE_LENGTH);

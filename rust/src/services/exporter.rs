@@ -192,6 +192,44 @@ impl<T: Clone> ValueMap<T> {
     }
 }
 
+impl<T: Clone + Send + 'static> TypeExporter for ValueMap<T> {
+    fn load(&mut self, _store: &dyn crate::db::Store, _exporter: &dyn DataExporter, _progress: &mut dyn Progress) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn restore(&mut self, _store: &dyn crate::db::Store, _exporter: &dyn DataExporter, _progress: &mut dyn Progress) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn get_loaded_keys(&self, scope: &str) -> Result<Vec<EntityKey>, String> {
+        ValueMap::get_loaded_keys(self, scope)
+    }
+
+    fn get_loaded_values(&self, scope: &str) -> Result<Vec<Box<dyn std::any::Any>>, String> {
+        ValueMap::get_loaded_values(self, scope)
+    }
+
+    fn get_name(&self) -> &str {
+        std::any::type_name::<T>()
+    }
+
+    fn export_depends_on(&self) -> Vec<&str> {
+        ValueMap::export_depends_on(self)
+    }
+
+    fn import_depends_on(&self) -> Vec<&str> {
+        ValueMap::import_depends_on(self)
+    }
+
+    fn get_errors(&self) -> Vec<String> {
+        ValueMap::get_errors(self)
+    }
+
+    fn clear(&mut self) {
+        ValueMap::clear(self)
+    }
+}
+
 /// ExporterChain - цепочка экспортеров
 pub struct ExporterChain {
     exporters: HashMap<String, Box<dyn TypeExporter>>,

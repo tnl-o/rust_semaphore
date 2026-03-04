@@ -121,11 +121,9 @@ impl SqlDb {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     async fn create_test_db() -> SqlDb {
-        let temp_db = env::temp_dir().join("test_template_vault.db");
-        let db_path = temp_db.to_string_lossy().to_string();
+        let (db_path, _temp) = crate::db::sql::init::test_sqlite_url();
         
         let db = SqlDb::connect_sqlite(&db_path).await.unwrap();
         
@@ -156,7 +154,7 @@ mod tests {
             template_id: 1,
             project_id: 1,
             vault_id: 1,
-            vault_key_id: None,
+            vault_key_id: 0,
             name: "Test Vault".to_string(),
         };
         
@@ -180,7 +178,7 @@ mod tests {
             template_id: 1,
             project_id: 1,
             vault_id: 1,
-            vault_key_id: None,
+            vault_key_id: 0,
             name: "Test Vault".to_string(),
         };
         
@@ -207,7 +205,7 @@ mod tests {
             template_id: 1,
             project_id: 1,
             vault_id: 1,
-            vault_key_id: None,
+            vault_key_id: 0,
             name: "Test Vault".to_string(),
         };
         
@@ -233,7 +231,7 @@ mod tests {
                 template_id: 1,
                 project_id: 1,
                 vault_id: 1,
-                vault_key_id: None,
+                vault_key_id: 0,
                 name: "Vault 1".to_string(),
             },
             TemplateVault {
@@ -241,7 +239,7 @@ mod tests {
                 template_id: 1,
                 project_id: 1,
                 vault_id: 2,
-                vault_key_id: None,
+                vault_key_id: 0,
                 name: "Vault 2".to_string(),
             },
         ];

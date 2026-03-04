@@ -171,57 +171,44 @@ mod tests {
         let logger = Arc::new(BasicLogger::new());
         let key_installer = AccessKeyInstallerImpl::new();
 
-        let task = crate::models::Task {
-            id: 1,
-            created: Utc::now(),
-            template_id: 1,
-            status: crate::models::TaskStatus::Waiting,
-            message: String::from("Test task"),
-            commit_hash: Some(String::from("abc123")),
-            commit_message: Some(String::from("Test commit")),
-            version: None,
-            project_id: 1,
-            ..Default::default()
-        };
+        let mut task = crate::models::Task::default();
+        task.id = 1;
+        task.created = Utc::now();
+        task.template_id = 1;
+        task.project_id = 1;
+        task.message = Some("Test task".to_string());
+        task.commit_hash = Some(String::from("abc123"));
+        task.commit_message = Some(String::from("Test commit"));
 
-        let inventory = crate::models::Inventory {
-            id: 1,
-            name: String::from("Test Inventory"),
-            project_id: 1,
-            inventory_type: crate::models::InventoryType::Static,
-            inventory: String::from("localhost"),
-            ssh_key_id: None,
-            become_key_id: None,
-            vaults: Vec::new(),
-        };
+        let mut inventory = crate::models::Inventory::default();
+        inventory.id = 1;
+        inventory.name = "Test Inventory".to_string();
+        inventory.project_id = 1;
+        inventory.inventory_type = crate::models::InventoryType::Static;
+        inventory.inventory_data = "localhost".to_string();
 
-        let repository = crate::models::Repository {
-            id: 1,
-            name: String::from("Test Repo"),
-            project_id: 1,
-            git_url: String::from("https://github.com/test/test.git"),
-            git_branch: String::from("main"),
-        };
+        let mut repository = crate::models::Repository::default();
+        repository.id = 1;
+        repository.name = "Test Repo".to_string();
+        repository.project_id = 1;
+        repository.git_url = "https://github.com/test/test.git".to_string();
+        repository.git_branch = Some("main".to_string());
 
         let environment = crate::models::Environment {
             id: 1,
-            name: String::from("Test Env"),
             project_id: 1,
+            name: String::from("Test Env"),
             json: String::from(r#"{"key": "value"}"#),
-            env: None,
-            secrets: Vec::new(),
+            secret_storage_id: None,
+            secrets: None,
         };
 
-        let template = crate::models::Template {
-            id: 1,
-            name: String::from("Test Template"),
-            project_id: 1,
-            playbook: String::from("test.yml"),
-            template_type: crate::models::TemplateType::Task,
-            arguments: None,
-            params: String::new(),
-            ..Default::default()
-        };
+        let mut template = crate::models::Template::default();
+        template.id = 1;
+        template.name = "Test Template".to_string();
+        template.project_id = 1;
+        template.playbook = "test.yml".to_string();
+        template.template_type = Some(crate::models::TemplateType::Task);
 
         LocalJob::new(
             task,

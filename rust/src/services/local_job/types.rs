@@ -11,6 +11,7 @@ use crate::error::Result;
 use crate::models::{Task, Template, Inventory, Repository, Environment};
 use crate::services::task_logger::{TaskLogger, TaskStatus};
 use crate::services::ssh_agent::AccessKeyInstallation;
+use crate::services::task_runner::Job;
 use crate::db_lib::AccessKeyInstallerImpl;
 
 /// Локальная задача для выполнения
@@ -45,6 +46,12 @@ pub struct LocalJob {
     pub work_dir: PathBuf,
     /// Временная директория
     pub tmp_dir: PathBuf,
+    /// Имя пользователя (для Job trait)
+    pub username: String,
+    /// Входящая версия (для Job trait)
+    pub incoming_version: Option<String>,
+    /// Alias для запуска (для Job trait)
+    pub alias: String,
 }
 
 impl LocalJob {
@@ -76,7 +83,17 @@ impl LocalJob {
             killed: false,
             work_dir,
             tmp_dir,
+            username: String::new(),
+            incoming_version: None,
+            alias: String::new(),
         }
+    }
+
+    /// Устанавливает параметры запуска (вызывается перед Job::run)
+    pub fn set_run_params(&mut self, username: String, incoming_version: Option<String>, alias: String) {
+        self.username = username;
+        self.incoming_version = incoming_version;
+        self.alias = alias;
     }
 
     /// Проверяет, убита ли задача
@@ -115,6 +132,30 @@ impl Drop for LocalJob {
         self.ssh_key_installation = None;
         self.become_key_installation = None;
         self.vault_file_installations.clear();
+    }
+}
+
+#[async_trait::async_trait]
+impl Job for LocalJob {
+    async fn run(&mut self) -> Result<()> {
+        let username = self.username.clone();
+        let incoming_version = self.incoming_version.clone();
+        let alias = self.alias.clone();
+        LocalJob::run(
+            self,
+            &username,
+            incoming_version.as_deref(),
+            &alias,
+        )
+        .await
+    }
+
+    fn kill(&mut self) {
+        LocalJob::kill(self);
+    }
+
+    fn is_killed(&self) -> bool {
+        LocalJob::is_killed(self)
     }
 }
 

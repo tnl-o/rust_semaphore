@@ -198,6 +198,7 @@ impl RestoreEntryAsync for BackupSchedule {
             active: self.active,
             last_commit_hash: None,
             repository_id: None,
+            created: None,
         };
 
         let new_schedule = store.create_schedule(schedule).await?;
@@ -433,8 +434,8 @@ impl BackupFormat {
             alert: self.project.alert,
             alert_chat: self.project.alert_chat.clone(),
             max_parallel_tasks: self.project.max_parallel_tasks,
-            // r#type: self.project.r#type.clone(),  // поле удалено
-            // default_secret_storage_id: self.project.default_secret_storage_id,  // поле удалено
+            r#type: None,  // BackupProject не содержит type
+            default_secret_storage_id: None,  // BackupProject не содержит default_secret_storage_id
         };
 
         let new_project = store.create_project(project).await?;
@@ -515,8 +516,8 @@ mod tests {
     #[test]
     fn test_verify_duplicate() {
         let items = vec![
-            BackupEnvironment { name: "Test".to_string(), json: String::new(), env: None },
-            BackupEnvironment { name: "Test".to_string(), json: String::new(), env: None },
+            BackupEnvironment { name: "Test".to_string(), json: String::new() },
+            BackupEnvironment { name: "Test".to_string(), json: String::new() },
         ];
         
         let result = verify_duplicate("Test", &items);
@@ -526,11 +527,12 @@ mod tests {
     #[test]
     fn test_get_entry_by_name() {
         let items = vec![
-            BackupEnvironment { name: "Test1".to_string(), json: String::new(), env: None },
-            BackupEnvironment { name: "Test2".to_string(), json: String::new(), env: None },
+            BackupEnvironment { name: "Test1".to_string(), json: String::new() },
+            BackupEnvironment { name: "Test2".to_string(), json: String::new() },
         ];
         
-        let result = get_entry_by_name(&Some("Test1".to_string()), &items);
+        let name = Some("Test1".to_string());
+        let result = get_entry_by_name(&name, &items);
         assert!(result.is_some());
         assert_eq!(result.unwrap().name, "Test1");
     }

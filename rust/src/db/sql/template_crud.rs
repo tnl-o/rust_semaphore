@@ -141,12 +141,10 @@ impl SqlDb {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
     use chrono::Utc;
 
     async fn create_test_db() -> SqlDb {
-        let temp_db = env::temp_dir().join("test_template.db");
-        let db_path = temp_db.to_string_lossy().to_string();
+        let (db_path, _temp) = crate::db::sql::init::test_sqlite_url();
         
         let db = SqlDb::connect_sqlite(&db_path).await.unwrap();
         
@@ -182,24 +180,12 @@ mod tests {
     async fn test_create_and_get_template() {
         let db = create_test_db().await;
         
-        let template = Template {
-            id: 0,
-            project_id: 1,
-            name: "Test Template".to_string(),
-            playbook: "test.yml".to_string(),
-            arguments: None,
-            template_type: TemplateType::Task,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            start_version: None,
-            build_version: None,
-            description: None,
-            survey_vars: None,
-            vaults: Vec::new(),
-            tasks: 0,
-            created: Utc::now(),
-        };
+        let mut template = Template::default();
+        template.project_id = 1;
+        template.name = "Test Template".to_string();
+        template.playbook = "test.yml".to_string();
+        template.template_type = Some(TemplateType::Task);
+        template.created = Utc::now();
         
         let created = db.create_template(template.clone()).await.unwrap();
         assert!(created.id > 0);
@@ -218,24 +204,12 @@ mod tests {
         
         // Создаём несколько шаблонов
         for i in 0..5 {
-            let template = Template {
-                id: 0,
-                project_id: 1,
-                name: format!("Template {}", i),
-                playbook: format!("test{}.yml", i),
-                arguments: None,
-                template_type: TemplateType::Task,
-                inventory_id: None,
-                repository_id: None,
-                environment_id: None,
-                start_version: None,
-                build_version: None,
-                description: None,
-                survey_vars: None,
-                vaults: Vec::new(),
-                tasks: 0,
-                created: Utc::now(),
-            };
+            let mut template = Template::default();
+            template.project_id = 1;
+            template.name = format!("Template {}", i);
+            template.playbook = format!("test{}.yml", i);
+            template.template_type = Some(TemplateType::Task);
+            template.created = Utc::now();
             db.create_template(template).await.unwrap();
         }
         
@@ -250,24 +224,12 @@ mod tests {
     async fn test_update_template() {
         let db = create_test_db().await;
         
-        let template = Template {
-            id: 0,
-            project_id: 1,
-            name: "Test Template".to_string(),
-            playbook: "test.yml".to_string(),
-            arguments: None,
-            template_type: TemplateType::Task,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            start_version: None,
-            build_version: None,
-            description: None,
-            survey_vars: None,
-            vaults: Vec::new(),
-            tasks: 0,
-            created: Utc::now(),
-        };
+        let mut template = Template::default();
+        template.project_id = 1;
+        template.name = "Test Template".to_string();
+        template.playbook = "test.yml".to_string();
+        template.template_type = Some(TemplateType::Task);
+        template.created = Utc::now();
         
         let created = db.create_template(template).await.unwrap();
         
@@ -289,24 +251,12 @@ mod tests {
     async fn test_delete_template() {
         let db = create_test_db().await;
         
-        let template = Template {
-            id: 0,
-            project_id: 1,
-            name: "Test Template".to_string(),
-            playbook: "test.yml".to_string(),
-            arguments: None,
-            template_type: TemplateType::Task,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            start_version: None,
-            build_version: None,
-            description: None,
-            survey_vars: None,
-            vaults: Vec::new(),
-            tasks: 0,
-            created: Utc::now(),
-        };
+        let mut template = Template::default();
+        template.project_id = 1;
+        template.name = "Test Template".to_string();
+        template.playbook = "test.yml".to_string();
+        template.template_type = Some(TemplateType::Task);
+        template.created = Utc::now();
         
         let created = db.create_template(template).await.unwrap();
         

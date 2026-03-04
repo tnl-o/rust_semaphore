@@ -17,7 +17,7 @@ impl SqlDb {
                 );
                 
                 // Добавляем лимит и оффсет
-                query.push_str(&format!(" LIMIT {} OFFSET {}", params.count, params.offset));
+                query.push_str(&format!(" LIMIT {} OFFSET {}", params.count.unwrap_or(100), params.offset));
                 
                 let outputs = sqlx::query_as::<_, TaskOutput>(&query)
                     .bind(task_id)
@@ -101,12 +101,10 @@ impl SqlDb {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
     use chrono::Utc;
 
     async fn create_test_db() -> SqlDb {
-        let temp_db = env::temp_dir().join("test_task_output.db");
-        let db_path = temp_db.to_string_lossy().to_string();
+        let (db_path, _temp) = crate::db::sql::init::test_sqlite_url();
         
         let db = SqlDb::connect_sqlite(&db_path).await.unwrap();
         
@@ -137,6 +135,7 @@ mod tests {
             project_id: 1,
             output: "Test output line 1".to_string(),
             time: Utc::now(),
+            stage_id: None,
         };
         
         let created = db.create_task_output(output.clone()).await.unwrap();
@@ -144,7 +143,9 @@ mod tests {
         
         let params = RetrieveQueryParams {
             offset: 0,
-            count: 10,
+            count: Some(10),
+            sort_by: None,
+            sort_inverted: false,
             filter: None,
         };
         
@@ -167,6 +168,7 @@ mod tests {
                 project_id: 1,
                 output: "Output 1".to_string(),
                 time: Utc::now(),
+                stage_id: None,
             },
             TaskOutput {
                 id: 0,
@@ -174,6 +176,7 @@ mod tests {
                 project_id: 1,
                 output: "Output 2".to_string(),
                 time: Utc::now(),
+                stage_id: None,
             },
             TaskOutput {
                 id: 0,
@@ -181,6 +184,7 @@ mod tests {
                 project_id: 1,
                 output: "Output 3".to_string(),
                 time: Utc::now(),
+                stage_id: None,
             },
         ];
         
@@ -188,7 +192,9 @@ mod tests {
         
         let params = RetrieveQueryParams {
             offset: 0,
-            count: 10,
+            count: Some(10),
+            sort_by: None,
+            sort_inverted: false,
             filter: None,
         };
         
@@ -209,6 +215,7 @@ mod tests {
             project_id: 1,
             output: "Test output".to_string(),
             time: Utc::now(),
+            stage_id: None,
         };
         
         db.create_task_output(output).await.unwrap();
@@ -217,7 +224,9 @@ mod tests {
         
         let params = RetrieveQueryParams {
             offset: 0,
-            count: 10,
+            count: Some(10),
+            sort_by: None,
+            sort_inverted: false,
             filter: None,
         };
         
@@ -239,6 +248,7 @@ mod tests {
                 project_id: 1,
                 output: "Output 1".to_string(),
                 time: Utc::now(),
+                stage_id: None,
             },
             TaskOutput {
                 id: 0,
@@ -246,6 +256,7 @@ mod tests {
                 project_id: 1,
                 output: "Output 2".to_string(),
                 time: Utc::now(),
+                stage_id: None,
             },
         ];
         

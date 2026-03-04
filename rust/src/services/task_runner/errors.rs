@@ -77,51 +77,43 @@ mod tests {
     use super::*;
     use chrono::Utc;
     use crate::services::task_logger::TaskStatus;
-    use crate::models::{Task, Project};
+    use crate::models::Task;
     use crate::services::task_pool::TaskPool;
     use crate::db_lib::AccessKeyInstallerImpl;
     use crate::db::MockStore;
     use std::sync::Arc;
 
     fn create_test_task_runner() -> TaskRunner {
-        let task = Task {
-            id: 1,
-            created: Utc::now(),
-            template_id: 1,
-            status: TaskStatus::Waiting,
-            message: String::new(),
-            commit_hash: None,
-            commit_message: None,
-            version: None,
-            project_id: 1,
-            ..Default::default()
-        };
+        let mut task = Task::default();
+        task.id = 1;
+        task.template_id = 1;
+        task.project_id = 1;
+        task.created = Utc::now();
 
         let pool = Arc::new(TaskPool::new(
-            Project::default(),
-            AccessKeyInstallerImpl::new(),
             Arc::new(MockStore::new()),
+            5,
         ));
 
         TaskRunner::new(task, pool, "testuser".to_string(), AccessKeyInstallerImpl::new())
     }
 
-    #[test]
-    fn test_is_error_fatal_permission_denied() {
+    #[tokio::test]
+    async fn test_is_error_fatal_permission_denied() {
         let runner = create_test_task_runner();
         let err = crate::error::Error::Other("permission denied".to_string());
         assert!(runner.is_error_fatal(&err));
     }
 
-    #[test]
-    fn test_is_error_fatal_non_fatal() {
+    #[tokio::test]
+    async fn test_is_error_fatal_non_fatal() {
         let runner = create_test_task_runner();
         let err = crate::error::Error::Other("minor issue".to_string());
         assert!(!runner.is_error_fatal(&err));
     }
 
-    #[test]
-    fn test_wrap_error() {
+    #[tokio::test]
+    async fn test_wrap_error() {
         let runner = create_test_task_runner();
         let err = crate::error::Error::Other("original error".to_string());
         let wrapped = runner.wrap_error(err, "context");
@@ -129,8 +121,8 @@ mod tests {
         assert!(wrapped.to_string().contains("original error"));
     }
 
-    #[test]
-    fn test_prepare_error_ok() {
+    #[tokio::test]
+    async fn test_prepare_error_ok() {
         let runner = create_test_task_runner();
         let result = runner.prepare_error(Ok(()), "test message");
         assert!(result.is_ok());

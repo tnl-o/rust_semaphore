@@ -134,24 +134,12 @@ mod tests {
 
     #[test]
     fn test_validate_template_valid() {
-        let template = Template {
-            id: 0,
-            project_id: 1,
-            name: "Test Template".to_string(),
-            playbook: "test.yml".to_string(),
-            arguments: None,
-            template_type: TemplateType::Task,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            start_version: None,
-            build_version: None,
-            description: None,
-            survey_vars: None,
-            vaults: Vec::new(),
-            tasks: 0,
-            created: Utc::now(),
-        };
+        let mut template = Template::default();
+        template.project_id = 1;
+        template.name = "Test Template".to_string();
+        template.playbook = "test.yml".to_string();
+        template.template_type = Some(TemplateType::Task);
+        template.created = Utc::now();
         
         let result = validate_template(&template);
         assert!(result.is_ok());
@@ -159,24 +147,12 @@ mod tests {
 
     #[test]
     fn test_validate_template_empty_name() {
-        let template = Template {
-            id: 0,
-            project_id: 1,
-            name: String::new(),
-            playbook: "test.yml".to_string(),
-            arguments: None,
-            template_type: TemplateType::Task,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            start_version: None,
-            build_version: None,
-            description: None,
-            survey_vars: None,
-            vaults: Vec::new(),
-            tasks: 0,
-            created: Utc::now(),
-        };
+        let mut template = Template::default();
+        template.project_id = 1;
+        template.name = String::new();
+        template.playbook = "test.yml".to_string();
+        template.template_type = Some(TemplateType::Task);
+        template.created = Utc::now();
         
         let result = validate_template(&template);
         assert!(result.is_err());
@@ -185,24 +161,12 @@ mod tests {
 
     #[test]
     fn test_validate_template_empty_playbook() {
-        let template = Template {
-            id: 0,
-            project_id: 1,
-            name: "Test".to_string(),
-            playbook: String::new(),
-            arguments: None,
-            template_type: TemplateType::Task,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            start_version: None,
-            build_version: None,
-            description: None,
-            survey_vars: None,
-            vaults: Vec::new(),
-            tasks: 0,
-            created: Utc::now(),
-        };
+        let mut template = Template::default();
+        template.project_id = 1;
+        template.name = "Test".to_string();
+        template.playbook = String::new();
+        template.template_type = Some(TemplateType::Task);
+        template.created = Utc::now();
         
         let result = validate_template(&template);
         assert!(result.is_err());
@@ -211,24 +175,12 @@ mod tests {
 
     #[test]
     fn test_validate_template_invalid_extension() {
-        let template = Template {
-            id: 0,
-            project_id: 1,
-            name: "Test".to_string(),
-            playbook: "test.txt".to_string(),
-            arguments: None,
-            template_type: TemplateType::Task,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            start_version: None,
-            build_version: None,
-            description: None,
-            survey_vars: None,
-            vaults: Vec::new(),
-            tasks: 0,
-            created: Utc::now(),
-        };
+        let mut template = Template::default();
+        template.project_id = 1;
+        template.name = "Test".to_string();
+        template.playbook = "test.txt".to_string();
+        template.template_type = Some(TemplateType::Task);
+        template.created = Utc::now();
         
         let result = validate_template(&template);
         assert!(result.is_err());

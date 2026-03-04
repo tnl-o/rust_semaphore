@@ -91,7 +91,7 @@ mod tests {
             created: Utc::now(),
             template_id: 1,
             status: TaskStatus::Waiting,
-            message: String::new(),
+            message: None,
             commit_hash: None,
             commit_message: None,
             version: None,
@@ -100,16 +100,15 @@ mod tests {
         };
 
         let pool = Arc::new(TaskPool::new(
-            Project::default(),
-            AccessKeyInstallerImpl::new(),
             Arc::new(MockStore::new()),
+            5,
         ));
 
         TaskRunner::new(task, pool, "testuser".to_string(), AccessKeyInstallerImpl::new())
     }
 
-    #[test]
-    fn test_get_status() {
+    #[tokio::test]
+    async fn test_get_status() {
         let runner = create_test_task_runner();
         assert_eq!(runner.get_status(), TaskStatus::Waiting);
     }
@@ -121,11 +120,10 @@ mod tests {
         assert_eq!(runner.get_status(), TaskStatus::Running);
     }
 
-    #[test]
-    fn test_log() {
+    #[tokio::test]
+    async fn test_log() {
         let runner = create_test_task_runner();
         runner.log("Test log message");
-        // Просто проверяем, что метод вызывается без паники
     }
 
     #[tokio::test]

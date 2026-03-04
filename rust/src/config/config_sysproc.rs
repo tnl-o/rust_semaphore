@@ -2,8 +2,10 @@
 //!
 //! Системные атрибуты процесса для Unix/Linux
 
+#[cfg(unix)]
 use std::os::unix::process::CommandExt;
 use std::process::Command;
+#[cfg(unix)]
 use nix;
 
 /// Конфигурация процесса
@@ -65,6 +67,12 @@ pub fn configure_process_command(cmd: &mut Command, config: &ProcessConfig) -> s
 // ============================================================================
 // Windows версия (заглушка)
 // ============================================================================
+
+#[cfg(not(unix))]
+pub fn configure_process_command(_cmd: &mut Command, _config: &ProcessConfig) -> std::io::Result<()> {
+    // Windows не поддерживает chroot и setuid/setgid
+    Ok(())
+}
 
 #[cfg(target_os = "windows")]
 pub mod windows {

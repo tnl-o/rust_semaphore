@@ -171,14 +171,16 @@ mod tests {
     async fn create_test_pool() -> TaskPool {
         use crate::db::sql::SqlStore;
         
-        let store = Arc::new(SqlStore::new(":memory:").unwrap());
+        let store = Arc::new(SqlStore::new(":memory:").await.unwrap());
         let project = Project {
             id: 1,
             name: "Test Project".to_string(),
             created: Utc::now(),
-            alert: false,
+            alert: None,
             alert_chat: None,
-            max_parallel_tasks: 5,
+            max_parallel_tasks: Some(5),
+            r#type: None,
+            default_secret_storage_id: None,
         };
         
         TaskPool::new(store, project)
@@ -189,24 +191,12 @@ mod tests {
         let pool = create_test_pool().await;
         
         // Добавляем задачу в запущенные
-        let task = crate::models::Task {
-            id: 1,
-            project_id: 1,
-            template_id: 1,
-            status: TaskStatus::Running,
-            message: "Test task".to_string(),
-            commit_hash: None,
-            commit_message: None,
-            version: None,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            arguments: None,
-            params: String::new(),
-            playbook: String::new(),
-            start: None,
-            end: None,
-        };
+        let mut task = crate::models::Task::default();
+        task.id = 1;
+        task.project_id = 1;
+        task.template_id = 1;
+        task.status = TaskStatus::Running;
+        task.message = Some("Test task".to_string());
         
         let logger = Arc::new(BasicLogger::new());
         let template = crate::models::Template::default();
@@ -248,24 +238,12 @@ mod tests {
         
         pool.shutdown().await;
         
-        let task = crate::models::Task {
-            id: 1,
-            project_id: 1,
-            template_id: 1,
-            status: TaskStatus::Waiting,
-            message: "Test task".to_string(),
-            commit_hash: None,
-            commit_message: None,
-            version: None,
-            inventory_id: None,
-            repository_id: None,
-            environment_id: None,
-            arguments: None,
-            params: String::new(),
-            playbook: String::new(),
-            start: None,
-            end: None,
-        };
+        let mut task = crate::models::Task::default();
+        task.id = 1;
+        task.project_id = 1;
+        task.template_id = 1;
+        task.status = TaskStatus::Waiting;
+        task.message = Some("Test task".to_string());
         
         let result = pool.run_task(task).await;
         assert!(result.is_err());

@@ -101,7 +101,7 @@ mod tests {
             created: Utc::now(),
             template_id: 1,
             status: TaskStatus::Waiting,
-            message: String::new(),
+            message: None,
             commit_hash: None,
             commit_message: None,
             version: None,
@@ -110,9 +110,8 @@ mod tests {
         };
 
         let pool = Arc::new(TaskPool::new(
-            Project::default(),
-            AccessKeyInstallerImpl::new(),
             Arc::new(MockStore::new()),
+            5,
         ));
 
         TaskRunner::new(task, pool, "testuser".to_string(), AccessKeyInstallerImpl::new())

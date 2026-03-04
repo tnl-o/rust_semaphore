@@ -156,7 +156,7 @@ debug = true
 
 # Флаги для разных баз данных
 [features]
-default = ["sqlite", "mysql", "postgres", "bolt"]
+default = ["sqlite", "mysql", "postgres"]
 sqlite = ["sqlx/sqlite"]
 mysql = ["sqlx/mysql"]
 postgres = ["sqlx/postgres"]

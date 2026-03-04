@@ -12,12 +12,10 @@ use crate::error::{Error, Result};
 mod tests {
     use super::*;
     use crate::models::*;
-    use std::env;
     use chrono::Utc;
 
     async fn create_test_db() -> SqlDb {
-        let temp_db = env::temp_dir().join("test_queries.db");
-        let db_path = temp_db.to_string_lossy().to_string();
+        let (db_path, _temp) = crate::db::sql::init::test_sqlite_url();
         
         let db = SqlDb::connect_sqlite(&db_path).await.unwrap();
         

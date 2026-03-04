@@ -37,6 +37,13 @@ pub struct Project {
     pub default_secret_storage_id: Option<i32>,
 }
 
+#[cfg(test)]
+impl Default for Project {
+    fn default() -> Self {
+        Self::new("default".to_string())
+    }
+}
+
 impl Project {
     /// Создаёт новый проект
     pub fn new(name: String) -> Self {

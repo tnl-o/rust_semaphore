@@ -69,7 +69,16 @@ impl App {
 
 impl Default for App {
     fn default() -> Self {
-        Self::new(String::new(), String::new())
+        Self {
+            active: false,
+            priority: 0,
+            title: String::new(),
+            icon: String::new(),
+            color: String::new(),
+            dark_color: String::new(),
+            app_path: String::new(),
+            app_args: Vec::new(),
+        }
     }
 }
 

@@ -136,7 +136,7 @@ impl AnsiblePlaybook {
         cli_args: Vec<String>,
         environment_vars: Vec<String>,
         inputs: HashMap<String, String>,
-        cb: Option<Box<dyn Fn(&Child) + Send>>,
+        cb: Option<Box<dyn FnOnce(u32) + Send + 'static>>,
     ) -> Result<()> {
         self.logger.log("Running Ansible playbook...");
         
@@ -158,10 +158,12 @@ impl AnsiblePlaybook {
         let mut cmd = self.make_cmd("ansible-playbook", args, environment_vars);
         
         let mut child = cmd.spawn()?;
+        // На Windows child.id() возвращает Option<u32>
+        let pid = child.id().unwrap_or(0);
         
-        // Callback для процесса
+        // Callback для процесса (передаём PID)
         if let Some(callback) = cb {
-            callback(&child);
+            callback(pid);
         }
         
         let status = child.wait().await?;
@@ -391,14 +393,11 @@ impl AnsibleApp {
         // Получаем аргументы для "default" ключа
         let cli_args = args.cli_args.get("default").cloned().unwrap_or_default();
 
-        // Callback для получения PID
-        let callback = args.callback;
-        
         self.playbook.run_playbook(
             cli_args,
             args.environment_vars,
             args.inputs,
-            None,  // callback
+            Some(args.callback),
         ).await
     }
 
@@ -422,7 +421,8 @@ mod tests {
 
     fn create_test_ansible_app() -> AnsibleApp {
         let logger = Arc::new(BasicLogger::new());
-        let template = Template::default();
+        let mut template = Template::default();
+        template.playbook = "playbook.yml".to_string();
         let repository = Repository::default();
         let work_dir = PathBuf::from("/tmp/test_ansible");
 
@@ -432,14 +432,15 @@ mod tests {
     #[test]
     fn test_ansible_app_creation() {
         let app = create_test_ansible_app();
-        assert_eq!(app.template.playbook, "");
+        assert_eq!(app.template.playbook, "playbook.yml");
     }
 
     #[test]
     fn test_get_playbook_dir() {
         let app = create_test_ansible_app();
         let dir = app.get_playbook_dir();
-        assert!(dir.ends_with("repository"));
+        // get_playbook_dir returns parent of (repo_path/playbook), i.e. repository dir
+        assert!(dir.ends_with("repository") || dir.to_string_lossy().replace('\\', "/").ends_with("repository"));
     }
 
     #[test]

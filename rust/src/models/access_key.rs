@@ -24,6 +24,7 @@ pub struct LoginPasswordData {
 pub enum AccessKeyType {
     None,
     LoginPassword,
+    #[serde(rename = "ssh")]
     SSH,
     AccessKey,
 }

@@ -193,12 +193,10 @@ impl Default for MigrationManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     #[tokio::test]
     async fn test_migration_manager_sqlite() {
-        let temp_db = env::temp_dir().join("test_migration.db");
-        let db_path = temp_db.to_string_lossy().to_string();
+        let (db_path, _temp) = crate::db::sql::init::test_sqlite_url();
         
         let db = SqlDb::connect_sqlite(&db_path).await.unwrap();
         let manager = MigrationManager::new();
@@ -221,9 +219,7 @@ mod tests {
         let version = manager.get_latest_version(&db).await.unwrap();
         assert_eq!(version, Some(1));
         
-        // Cleanup
         let _ = db.close().await;
-        let _ = std::fs::remove_file(&temp_db);
     }
 
     #[test]

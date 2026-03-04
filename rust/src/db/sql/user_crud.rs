@@ -240,12 +240,10 @@ impl SqlDb {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
     use chrono::Utc;
 
     async fn create_test_db() -> SqlDb {
-        let temp_db = env::temp_dir().join("test_user.db");
-        let db_path = temp_db.to_string_lossy().to_string();
+        let (db_path, _temp) = crate::db::sql::init::test_sqlite_url();
         
         let db = SqlDb::connect_sqlite(&db_path).await.unwrap();
         
@@ -361,7 +359,9 @@ mod tests {
         
         let params = RetrieveQueryParams {
             offset: 0,
-            count: 10,
+            count: Some(10),
+            sort_by: None,
+            sort_inverted: false,
             filter: None,
         };
         

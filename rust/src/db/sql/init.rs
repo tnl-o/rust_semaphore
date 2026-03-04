@@ -144,15 +144,22 @@ pub async fn create_database_connection(database_url: &str) -> Result<SqlDb> {
     }
 }
 
+/// Создаёт URL для тестовой SQLite БД (уникальный файл, корректный формат для Windows)
+#[cfg(test)]
+pub fn test_sqlite_url() -> (String, tempfile::NamedTempFile) {
+    let temp = tempfile::NamedTempFile::new().unwrap();
+    let path = temp.path().to_string_lossy().replace('\\', "/");
+    let url = format!("sqlite:///{}", path);
+    (url, temp)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     #[tokio::test]
     async fn test_sqlite_connection() {
-        let temp_db = env::temp_dir().join("test.db");
-        let db_path = temp_db.to_string_lossy().to_string();
+        let (db_path, _temp) = test_sqlite_url();
         
         let result = SqlDb::connect_sqlite(&db_path).await;
         assert!(result.is_ok());
@@ -161,23 +168,18 @@ mod tests {
         assert!(db.is_connected());
         assert_eq!(db.get_dialect(), SqlDialect::SQLite);
         
-        // Cleanup
         let _ = db.close().await;
-        let _ = std::fs::remove_file(&temp_db);
     }
 
     #[tokio::test]
     async fn test_sqlite_ping() {
-        let temp_db = env::temp_dir().join("test_ping.db");
-        let db_path = temp_db.to_string_lossy().to_string();
+        let (db_path, _temp) = test_sqlite_url();
         
         let db = SqlDb::connect_sqlite(&db_path).await.unwrap();
         let result = db.ping().await;
         assert!(result.is_ok());
         
-        // Cleanup
         let _ = db.close().await;
-        let _ = std::fs::remove_file(&temp_db);
     }
 
     #[test]

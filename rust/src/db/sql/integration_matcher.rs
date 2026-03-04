@@ -93,11 +93,9 @@ impl SqlDb {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     async fn create_test_db() -> SqlDb {
-        let temp_db = env::temp_dir().join("test_integration_matcher.db");
-        let db_path = temp_db.to_string_lossy().to_string();
+        let (db_path, _temp) = crate::db::sql::init::test_sqlite_url();
         
         let db = SqlDb::connect_sqlite(&db_path).await.unwrap();
         
@@ -126,8 +124,12 @@ mod tests {
             id: 0,
             integration_id: 1,
             project_id: 1,
+            name: "Test Matcher".to_string(),
+            body_data_type: "json".to_string(),
+            key: None,
             matcher_type: "header".to_string(),
             matcher_value: "Content-Type".to_string(),
+            method: "GET".to_string(),
         };
         
         let created = db.create_integration_matcher(matcher.clone()).await.unwrap();
@@ -149,8 +151,12 @@ mod tests {
             id: 0,
             integration_id: 1,
             project_id: 1,
+            name: "Test Matcher".to_string(),
+            body_data_type: "json".to_string(),
+            key: None,
             matcher_type: "header".to_string(),
             matcher_value: "Content-Type".to_string(),
+            method: "GET".to_string(),
         };
         
         let created = db.create_integration_matcher(matcher).await.unwrap();
@@ -175,8 +181,12 @@ mod tests {
             id: 0,
             integration_id: 1,
             project_id: 1,
+            name: "Test Matcher".to_string(),
+            body_data_type: "json".to_string(),
+            key: None,
             matcher_type: "header".to_string(),
             matcher_value: "Content-Type".to_string(),
+            method: "GET".to_string(),
         };
         
         let created = db.create_integration_matcher(matcher).await.unwrap();

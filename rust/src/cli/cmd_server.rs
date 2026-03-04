@@ -40,10 +40,12 @@ impl ServerCommand {
 
         runtime.block_on(async {
             let listener = tokio::net::TcpListener::bind(format!("{}:{}", self.host, self.port))
-                .await?;
+                .await
+                .map_err(|e| crate::error::Error::Other(e.to_string()))?;
             println!("Server started at http://{}:{}/", self.host, self.port);
-            axum::serve(listener, app).await?;
-            Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+            axum::serve(listener, app).await
+                .map_err(|e| crate::error::Error::Other(e.to_string()))?;
+            Ok::<(), crate::error::Error>(())
         })?;
 
         Ok(())

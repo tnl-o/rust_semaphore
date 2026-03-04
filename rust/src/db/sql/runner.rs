@@ -163,17 +163,18 @@ mod tests {
 
     fn create_test_runner() -> Runner {
         Runner {
+            last_active: None,
             id: 0,
             name: "Test Runner".to_string(),
             active: true,
             webhook: None,
-            max_parallel_tasks: 5,
-            tag: "test".to_string(),
+            max_parallel_tasks: Some(5),
+            tag: Some("test".to_string()),
             token: Uuid::new_v4().to_string(),
             project_id: None,
             cleaning_requested: None,
             touched: None,
-            created: chrono::Utc::now(),
+            created: Some(chrono::Utc::now()),
         }
     }
 
@@ -182,7 +183,7 @@ mod tests {
         let runner = create_test_runner();
         assert_eq!(runner.name, "Test Runner");
         assert!(runner.active);
-        assert_eq!(runner.max_parallel_tasks, 5);
+        assert_eq!(runner.max_parallel_tasks, Some(5));
     }
 
     #[test]

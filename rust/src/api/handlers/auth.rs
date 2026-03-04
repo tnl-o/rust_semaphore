@@ -121,14 +121,6 @@ pub struct LoginResponse {
     pub totp_required: Option<bool>,
 }
 
-/// Response для настройки TOTP
-#[derive(Debug, Serialize)]
-pub struct TotpSetupResponse {
-    pub secret: String,
-    pub url: String,
-    pub recovery_code: String,
-}
-
 // ============================================================================
 // Tests
 // ============================================================================

@@ -135,6 +135,8 @@ mod tests {
             role: "owner".to_string(),
             created: chrono::Utc::now(),
             updated: chrono::Utc::now(),
+            token: String::new(),
+            inviter_user_id: 1,
         };
         assert_eq!(invite.id, 1);
         assert_eq!(invite.project_id, 1);

@@ -873,7 +873,7 @@ mod key_installer_tests {
             "user".to_string(),
             Some(1),
         );
-        assert_eq!(key.get_type(), &AccessKeyType::SSH);
+        assert_eq!(key.get_type(), &AccessKeyType::Ssh);
         assert!(key.ssh_key.is_some());
     }
 

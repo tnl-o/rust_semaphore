@@ -700,46 +700,27 @@ mod tests {
 
     #[test]
     fn test_ansible_job_creation() {
-        let task = Task {
-            id: 1,
-            template_id: 1,
-            project_id: 1,
-            status: crate::services::task_logger::TaskStatus::Waiting,
-            playbook: None,
-            environment: None,
-            secret: None,
-            arguments: None,
-            git_branch: None,
-            user_id: None,
-            integration_id: None,
-            schedule_id: None,
-            created: Utc::now(),
-            start: None,
-            end: None,
-            message: None,
-            commit_hash: None,
-            commit_message: None,
-            build_task_id: None,
-            version: None,
-            inventory_id: None,
-            params: None,
-        };
+        let mut task = Task::default();
+        task.id = 1;
+        task.template_id = 1;
+        task.project_id = 1;
+        task.status = crate::services::task_logger::TaskStatus::Waiting;
+        task.created = Utc::now();
 
-        let template = Template {
-            id: 1,
-            project_id: 1,
-            name: "Test".to_string(),
-            playbook: "test.yml".to_string(),
-            description: "Test".to_string(),
-            inventory_id: 1,
-            repository_id: 1,
-            environment_id: 0,
-            app: TemplateApp::Ansible,
-            r#type: crate::models::template::TemplateType::Default,
-            git_branch: "main".to_string(),
-            deleted: false,
-            created: Utc::now(),
-        };
+        let mut template = Template::default();
+        template.id = 1;
+        template.project_id = 1;
+        template.name = "Test".to_string();
+        template.playbook = "test.yml".to_string();
+        template.description = "Test".to_string();
+        template.inventory_id = 1;
+        template.repository_id = 1;
+        template.environment_id = 0;
+        template.app = TemplateApp::Ansible;
+        template.r#type = crate::models::template::TemplateType::Default;
+        template.git_branch = "main".to_string();
+        template.deleted = false;
+        template.created = Utc::now();
 
         let job = AnsibleJob::new(task, template, None, None, None);
         
@@ -749,46 +730,27 @@ mod tests {
 
     #[test]
     fn test_terraform_job_creation() {
-        let task = Task {
-            id: 1,
-            template_id: 1,
-            project_id: 1,
-            status: crate::services::task_logger::TaskStatus::Waiting,
-            playbook: None,
-            environment: None,
-            secret: None,
-            arguments: None,
-            git_branch: None,
-            user_id: None,
-            integration_id: None,
-            schedule_id: None,
-            created: Utc::now(),
-            start: None,
-            end: None,
-            message: None,
-            commit_hash: None,
-            commit_message: None,
-            build_task_id: None,
-            version: None,
-            inventory_id: None,
-            params: None,
-        };
+        let mut task = Task::default();
+        task.id = 1;
+        task.template_id = 1;
+        task.project_id = 1;
+        task.status = crate::services::task_logger::TaskStatus::Waiting;
+        task.created = Utc::now();
 
-        let template = Template {
-            id: 1,
-            project_id: 1,
-            name: "Test".to_string(),
-            playbook: "test.tf".to_string(),
-            description: "Test".to_string(),
-            inventory_id: 1,
-            repository_id: 1,
-            environment_id: 0,
-            app: TemplateApp::Terraform,
-            r#type: crate::models::template::TemplateType::Default,
-            git_branch: "main".to_string(),
-            deleted: false,
-            created: Utc::now(),
-        };
+        let mut template = Template::default();
+        template.id = 1;
+        template.project_id = 1;
+        template.name = "Test".to_string();
+        template.playbook = "test.tf".to_string();
+        template.description = "Test".to_string();
+        template.inventory_id = 1;
+        template.repository_id = 1;
+        template.environment_id = 0;
+        template.app = TemplateApp::Terraform;
+        template.r#type = crate::models::template::TemplateType::Default;
+        template.git_branch = "main".to_string();
+        template.deleted = false;
+        template.created = Utc::now();
 
         let mut job = TerraformJob::new(task, template, None, None, None);
         job.set_workspace("dev".to_string());
@@ -800,46 +762,27 @@ mod tests {
 
     #[test]
     fn test_shell_job_creation() {
-        let task = Task {
-            id: 1,
-            template_id: 1,
-            project_id: 1,
-            status: crate::services::task_logger::TaskStatus::Waiting,
-            playbook: None,
-            environment: None,
-            secret: None,
-            arguments: None,
-            git_branch: None,
-            user_id: None,
-            integration_id: None,
-            schedule_id: None,
-            created: Utc::now(),
-            start: None,
-            end: None,
-            message: None,
-            commit_hash: None,
-            commit_message: None,
-            build_task_id: None,
-            version: None,
-            inventory_id: None,
-            params: None,
-        };
+        let mut task = Task::default();
+        task.id = 1;
+        task.template_id = 1;
+        task.project_id = 1;
+        task.status = crate::services::task_logger::TaskStatus::Waiting;
+        task.created = Utc::now();
 
-        let template = Template {
-            id: 1,
-            project_id: 1,
-            name: "Test".to_string(),
-            playbook: "test.sh".to_string(),
-            description: "Test".to_string(),
-            inventory_id: 1,
-            repository_id: 1,
-            environment_id: 0,
-            app: TemplateApp::Bash,
-            r#type: crate::models::template::TemplateType::Default,
-            git_branch: "main".to_string(),
-            deleted: false,
-            created: Utc::now(),
-        };
+        let mut template = Template::default();
+        template.id = 1;
+        template.project_id = 1;
+        template.name = "Test".to_string();
+        template.playbook = "test.sh".to_string();
+        template.description = "Test".to_string();
+        template.inventory_id = 1;
+        template.repository_id = 1;
+        template.environment_id = 0;
+        template.app = TemplateApp::Bash;
+        template.r#type = crate::models::template::TemplateType::Default;
+        template.git_branch = "main".to_string();
+        template.deleted = false;
+        template.created = Utc::now();
 
         let job = ShellJob::new(task, template, None, None, None, ShellType::Bash);
         

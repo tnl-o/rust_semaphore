@@ -1,7 +1,7 @@
 # Отчёт об ошибках сборки Semaphore Rust
 
 **Дата начала:** 2026-03-02  
-**Последнее обновление:** 2026-03-03 (сессия 6)
+**Последнее обновление:** 2026-03-03 (сессия 10)
 
 ---
 
@@ -10,25 +10,74 @@
 | Метрика | Значение |
 |---------|----------|
 | Начальное количество ошибок | 585 |
-| Исправлено ошибок | 448 |
-| **Осталось ошибок** | **137** |
-| **Процент выполнения** | **76.6%** |
+| Исправлено ошибок (lib) | 585 |
+| **Ошибок сборки lib** | **0** ✅ |
+| Ошибок в тестах (компиляция) | 0 ✅ |
+| Падающих тестов (runtime) | 21 |
+| **Процент выполнения (lib)** | **100%** |
 
 ---
 
 ## 📈 Прогресс по сессиям
 
-| Сессия | Дата | Исправлено | Осталось | Процент |
-|--------|------|------------|----------|---------|
+| Сессия | Дата | Исправлено | Осталось (lib) | Процент |
+|--------|------|------------|----------------|---------|
 | Начало | 2026-03-02 | 0 | 585 | 0% |
 | Сессия 1-3 | 2026-03-02 | ~200 | ~385 | 34% |
 | Сессия 4 | 2026-03-03 | 159 | 226 | 61% |
 | Сессия 5 | 2026-03-03 | 61 | 165 | 72% |
 | Сессия 6 | 2026-03-03 | 28 | 137 | 77% |
+| **Сессия 7** | **2026-03-03** | **137** | **0** | **100%** |
+| Сессия 8 | 2026-03-03 | — | 0 | 100% |
+| **Сессия 9** | **2026-03-03** | **~35** | **~124** | **100% (lib)** |
 
 ---
 
 ## ✅ Исправленные категории ошибок
+
+### Сессия 10 — план работы (2026-03-03)
+
+- SQLite тесты — tempfile + sqlite:/// для Windows
+- extract_token_from_header — только Bearer, Basic возвращает None
+- AccessKeyType::SSH — #[serde(rename = "ssh")] для десериализации
+- App::default() — active: false
+- task_runner errors/logging — #[tokio::test] для TaskPool
+- ansible_app — playbook в фикстуре для get_playbook_dir
+- TotpSetupResponse — удалён дубликат из auth.rs
+- task_pool_impl.rs — удалён (мёртвый код)
+- **Результат:** 475 passed, 21 failed (было 423/73)
+
+### Сессия 9 — исправления тестов
+
+- TaskPool::new() — исправлены вызовы в task_runner (lifecycle, details, logging, websocket, hooks)
+- Task фикстуры — task_pool.rs, task_pool_queue.rs, task_runner/*, alert.rs, job.rs
+- local_job (ssh, vault, repository) — message: None
+- restore.rs — BackupEnvironment без env, fix временного значения
+- ssh_agent.rs — AccessKeyType::Ssh
+- git_repository.rs — Repository.git_branch: None
+- template_crud, template_utils, template_vault, template_roles — Template::default()
+- integration_crud, integration_matcher, integration_extract — добавлены поля
+- task_crud, task_output, task_stage, user_totp, user_crud — фикстуры
+- project_invite, access_key_installer — недостающие поля
+- **Компиляция тестов: 0 ошибок** (423 passed, 73 failed at runtime)
+
+### Сессия 8 — исправления тестов и проверка
+
+- extract_token_from_header — экспорт из api/auth, pub в extractors
+- Commands::Version — исправлен тест (tuple variant)
+- verify_totp / generate_totp_code — добавлены в totp для тестов
+- TaskStatus — заменён crate::models на task_logger в local_job, task_pool_impl
+- task_runner/errors — TaskPool::new(store, 5), Task::default(), Project::default()
+- Task, Project — добавлен Default для тестов
+- max_parallel_tasks — Some(5) в task_pool_*, runner created: Some(...)
+- Сервер запускается (требует Database URL)
+- UserProfileUpdate Serialize, UsersController subscription_service
+- SqlStore::new — block_on в task_pool тестах
+- Project, Runner, Task фикстуры в task_pool, local_job
+- CLI test — cmd_user::UserCommands
+- backup_restore Project, db/sql/runner
+- cargo fix — автоисправление warnings
+- Остаётся ~100 ошибок в тестовых фикстурах (db/sql, template_crud и др.)
 
 ### Сессия 6 (28 ошибок)
 
@@ -92,70 +141,45 @@
 
 ---
 
-## 🔴 Текущие ошибки (137 осталось)
+## ✅ Сессия 7 — исправления (lib собирается)
 
-### Топ ошибок по категориям
-
-| Категория | Количество | Приоритет |
-|-----------|------------|-----------|
-| mismatched types | ~11 | Высокий |
-| type annotations needed | ~10 | Средний |
-| dyn Any + Send + Sync: Clone | 4 | Средний |
-| Task: sqlx::Decode/Type | 4 | Высокий |
-| and_then for i32 | 3 | Средний |
-| SecretStorage: FromRow | 2 | Средний |
-| ExporterChain: DataExporter | 4 | Низкий |
-| Прочие | ~99 | Разный |
-
-### Критические проблемы
-
-#### 1. mismatched types (~11 ошибок)
-**Файлы:**
-- `src/db_lib/ansible_app.rs` - callback типы
-- `src/db_lib/ansible_playbook.rs` - Command типы (tokio vs std)
-- `src/db_lib/go_git_client.rs` - clone/set_head
-- `src/db_lib/shell_app.rs` - callback типы
-
-#### 2. SQLx трейты (6 ошибок)
-**Проблема:** Модели не реализуют `sqlx::Decode` и `sqlx::Type`
-
-**Файлы:**
-- `src/models/task.rs` - Task (4 ошибки)
-- `src/models/secret_storage.rs` - SecretStorage (2 ошибки)
-
-#### 3. Clone trait (4 ошибки)
-**Проблема:** `dyn Any + Send + Sync` не реализует Clone
-
-**Файлы:**
-- `src/db_lib/local_app.rs` - LocalAppRunningArgs
-
-#### 4. Job trait (1 ошибка)
-**Проблема:** `LocalJob` не реализует трейт `Job`
-
-**Файлы:**
-- `src/services/local_job/types.rs`
-- `src/services/job.rs`
+- config_sysproc — `std::os::unix` на Windows (cfg)
+- local_job/types — Result, Job trait, borrow fix
+- task_output — params.count Option
+- ansible_app — child.id() Option на Windows
+- terraform_app — TerraformTaskParams
+- restore — Project, Schedule поля
+- cmd_server — error handling
+- local_app — Debug для dyn полей
+- exporter — TypeExporter для ValueMap
 
 ---
 
-## 📋 План следующей сессии (сессия 7)
+## 🔴 Текущее состояние (сессия 9)
 
-### Приоритет 1: mismatched types (11 ошибок)
-1. Исправить `ansible_app.rs` - callback типы
-2. Исправить `ansible_playbook.rs` - Command типы
-3. Исправить `go_git_client.rs` - git2 API
-4. Исправить `shell_app.rs` - callback типы
+### Компиляция — полностью исправлена ✅
 
-### Приоритет 2: SQLx трейты (6 ошибок)
-1. Реализовать `sqlx::Decode` и `sqlx::Type` для `Task`
-2. Реализовать `FromRow` для `SecretStorage`
+| Категория | Статус |
+|-----------|--------|
+| MockStore не реализует Store | ✅ Исправлено |
+| Устаревшие фикстуры (Task, Template, Project и др.) | ✅ Исправлено (сессия 9) |
+| Импорты (TaskStatus, extract_token_from_header) | ✅ Исправлено |
+| RetrieveQueryParams, TotpVerification, TaskOutput | ✅ Исправлено |
 
-### Приоритет 3: Clone trait (4 ошибки)
-1. Убрать Clone из `LocalAppRunningArgs`
-2. Использовать Arc для shared данных
+### Падающие тесты (runtime) — 21 шт.
 
-### Приоритет 4: Job trait (1 ошибка)
-1. Реализовать `Job` trait для `LocalJob`
+**Исправлено в сессии 10:** SQLite пути (tempfile), extract_token, AccessKeyType SSH, App::default, task_runner tokio, ansible_app playbook_dir, TotpSetupResponse ambiguous, task_pool_impl удалён.
+
+**Требуют дальнейшей работы:**
+
+| Область | Тесты | Возможная причина |
+|---------|-------|-------------------|
+| db/sql/* | template_crud, task_crud, integration_*, template_roles | Схема БД (ColumnNotFound, NOT NULL) |
+| config/* | merge_db_configs, validate_config, verify_recovery_code | Конфигурация окружения |
+| services/task_pool_runner | test_kill_task | Структура TaskPool |
+| services/local_job | test_get_template_params, test_get_environment_env | Логика тестов |
+
+**Рекомендации:** запустить `cargo test -- --nocapture` для просмотра выводов падающих тестов.
 
 ---
 
@@ -184,19 +208,27 @@
 
 ### Успехи
 
-- ✅ 76.6% ошибок исправлено
+- ✅ 100% ошибок компиляции исправлено (lib + tests)
 - ✅ BoltDB удалён без потери функциональности
 - ✅ Конфигурация полностью исправлена
 - ✅ Основные модели данных исправлены
 - ✅ Git Client исправлен (частично)
+- ✅ 423 теста проходят успешно
 
 ---
 
 ## 🎯 Цели
 
-| Цель | Ошибок | Статус |
-|------|--------|--------|
-| < 100 ошибок | 100 | 🎯 Следующая цель |
-| < 50 ошибок | 50 | ⏳ В плане |
-| < 10 ошибок | 10 | ⏳ В плане |
-| 0 ошибок | 0 | ⏳ Финальная цель |
+| Цель | Статус |
+|------|--------|
+| ✅ Сборка lib (cargo build) | Достигнуто |
+| ✅ Компиляция тестов (cargo test --no-run) | Достигнуто |
+| ⏳ 0 падающих тестов (runtime) | 73 осталось |
+| ⏳ Устранение warnings (~270) | В плане |
+
+---
+
+## 📋 TODO для следующей сессии
+
+1. **Исправить 21 падающий тест** — db/sql (схема), config, task_pool_runner, local_job
+2. **Устранение оставшихся warnings** — ~250 (cargo fix применён частично)

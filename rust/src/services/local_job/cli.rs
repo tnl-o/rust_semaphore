@@ -95,31 +95,21 @@ mod tests {
         let logger = Arc::new(BasicLogger::new());
         let key_installer = AccessKeyInstallerImpl::new();
 
-        let task = crate::models::Task {
-            id: 1,
-            created: Utc::now(),
-            template_id: 1,
-            status: crate::models::TaskStatus::Waiting,
-            message: String::new(),
-            commit_hash: None,
-            commit_message: None,
-            version: None,
-            project_id: 1,
-            arguments: Some(r#"["--arg1", "--arg2"]"#.to_string()),
-            params: r#"{"key": "value"}"#.to_string(),
-            ..Default::default()
-        };
+        let mut task = crate::models::Task::default();
+        task.id = 1;
+        task.template_id = 1;
+        task.project_id = 1;
+        task.created = Utc::now();
+        task.arguments = Some(r#"["--arg1", "--arg2"]"#.to_string());
+        task.params = Some(serde_json::json!({"key": "value"}));
 
-        let template = crate::models::Template {
-            id: 1,
-            name: String::from("Test Template"),
-            project_id: 1,
-            playbook: String::from("test.yml"),
-            template_type: crate::models::TemplateType::Task,
-            arguments: Some(r#"["--template-arg"]"#.to_string()),
-            params: r#"{"template_key": "template_value"}"#.to_string(),
-            ..Default::default()
-        };
+        let mut template = crate::models::Template::default();
+        template.id = 1;
+        template.name = "Test Template".to_string();
+        template.project_id = 1;
+        template.playbook = "test.yml".to_string();
+        template.template_type = Some(crate::models::TemplateType::Task);
+        template.arguments = Some(r#"["--template-arg"]"#.to_string());
 
         LocalJob::new(
             task,

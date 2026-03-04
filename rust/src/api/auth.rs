@@ -2,6 +2,8 @@
 //!
 //! Обработчики для аутентификации
 
+pub use crate::api::extractors::extract_token_from_header;
+
 use axum::{
     extract::State,
     http::StatusCode,

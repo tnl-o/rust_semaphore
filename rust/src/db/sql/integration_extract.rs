@@ -95,11 +95,9 @@ impl SqlDb {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     async fn create_test_db() -> SqlDb {
-        let temp_db = env::temp_dir().join("test_integration_extract.db");
-        let db_path = temp_db.to_string_lossy().to_string();
+        let (db_path, _temp) = crate::db::sql::init::test_sqlite_url();
         
         let db = SqlDb::connect_sqlite(&db_path).await.unwrap();
         
@@ -129,7 +127,11 @@ mod tests {
             id: 0,
             integration_id: 1,
             project_id: 1,
+            name: "Test Value".to_string(),
             value_source: "body".to_string(),
+            body_data_type: "json".to_string(),
+            key: None,
+            variable: None,
             value_name: "task_id".to_string(),
             value_type: "json".to_string(),
         };
@@ -153,7 +155,11 @@ mod tests {
             id: 0,
             integration_id: 1,
             project_id: 1,
+            name: "Test Value".to_string(),
             value_source: "body".to_string(),
+            body_data_type: "json".to_string(),
+            key: None,
+            variable: None,
             value_name: "task_id".to_string(),
             value_type: "json".to_string(),
         };
@@ -180,7 +186,11 @@ mod tests {
             id: 0,
             integration_id: 1,
             project_id: 1,
+            name: "Test Value".to_string(),
             value_source: "body".to_string(),
+            body_data_type: "json".to_string(),
+            key: None,
+            variable: None,
             value_name: "task_id".to_string(),
             value_type: "json".to_string(),
         };

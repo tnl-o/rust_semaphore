@@ -276,12 +276,11 @@ impl TerraformApp {
         
         // Инициализация
         let params = TerraformTaskParams {
-            // backend_init_required: true,  // поле удалено
-            // backend_config: None,  // поле удалено
+            plan: false,
+            destroy: false,
+            auto_approve: false,
             upgrade: false,
             reconfigure: false,
-            destroy: false,
-            // workspace: None,  // поле удалено
         };
         
         self.init(vec![], &params, vec![]).await?;
