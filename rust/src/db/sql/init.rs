@@ -136,12 +136,75 @@ pub async fn create_database_connection(database_url: &str) -> Result<SqlDb> {
     } else if database_url.starts_with("mysql:") {
         // Парсим MySQL URL
         Err(Error::Other("MySQL connection not fully implemented yet".to_string()))
-    } else if database_url.starts_with("postgres:") {
+    } else if database_url.starts_with("postgres:") || database_url.starts_with("postgresql:") {
         // Парсим PostgreSQL URL
-        Err(Error::Other("PostgreSQL connection not fully implemented yet".to_string()))
+        // Формат: postgres://user:pass@host:port/dbname?options
+        parse_and_connect_postgres(database_url).await
     } else {
         Err(Error::Other(format!("Unknown database type: {}", database_url)))
     }
+}
+
+/// Парсит PostgreSQL URL и подключается к БД
+async fn parse_and_connect_postgres(database_url: &str) -> Result<SqlDb> {
+    use std::collections::HashMap;
+    
+    // Удаляем префикс
+    let url_without_prefix = database_url
+        .trim_start_matches("postgres://")
+        .trim_start_matches("postgresql://");
+    
+    // Простой парсинг: user:pass@host:port/dbname?options
+    let (auth_part, rest) = url_without_prefix
+        .split_once('@')
+        .ok_or_else(|| Error::Other("Invalid PostgreSQL URL: missing @".to_string()))?;
+    
+    let (username, password) = auth_part
+        .split_once(':')
+        .ok_or_else(|| Error::Other("Invalid PostgreSQL URL: missing password".to_string()))?;
+    
+    let (host_port, db_with_options) = rest
+        .split_once('/')
+        .ok_or_else(|| Error::Other("Invalid PostgreSQL URL: missing database name".to_string()))?;
+    
+    let (host, port_str) = host_port
+        .split_once(':')
+        .ok_or_else(|| Error::Other("Invalid PostgreSQL URL: missing port".to_string()))?;
+    
+    let port = port_str
+        .split_once('?')
+        .map(|(p, _)| p)
+        .unwrap_or(port_str)
+        .parse::<u16>()
+        .map_err(|_| Error::Other("Invalid PostgreSQL URL: invalid port".to_string()))?;
+    
+    // Извлекаем имя БД
+    let db_name = db_with_options
+        .split_once('?')
+        .map(|(db, _)| db)
+        .unwrap_or(db_with_options);
+    
+    // Создаём конфиг
+    let mut config = DbConnectionConfig {
+        host: host.to_string(),
+        port,
+        username: username.to_string(),
+        password: password.to_string(),
+        db_name: db_name.to_string(),
+        options: HashMap::new(),
+    };
+    
+    // Парсим опции если есть
+    if let Some(options_str) = db_with_options.split_once('?').map(|(_, o)| o) {
+        for pair in options_str.split('&') {
+            if let Some((key, value)) = pair.split_once('=') {
+                config.options.insert(key.to_string(), value.to_string());
+            }
+        }
+    }
+    
+    // Подключаемся
+    SqlDb::connect_postgres(&config).await
 }
 
 /// Создаёт URL для тестовой SQLite БД (уникальный файл, корректный формат для Windows)

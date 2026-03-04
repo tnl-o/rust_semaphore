@@ -12,7 +12,6 @@ use axum::{
 use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 use crate::api::state::AppState;
-use crate::error::Result;
 use crate::api::middleware::ErrorResponse;
 
 /// Информация об аутентификации
@@ -25,9 +24,10 @@ pub struct AuthInfo {
 
 /// Получает информацию об аутентификации
 pub async fn get_auth(
-    State(state): State<Arc<AppState>>,
+    State(_state): State<Arc<AppState>>,
 ) -> std::result::Result<Json<AuthInfo>, (StatusCode, Json<ErrorResponse>)> {
     // В реальной реализации нужно проверить сессию
+    // TODO: Реализовать проверку сессии
     let info = AuthInfo {
         authenticated: false,
         user_id: None,
@@ -39,9 +39,10 @@ pub async fn get_auth(
 
 /// Выход из системы
 pub async fn logout(
-    State(state): State<Arc<AppState>>,
+    State(_state): State<Arc<AppState>>,
 ) -> std::result::Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
     // В реальной реализации нужно уничтожить сессию
+    // TODO: Реализовать выход из системы
     Ok(StatusCode::OK)
 }
 

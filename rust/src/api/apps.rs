@@ -10,7 +10,6 @@ use axum::{
 use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 use crate::api::state::AppState;
-use crate::error::Result;
 use crate::api::middleware::ErrorResponse;
 
 /// Приложение
@@ -28,7 +27,7 @@ pub struct App {
 
 /// Получает все приложения
 pub async fn get_apps(
-    State(state): State<Arc<AppState>>,
+    State(_state): State<Arc<AppState>>,
 ) -> std::result::Result<Json<Vec<App>>, (StatusCode, Json<ErrorResponse>)> {
     // В реальной реализации нужно получить приложения из конфига
     let apps = vec![
@@ -49,12 +48,12 @@ pub async fn get_apps(
 
 /// Получает приложение по ID
 pub async fn get_app(
-    State(state): State<Arc<AppState>>,
-    Path(app_id): Path<String>,
+    State(_state): State<Arc<AppState>>,
+    Path(_app_id): Path<String>,
 ) -> std::result::Result<Json<App>, (StatusCode, Json<ErrorResponse>)> {
     // В реальной реализации нужно получить приложение из конфига
     let app = App {
-        id: app_id,
+        id: _app_id.clone(),
         priority: 10,
         title: "App".to_string(),
         icon: "app".to_string(),
@@ -69,10 +68,11 @@ pub async fn get_app(
 
 /// Удаляет приложение
 pub async fn delete_app(
-    State(state): State<Arc<AppState>>,
-    Path(app_id): Path<String>,
+    State(_state): State<Arc<AppState>>,
+    Path(_app_id): Path<String>,
 ) -> std::result::Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
     // В реальной реализации нужно удалить приложение из конфига
+    // TODO: Реализовать удаление приложения
     Ok(StatusCode::NO_CONTENT)
 }
 
