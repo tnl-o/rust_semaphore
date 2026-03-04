@@ -34,31 +34,29 @@ use crate::db::store::*;
 use crate::models::{User, Project, Task, TaskWithTpl, TaskOutput, TaskStage, Template, Inventory, Repository, Environment, AccessKey, Integration, Schedule, Session, APIToken, Event, Runner, View, Role, ProjectInvite, ProjectInviteWithUser, ProjectUser, RetrieveQueryParams, TerraformInventoryAlias, TerraformInventoryState, SecretStorage};
 use crate::error::{Error, Result};
 use crate::services::task_logger::TaskStatus;
+use crate::db::sql::types::SqlDb;
 use async_trait::async_trait;
 use sqlx::{SqlitePool, Row};
 use std::collections::HashMap;
 
-/// SQL-хранилище данных (на базе SQLite)
+/// SQL-хранилище данных (на базе SQLite, MySQL, PostgreSQL)
 pub struct SqlStore {
-    pool: SqlitePool,
+    db: SqlDb,
 }
 
 impl SqlStore {
     /// Создаёт новое SQL-хранилище
     pub async fn new(database_url: &str) -> Result<Self> {
-        // Проверка типа БД - пока поддерживается только SQLite
-        if database_url.starts_with("postgres:") || database_url.starts_with("postgresql:") {
-            return Err(Error::Other("PostgreSQL requires refactoring SqlStore to use enum with PgPool. This is work in progress.".to_string()));
-        }
-        if database_url.starts_with("mysql:") {
-            return Err(Error::Other("MySQL requires refactoring SqlStore to use enum with MySqlPool. This is work in progress.".to_string()));
-        }
-        
-        let pool = SqlitePool::connect(database_url)
-            .await
-            .map_err(|e| Error::Database(e))?;
+        // Используем функцию создания подключения из init.rs
+        let db = init::create_database_connection(database_url).await?;
 
-        Ok(Self { pool })
+        Ok(Self { db })
+    }
+
+    /// Получает SQLite pool (для обратной совместимости)
+    fn get_pool(&self) -> Result<&SqlitePool> {
+        self.db.get_sqlite_pool()
+            .ok_or_else(|| Error::Other("SQLite pool not found. Only SQLite is currently supported in SqlStore.".to_string()))
     }
 }
 
@@ -69,7 +67,7 @@ impl ConnectionManager for SqlStore {
     }
 
     async fn close(&self) -> Result<()> {
-        self.pool.close().await;
+        self.get_pool()?.close().await;
         Ok(())
     }
 
@@ -87,7 +85,7 @@ impl MigrationManager for SqlStore {
     async fn is_initialized(&self) -> Result<bool> {
         let query = "SELECT name FROM sqlite_master WHERE type='table' AND name='migration'";
         let result = sqlx::query(query)
-            .fetch_optional(&self.pool)
+            .fetch_optional(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
         Ok(result.is_some())
@@ -98,7 +96,7 @@ impl MigrationManager for SqlStore {
         sqlx::query(query)
             .bind(version)
             .bind(name)
-            .execute(&self.pool)
+            .execute(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
         Ok(())
@@ -108,7 +106,7 @@ impl MigrationManager for SqlStore {
         let query = "SELECT COUNT(*) FROM migration WHERE version = ?";
         let count: i64 = sqlx::query_scalar(query)
             .bind(version)
-            .fetch_one(&self.pool)
+            .fetch_one(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
         Ok(count > 0)
@@ -120,10 +118,10 @@ impl OptionsManager for SqlStore {
     async fn get_options(&self) -> Result<HashMap<String, String>> {
         let query = "SELECT key, value FROM option";
         let rows = sqlx::query(query)
-            .fetch_all(&self.pool)
+            .fetch_all(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
-        
+
         Ok(rows.into_iter().map(|row| {
             let key: String = row.get("key");
             let value: String = row.get("value");
@@ -135,7 +133,7 @@ impl OptionsManager for SqlStore {
         let query = "SELECT value FROM option WHERE key = ?";
         let result = sqlx::query_scalar::<_, String>(query)
             .bind(key)
-            .fetch_optional(&self.pool)
+            .fetch_optional(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
         Ok(result)
@@ -146,7 +144,7 @@ impl OptionsManager for SqlStore {
         sqlx::query(query)
             .bind(key)
             .bind(value)
-            .execute(&self.pool)
+            .execute(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
         Ok(())
@@ -156,7 +154,7 @@ impl OptionsManager for SqlStore {
         let query = "DELETE FROM option WHERE key = ?";
         sqlx::query(query)
             .bind(key)
-            .execute(&self.pool)
+            .execute(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
         Ok(())
@@ -168,10 +166,10 @@ impl UserManager for SqlStore {
     async fn get_users(&self, _params: RetrieveQueryParams) -> Result<Vec<User>> {
         let query = "SELECT * FROM user ORDER BY id";
         let rows = sqlx::query(query)
-            .fetch_all(&self.pool)
+            .fetch_all(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
-        
+
         Ok(rows.into_iter().map(|row| User {
             id: row.get("id"),
             created: row.get("created"),
@@ -192,13 +190,13 @@ impl UserManager for SqlStore {
         let query = "SELECT * FROM user WHERE id = ?";
         let row = sqlx::query(query)
             .bind(user_id)
-            .fetch_one(&self.pool)
+            .fetch_one(self.get_pool()?)
             .await
             .map_err(|e| match e {
                 sqlx::Error::RowNotFound => Error::NotFound("Пользователь не найден".to_string()),
                 _ => Error::Database(e),
             })?;
-        
+
         Ok(User {
             id: row.get("id"),
             created: row.get("created"),
@@ -220,13 +218,13 @@ impl UserManager for SqlStore {
         let row = sqlx::query(query)
             .bind(login)
             .bind(email)
-            .fetch_one(&self.pool)
+            .fetch_one(self.get_pool()?)
             .await
             .map_err(|e| match e {
                 sqlx::Error::RowNotFound => Error::NotFound("Пользователь не найден".to_string()),
                 _ => Error::Database(e),
             })?;
-        
+
         Ok(User {
             id: row.get("id"),
             created: row.get("created"),
@@ -255,10 +253,10 @@ impl UserManager for SqlStore {
             .bind(user.alert)
             .bind(user.pro)
             .bind(user.created)
-            .execute(&self.pool)
+            .execute(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
-        
+
         self.get_user_by_login_or_email(&user.username, &user.email).await
     }
 
@@ -273,7 +271,7 @@ impl UserManager for SqlStore {
             .bind(user.alert)
             .bind(user.pro)
             .bind(user.id)
-            .execute(&self.pool)
+            .execute(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
         Ok(())
@@ -283,7 +281,7 @@ impl UserManager for SqlStore {
         let query = "DELETE FROM user WHERE id = ?";
         sqlx::query(query)
             .bind(user_id)
-            .execute(&self.pool)
+            .execute(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
         Ok(())
@@ -294,7 +292,7 @@ impl UserManager for SqlStore {
         sqlx::query(query)
             .bind(password)
             .bind(user_id)
-            .execute(&self.pool)
+            .execute(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
         Ok(())
@@ -303,10 +301,10 @@ impl UserManager for SqlStore {
     async fn get_all_admins(&self) -> Result<Vec<User>> {
         let query = "SELECT * FROM user WHERE admin = 1";
         let rows = sqlx::query(query)
-            .fetch_all(&self.pool)
+            .fetch_all(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
-        
+
         Ok(rows.into_iter().map(|row| User {
             id: row.get("id"),
             created: row.get("created"),
@@ -326,21 +324,21 @@ impl UserManager for SqlStore {
     async fn get_user_count(&self) -> Result<usize> {
         let query = "SELECT COUNT(*) FROM user";
         let count: i64 = sqlx::query_scalar(query)
-            .fetch_one(&self.pool)
+            .fetch_one(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
         Ok(count as usize)
     }
 
     async fn get_project_users(&self, project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<ProjectUser>> {
-        let query = "SELECT pu.*, u.username, u.name, u.email 
-                     FROM project__user pu 
-                     JOIN user u ON pu.user_id = u.id 
-                     WHERE pu.project_id = ? 
+        let query = "SELECT pu.*, u.username, u.name, u.email
+                     FROM project__user pu
+                     JOIN user u ON pu.user_id = u.id
+                     WHERE pu.project_id = ?
                      ORDER BY pu.id";
         let rows = sqlx::query(query)
             .bind(project_id)
-            .fetch_all(&self.pool)
+            .fetch_all(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
 
@@ -371,10 +369,10 @@ impl ProjectStore for SqlStore {
         }
 
         let rows = q
-            .fetch_all(&self.pool)
+            .fetch_all(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
-        
+
         Ok(rows.into_iter().map(|row| Project {
             id: row.get("id"),
             created: row.get("created"),
@@ -391,13 +389,13 @@ impl ProjectStore for SqlStore {
         let query = "SELECT * FROM project WHERE id = ?";
         let row = sqlx::query(query)
             .bind(project_id)
-            .fetch_one(&self.pool)
+            .fetch_one(self.get_pool()?)
             .await
             .map_err(|e| match e {
                 sqlx::Error::RowNotFound => Error::NotFound("Проект не найден".to_string()),
                 _ => Error::Database(e),
             })?;
-        
+
         Ok(Project {
             id: row.get("id"),
             created: row.get("created"),
@@ -420,10 +418,10 @@ impl ProjectStore for SqlStore {
             .bind(project.max_parallel_tasks)
             .bind(&project.r#type)
             .bind(&project.default_secret_storage_id)
-            .fetch_one(&self.pool)
+            .fetch_one(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
-        
+
         project.id = id;
         Ok(project)
     }
@@ -438,7 +436,7 @@ impl ProjectStore for SqlStore {
             .bind(&project.r#type)
             .bind(&project.default_secret_storage_id)
             .bind(project.id)
-            .execute(&self.pool)
+            .execute(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
         Ok(())
@@ -448,7 +446,7 @@ impl ProjectStore for SqlStore {
         let query = "DELETE FROM project WHERE id = ?";
         sqlx::query(query)
             .bind(project_id)
-            .execute(&self.pool)
+            .execute(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
         Ok(())
@@ -666,7 +664,7 @@ impl SecretStorageManager for SqlStore {
             "SELECT * FROM secret_storage WHERE project_id = ? ORDER BY name"
         )
         .bind(project_id)
-        .fetch_all(&self.pool)
+        .fetch_all(self.get_pool()?)
         .await
         .map_err(|e| Error::Database(e))?;
 
@@ -679,7 +677,7 @@ impl SecretStorageManager for SqlStore {
         )
         .bind(storage_id)
         .bind(project_id)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.get_pool()?)
         .await
         .map_err(|e| Error::Database(e))?;
 
@@ -695,7 +693,7 @@ impl SecretStorageManager for SqlStore {
         .bind(&storage.r#type.to_string())
         .bind(&storage.params)
         .bind(storage.read_only)
-        .execute(&self.pool)
+        .execute(self.get_pool()?)
         .await
         .map_err(|e| Error::Database(e))?;
 
@@ -713,7 +711,7 @@ impl SecretStorageManager for SqlStore {
         .bind(storage.read_only)
         .bind(storage.id)
         .bind(storage.project_id)
-        .execute(&self.pool)
+        .execute(self.get_pool()?)
         .await
         .map_err(|e| Error::Database(e))?;
 
@@ -724,7 +722,7 @@ impl SecretStorageManager for SqlStore {
         sqlx::query("DELETE FROM secret_storage WHERE id = ? AND project_id = ?")
             .bind(storage_id)
             .bind(project_id)
-            .execute(&self.pool)
+            .execute(self.get_pool()?)
             .await
             .map_err(|e| Error::Database(e))?;
 
