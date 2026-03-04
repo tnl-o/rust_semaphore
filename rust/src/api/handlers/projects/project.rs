@@ -17,9 +17,8 @@ use crate::db::store::ProjectStore;
 /// Получает проекты пользователя
 pub async fn get_projects(
     State(state): State<Arc<AppState>>,
-    Path(user_id): Path<i32>,
 ) -> std::result::Result<Json<Vec<Project>>, (StatusCode, Json<ErrorResponse>)> {
-    let projects = state.store.get_projects(Some(user_id))
+    let projects = state.store.get_projects(None)
         .await
         .map_err(|e| (
             StatusCode::INTERNAL_SERVER_ERROR,
