@@ -1,7 +1,7 @@
 # Отчёт об ошибках сборки Semaphore Rust
 
 **Дата начала:** 2026-03-02  
-**Последнее обновление:** 2026-03-05 (сессия 13)
+**Последнее обновление:** 2026-03-05 (сессия 14)
 
 ---
 
@@ -34,10 +34,19 @@
 | **Сессия 9** | **2026-03-03** | **~35** | **~124** | **100% (lib)** |
 | **Сессия 12** | **2026-03-05** | **21→0** | **0 failed** | **490 passed** |
 | **Сессия 13** | **2026-03-05** | **6 ignored→0** | **0 failed** | **503 passed** |
+| **Сессия 14** | **2026-03-05** | **Фаза 1 API** | **0 failed** | **503 passed** |
 
 ---
 
 ## ✅ Исправленные категории ошибок
+
+### Сессия 14 — Фаза 1 API (2026-03-05)
+
+- **GET /api/user** — текущий пользователь (handlers/auth.rs)
+- **POST /api/users/{id}/password** — смена пароля (handlers/users.rs)
+- **POST /api/projects/restore** — восстановление проекта (handlers/projects/project.rs, services/backup.rs)
+- **AuthUser extractors** — исправлен тип state: `FromRequestParts<Arc<AppState>>` вместо `State<Arc<AppState>>`
+- **BackupFormat** — добавлены serde aliases для совместимости с api-docs (meta, keys, type, title)
 
 ### Сессия 13 — план дальнейших работ (2026-03-05)
 

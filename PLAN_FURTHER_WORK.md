@@ -1,7 +1,17 @@
 # План дальнейших работ Semaphore Rust
 
 **Дата:** 2026-03-05  
-**Последнее обновление:** 2026-03-05 (сессия 13)
+**Последнее обновление:** 2026-03-05 (сессия 14)
+
+---
+
+## ✅ Выполнено (сессия 14) — Фаза 1 API
+
+| Задача | Файлы | Статус |
+|--------|-------|--------|
+| 1.1 GET /api/user — текущий пользователь | handlers/auth.rs, routes.rs | ✅ |
+| 1.2 POST /api/users/{id}/password — смена пароля | handlers/users.rs, routes.rs | ✅ |
+| 1.3 POST /api/projects/restore — восстановление | handlers/projects/project.rs, services/backup.rs, routes.rs | ✅ |
 
 ---
 
@@ -17,7 +27,16 @@
 
 ---
 
-## 📋 Следующие шаги
+## 📋 Следующие шаги (Фаза 1 — осталось)
+
+| Шаг | Задача | Файлы | Примечание |
+|-----|--------|-------|------------|
+| 1.4 | POST /api/projects/{id}/tasks/{id}/stop | handlers/tasks.rs, task_pool_runner | Остановка задачи |
+| 1.5 | GET /api/projects/{id}/tasks/{id}/output | handlers/tasks.rs, task_output | Вывод задачи |
+
+---
+
+## 📋 Следующие шаги (общие)
 
 1. **Очистка warnings** (опционально) — убрать `#![allow(...)]`, исправить ~241 предупреждение
 2. **Расширить unit-тесты** — task handlers, интеграционные тесты
@@ -199,9 +218,32 @@
 
 ---
 
+## 🔍 Новые вводные (сессия 14)
+
+### Axum 0.8 — extractors
+
+- **AuthUser** и др. extractors должны реализовывать `FromRequestParts<Arc<AppState>>`, а не `FromRequestParts<State<Arc<AppState>>>`. В Axum 0.8 state передаётся как `Arc<AppState>` напрямую.
+
+### BackupFormat — совместимость с api-docs
+
+- API использует `meta` вместо `project`, `keys` вместо `access_keys` — добавлены `#[serde(alias = "meta")]` и `#[serde(alias = "keys")]` в `services/backup.rs`.
+- В api-docs поля `type` в шаблонах, инвентаре, ключах — добавлены `#[serde(alias = "type")]` для `template_type`, `inventory_type`, `key_type`.
+- Views в api-docs используют `title` — добавлен `#[serde(alias = "title")]` для `BackupView.name`.
+
+### Restore — владелец проекта
+
+- `create_project_user` закомментирован в `handlers/projects/users.rs` — после restore пользователь не добавляется как owner автоматически. Требуется реализация Store::create_project_user.
+
+### Go reference
+
+- RESTORE: `api/projects/backup_restore.go` — `Restore()` читает body, unmarshal в BackupFormat, verify(), backup.Restore(user, store), возвращает 200 + Project.
+- Пароль: `api/users.go` — `updateUserPassword()`: только admin или сам пользователь; external users не могут менять пароль.
+
+---
+
 ## Чеклист для каждой сессии
 
 1. `cargo build --lib` — сборка без ошибок
 2. `cargo test --lib` — все тесты проходят
 3. `cargo run -- server` — сервер запускается
-4. Обновить BUILD_ERRORS.md при изменении статуса
+4. Обновить BUILD_ERRORS.md или PLAN_FURTHER_WORK.md при изменении статуса
