@@ -31,13 +31,14 @@ pub mod session;
 pub mod view;
 
 use crate::db::store::*;
-use crate::models::{User, Project, Task, TaskWithTpl, TaskOutput, TaskStage, Template, Inventory, Repository, Environment, AccessKey, Integration, Schedule, Session, APIToken, Event, Runner, View, Role, ProjectInvite, ProjectInviteWithUser, ProjectUser, RetrieveQueryParams, TerraformInventoryAlias, TerraformInventoryState, SecretStorage};
+use crate::models::{User, Project, Task, TaskWithTpl, TaskOutput, TaskStage, Template, Inventory, Repository, Environment, AccessKey, Integration, Schedule, Session, APIToken, Event, Runner, View, Role, ProjectInvite, ProjectInviteWithUser, ProjectUser, RetrieveQueryParams, TerraformInventoryAlias, TerraformInventoryState, SecretStorage, SessionVerificationMethod};
 use crate::error::{Error, Result};
 use crate::services::task_logger::TaskStatus;
 use crate::db::sql::types::{SqlDb, SqlDialect};
 use async_trait::async_trait;
 use sqlx::{SqlitePool, PgPool, MySqlPool, Row};
 use std::collections::HashMap;
+use chrono::Utc;
 
 /// SQL-хранилище данных (на базе SQLite, MySQL, PostgreSQL)
 pub struct SqlStore {
@@ -3483,37 +3484,659 @@ impl TaskManager for SqlStore {
 
 #[async_trait]
 impl ScheduleManager for SqlStore {
-    async fn get_schedules(&self, _project_id: i32) -> Result<Vec<Schedule>> { Ok(vec![]) }
-    async fn get_schedule(&self, _project_id: i32, _schedule_id: i32) -> Result<Schedule> { Err(Error::NotFound("Расписание не найдено".to_string())) }
-    async fn create_schedule(&self, _schedule: Schedule) -> Result<Schedule> { Err(Error::Other("Не реализовано".to_string())) }
-    async fn update_schedule(&self, _schedule: Schedule) -> Result<()> { Err(Error::Other("Не реализовано".to_string())) }
-    async fn delete_schedule(&self, _project_id: i32, _schedule_id: i32) -> Result<()> { Err(Error::Other("Не реализовано".to_string())) }
-    async fn set_schedule_active(&self, _project_id: i32, _schedule_id: i32, _active: bool) -> Result<()> { Err(Error::Other("Не реализовано".to_string())) }
-    async fn set_schedule_commit_hash(&self, _project_id: i32, _schedule_id: i32, _hash: &str) -> Result<()> { Err(Error::Other("Не реализовано".to_string())) }
+    async fn get_schedules(&self, project_id: i32) -> Result<Vec<Schedule>> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "SELECT * FROM schedule WHERE project_id = ? ORDER BY name";
+                let rows = sqlx::query(query).bind(project_id).fetch_all(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+                Ok(rows.into_iter().map(|row| Schedule {
+                    id: row.get("id"),
+                    project_id: row.get("project_id"),
+                    template_id: row.get("template_id"),
+                    cron: row.get("cron"),
+                    cron_format: row.try_get("cron_format").ok().flatten(),
+                    name: row.get("name"),
+                    active: row.get("active"),
+                    last_commit_hash: row.try_get("last_commit_hash").ok().flatten(),
+                    repository_id: row.try_get("repository_id").ok(),
+                    created: row.try_get("created").ok(),
+                }).collect())
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "SELECT * FROM schedule WHERE project_id = $1 ORDER BY name";
+                let rows = sqlx::query(query).bind(project_id).fetch_all(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+                Ok(rows.into_iter().map(|row| Schedule {
+                    id: row.get("id"),
+                    project_id: row.get("project_id"),
+                    template_id: row.get("template_id"),
+                    cron: row.get("cron"),
+                    cron_format: row.try_get("cron_format").ok().flatten(),
+                    name: row.get("name"),
+                    active: row.get("active"),
+                    last_commit_hash: row.try_get("last_commit_hash").ok().flatten(),
+                    repository_id: row.try_get("repository_id").ok(),
+                    created: row.try_get("created").ok(),
+                }).collect())
+            }
+            SqlDialect::MySQL => {
+                let query = "SELECT * FROM `schedule` WHERE project_id = ? ORDER BY name";
+                let rows = sqlx::query(query).bind(project_id).fetch_all(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+                Ok(rows.into_iter().map(|row| Schedule {
+                    id: row.get("id"),
+                    project_id: row.get("project_id"),
+                    template_id: row.get("template_id"),
+                    cron: row.get("cron"),
+                    cron_format: row.try_get("cron_format").ok().flatten(),
+                    name: row.get("name"),
+                    active: row.get("active"),
+                    last_commit_hash: row.try_get("last_commit_hash").ok().flatten(),
+                    repository_id: row.try_get("repository_id").ok(),
+                    created: row.try_get("created").ok(),
+                }).collect())
+            }
+        }
+    }
+
+    async fn get_schedule(&self, _project_id: i32, schedule_id: i32) -> Result<Schedule> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "SELECT * FROM schedule WHERE id = ?";
+                let row = sqlx::query(query).bind(schedule_id).fetch_one(self.get_sqlite_pool()?).await.map_err(|e| match e {
+                    sqlx::Error::RowNotFound => Error::NotFound("Расписание не найдено".to_string()),
+                    _ => Error::Database(e),
+                })?;
+                Ok(Schedule {
+                    id: row.get("id"),
+                    project_id: row.get("project_id"),
+                    template_id: row.get("template_id"),
+                    cron: row.get("cron"),
+                    cron_format: row.try_get("cron_format").ok().flatten(),
+                    name: row.get("name"),
+                    active: row.get("active"),
+                    last_commit_hash: row.try_get("last_commit_hash").ok().flatten(),
+                    repository_id: row.try_get("repository_id").ok(),
+                    created: row.try_get("created").ok(),
+                })
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "SELECT * FROM schedule WHERE id = $1";
+                let row = sqlx::query(query).bind(schedule_id).fetch_one(self.get_postgres_pool()?).await.map_err(|e| match e {
+                    sqlx::Error::RowNotFound => Error::NotFound("Расписание не найдено".to_string()),
+                    _ => Error::Database(e),
+                })?;
+                Ok(Schedule {
+                    id: row.get("id"),
+                    project_id: row.get("project_id"),
+                    template_id: row.get("template_id"),
+                    cron: row.get("cron"),
+                    cron_format: row.try_get("cron_format").ok().flatten(),
+                    name: row.get("name"),
+                    active: row.get("active"),
+                    last_commit_hash: row.try_get("last_commit_hash").ok().flatten(),
+                    repository_id: row.try_get("repository_id").ok(),
+                    created: row.try_get("created").ok(),
+                })
+            }
+            SqlDialect::MySQL => {
+                let query = "SELECT * FROM `schedule` WHERE id = ?";
+                let row = sqlx::query(query).bind(schedule_id).fetch_one(self.get_mysql_pool()?).await.map_err(|e| match e {
+                    sqlx::Error::RowNotFound => Error::NotFound("Расписание не найдено".to_string()),
+                    _ => Error::Database(e),
+                })?;
+                Ok(Schedule {
+                    id: row.get("id"),
+                    project_id: row.get("project_id"),
+                    template_id: row.get("template_id"),
+                    cron: row.get("cron"),
+                    cron_format: row.try_get("cron_format").ok().flatten(),
+                    name: row.get("name"),
+                    active: row.get("active"),
+                    last_commit_hash: row.try_get("last_commit_hash").ok().flatten(),
+                    repository_id: row.try_get("repository_id").ok(),
+                    created: row.try_get("created").ok(),
+                })
+            }
+        }
+    }
+
+    async fn create_schedule(&self, mut schedule: Schedule) -> Result<Schedule> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "INSERT INTO schedule (project_id, template_id, cron, name, active, created) VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
+                let id: i32 = sqlx::query_scalar(query)
+                    .bind(schedule.project_id)
+                    .bind(schedule.template_id)
+                    .bind(&schedule.cron)
+                    .bind(&schedule.name)
+                    .bind(schedule.active)
+                    .bind(&schedule.created)
+                    .fetch_one(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+                schedule.id = id;
+                Ok(schedule)
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "INSERT INTO schedule (project_id, template_id, cron, name, active, created) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id";
+                let id: i32 = sqlx::query_scalar(query)
+                    .bind(schedule.project_id)
+                    .bind(schedule.template_id)
+                    .bind(&schedule.cron)
+                    .bind(&schedule.name)
+                    .bind(schedule.active)
+                    .bind(&schedule.created)
+                    .fetch_one(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+                schedule.id = id;
+                Ok(schedule)
+            }
+            SqlDialect::MySQL => {
+                let query = "INSERT INTO `schedule` (project_id, template_id, cron, name, active, created) VALUES (?, ?, ?, ?, ?, ?)";
+                let result = sqlx::query(query)
+                    .bind(schedule.project_id)
+                    .bind(schedule.template_id)
+                    .bind(&schedule.cron)
+                    .bind(&schedule.name)
+                    .bind(schedule.active)
+                    .bind(&schedule.created)
+                    .execute(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+                schedule.id = result.last_insert_id() as i32;
+                Ok(schedule)
+            }
+        }
+    }
+
+    async fn update_schedule(&self, schedule: Schedule) -> Result<()> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "UPDATE schedule SET cron = ?, name = ?, active = ? WHERE id = ?";
+                sqlx::query(query)
+                    .bind(&schedule.cron)
+                    .bind(&schedule.name)
+                    .bind(schedule.active)
+                    .bind(schedule.id)
+                    .execute(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "UPDATE schedule SET cron = $1, name = $2, active = $3 WHERE id = $4";
+                sqlx::query(query)
+                    .bind(&schedule.cron)
+                    .bind(&schedule.name)
+                    .bind(schedule.active)
+                    .bind(schedule.id)
+                    .execute(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::MySQL => {
+                let query = "UPDATE `schedule` SET cron = ?, name = ?, active = ? WHERE id = ?";
+                sqlx::query(query)
+                    .bind(&schedule.cron)
+                    .bind(&schedule.name)
+                    .bind(schedule.active)
+                    .bind(schedule.id)
+                    .execute(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn delete_schedule(&self, _project_id: i32, schedule_id: i32) -> Result<()> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "DELETE FROM schedule WHERE id = ?";
+                sqlx::query(query).bind(schedule_id).execute(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "DELETE FROM schedule WHERE id = $1";
+                sqlx::query(query).bind(schedule_id).execute(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::MySQL => {
+                let query = "DELETE FROM `schedule` WHERE id = ?";
+                sqlx::query(query).bind(schedule_id).execute(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn set_schedule_active(&self, _project_id: i32, schedule_id: i32, active: bool) -> Result<()> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "UPDATE schedule SET active = ? WHERE id = ?";
+                sqlx::query(query).bind(active).bind(schedule_id).execute(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "UPDATE schedule SET active = $1 WHERE id = $2";
+                sqlx::query(query).bind(active).bind(schedule_id).execute(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::MySQL => {
+                let query = "UPDATE `schedule` SET active = ? WHERE id = ?";
+                sqlx::query(query).bind(active).bind(schedule_id).execute(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn set_schedule_commit_hash(&self, _project_id: i32, _schedule_id: i32, _hash: &str) -> Result<()> {
+        // TODO: добавить поле commit_hash в таблицу schedule
+        Ok(())
+    }
 }
 
 #[async_trait]
 impl SessionManager for SqlStore {
-    async fn get_session(&self, _user_id: i32, _session_id: i32) -> Result<Session> { Err(Error::NotFound("Сессия не найдена".to_string())) }
-    async fn create_session(&self, _session: Session) -> Result<Session> { Err(Error::Other("Не реализовано".to_string())) }
-    async fn expire_session(&self, _user_id: i32, _session_id: i32) -> Result<()> { Err(Error::Other("Не реализовано".to_string())) }
-    async fn verify_session(&self, _user_id: i32, _session_id: i32) -> Result<()> { Err(Error::Other("Не реализовано".to_string())) }
-    async fn touch_session(&self, _user_id: i32, _session_id: i32) -> Result<()> { Err(Error::Other("Не реализовано".to_string())) }
+    async fn get_session(&self, _user_id: i32, session_id: i32) -> Result<Session> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "SELECT * FROM session WHERE id = ?";
+                let row = sqlx::query(query).bind(session_id).fetch_one(self.get_sqlite_pool()?).await.map_err(|e| match e {
+                    sqlx::Error::RowNotFound => Error::NotFound("Сессия не найдена".to_string()),
+                    _ => Error::Database(e),
+                })?;
+                Ok(Session {
+                    id: row.get("id"),
+                    user_id: row.get("user_id"),
+                    created: row.get("created"),
+                    last_active: row.get("last_active"),
+                    ip: row.try_get("ip").ok().unwrap_or_default(),
+                    user_agent: row.try_get("user_agent").ok().unwrap_or_default(),
+                    expired: row.get("expired"),
+                    verification_method: row.try_get("verification_method").ok().unwrap_or(SessionVerificationMethod::None),
+                    verified: row.try_get("verified").ok().unwrap_or(false),
+                })
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "SELECT * FROM session WHERE id = $1";
+                let row = sqlx::query(query).bind(session_id).fetch_one(self.get_postgres_pool()?).await.map_err(|e| match e {
+                    sqlx::Error::RowNotFound => Error::NotFound("Сессия не найдена".to_string()),
+                    _ => Error::Database(e),
+                })?;
+                Ok(Session {
+                    id: row.get("id"),
+                    user_id: row.get("user_id"),
+                    created: row.get("created"),
+                    last_active: row.get("last_active"),
+                    ip: row.try_get("ip").ok().unwrap_or_default(),
+                    user_agent: row.try_get("user_agent").ok().unwrap_or_default(),
+                    expired: row.get("expired"),
+                    verification_method: row.try_get("verification_method").ok().unwrap_or(SessionVerificationMethod::None),
+                    verified: row.try_get("verified").ok().unwrap_or(false),
+                })
+            }
+            SqlDialect::MySQL => {
+                let query = "SELECT * FROM `session` WHERE id = ?";
+                let row = sqlx::query(query).bind(session_id).fetch_one(self.get_mysql_pool()?).await.map_err(|e| match e {
+                    sqlx::Error::RowNotFound => Error::NotFound("Сессия не найдена".to_string()),
+                    _ => Error::Database(e),
+                })?;
+                Ok(Session {
+                    id: row.get("id"),
+                    user_id: row.get("user_id"),
+                    created: row.get("created"),
+                    last_active: row.get("last_active"),
+                    ip: row.try_get("ip").ok().unwrap_or_default(),
+                    user_agent: row.try_get("user_agent").ok().unwrap_or_default(),
+                    expired: row.get("expired"),
+                    verification_method: row.try_get("verification_method").ok().unwrap_or(SessionVerificationMethod::None),
+                    verified: row.try_get("verified").ok().unwrap_or(false),
+                })
+            }
+        }
+    }
+
+    async fn create_session(&self, mut session: Session) -> Result<Session> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "INSERT INTO session (user_id, created, last_active, ip, user_agent, expired, verification_method, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+                let id: i32 = sqlx::query_scalar(query)
+                    .bind(session.user_id)
+                    .bind(session.created)
+                    .bind(session.last_active)
+                    .bind(&session.ip)
+                    .bind(&session.user_agent)
+                    .bind(session.expired)
+                    .bind(&session.verification_method)
+                    .bind(session.verified)
+                    .fetch_one(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+                session.id = id;
+                Ok(session)
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "INSERT INTO session (user_id, created, last_active, ip, user_agent, expired, verification_method, verified) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id";
+                let id: i32 = sqlx::query_scalar(query)
+                    .bind(session.user_id)
+                    .bind(session.created)
+                    .bind(session.last_active)
+                    .bind(&session.ip)
+                    .bind(&session.user_agent)
+                    .bind(session.expired)
+                    .bind(&session.verification_method)
+                    .bind(session.verified)
+                    .fetch_one(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+                session.id = id;
+                Ok(session)
+            }
+            SqlDialect::MySQL => {
+                let query = "INSERT INTO `session` (user_id, created, last_active, ip, user_agent, expired, verification_method, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                let result = sqlx::query(query)
+                    .bind(session.user_id)
+                    .bind(session.created)
+                    .bind(session.last_active)
+                    .bind(&session.ip)
+                    .bind(&session.user_agent)
+                    .bind(session.expired)
+                    .bind(&session.verification_method)
+                    .bind(session.verified)
+                    .execute(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+                session.id = result.last_insert_id() as i32;
+                Ok(session)
+            }
+        }
+    }
+
+    async fn expire_session(&self, _user_id: i32, session_id: i32) -> Result<()> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "UPDATE session SET expired = 1 WHERE id = ?";
+                sqlx::query(query).bind(session_id).execute(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "UPDATE session SET expired = TRUE WHERE id = $1";
+                sqlx::query(query).bind(session_id).execute(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::MySQL => {
+                let query = "UPDATE `session` SET expired = 1 WHERE id = ?";
+                sqlx::query(query).bind(session_id).execute(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn verify_session(&self, _user_id: i32, _session_id: i32) -> Result<()> {
+        // TODO: реализовать проверку сессии
+        Ok(())
+    }
+
+    async fn touch_session(&self, _user_id: i32, session_id: i32) -> Result<()> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "UPDATE session SET last_active = ? WHERE id = ?";
+                sqlx::query(query).bind(Utc::now()).bind(session_id).execute(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "UPDATE session SET last_active = $1 WHERE id = $2";
+                sqlx::query(query).bind(Utc::now()).bind(session_id).execute(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::MySQL => {
+                let query = "UPDATE `session` SET last_active = ? WHERE id = ?";
+                sqlx::query(query).bind(Utc::now()).bind(session_id).execute(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+        }
+        Ok(())
+    }
 }
 
 #[async_trait]
 impl TokenManager for SqlStore {
-    async fn get_api_tokens(&self, _user_id: i32) -> Result<Vec<APIToken>> { Ok(vec![]) }
-    async fn create_api_token(&self, _token: APIToken) -> Result<APIToken> { Err(Error::Other("Не реализовано".to_string())) }
-    async fn get_api_token(&self, _token_id: &str) -> Result<APIToken> { Err(Error::NotFound("Токен не найден".to_string())) }
-    async fn expire_api_token(&self, _user_id: i32, _token_id: &str) -> Result<()> { Err(Error::Other("Не реализовано".to_string())) }
-    async fn delete_api_token(&self, _user_id: i32, _token_id: &str) -> Result<()> { Err(Error::Other("Не реализовано".to_string())) }
+    async fn get_api_tokens(&self, user_id: i32) -> Result<Vec<APIToken>> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "SELECT * FROM api_token WHERE user_id = ? ORDER BY created DESC";
+                let rows = sqlx::query(query).bind(user_id).fetch_all(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+                Ok(rows.into_iter().map(|row| APIToken {
+                    id: row.get("id"),
+                    user_id: row.get("user_id"),
+                    created: row.get("created"),
+                    expired: row.get("expired"),
+                }).collect())
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "SELECT * FROM api_token WHERE user_id = $1 ORDER BY created DESC";
+                let rows = sqlx::query(query).bind(user_id).fetch_all(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+                Ok(rows.into_iter().map(|row| APIToken {
+                    id: row.get("id"),
+                    user_id: row.get("user_id"),
+                    created: row.get("created"),
+                    expired: row.get("expired"),
+                }).collect())
+            }
+            SqlDialect::MySQL => {
+                let query = "SELECT * FROM `api_token` WHERE user_id = ? ORDER BY created DESC";
+                let rows = sqlx::query(query).bind(user_id).fetch_all(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+                Ok(rows.into_iter().map(|row| APIToken {
+                    id: row.get("id"),
+                    user_id: row.get("user_id"),
+                    created: row.get("created"),
+                    expired: row.get("expired"),
+                }).collect())
+            }
+        }
+    }
+
+    async fn create_api_token(&self, mut token: APIToken) -> Result<APIToken> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "INSERT INTO api_token (user_id, created, expired) VALUES (?, ?, ?) RETURNING id";
+                let id: String = sqlx::query_scalar(query)
+                    .bind(token.user_id)
+                    .bind(token.created)
+                    .bind(token.expired)
+                    .fetch_one(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+                token.id = id;
+                Ok(token)
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "INSERT INTO api_token (user_id, created, expired) VALUES ($1, $2, $3) RETURNING id";
+                let id: String = sqlx::query_scalar(query)
+                    .bind(token.user_id)
+                    .bind(token.created)
+                    .bind(token.expired)
+                    .fetch_one(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+                token.id = id;
+                Ok(token)
+            }
+            SqlDialect::MySQL => {
+                let query = "INSERT INTO `api_token` (user_id, created, expired) VALUES (?, ?, ?)";
+                let result = sqlx::query(query)
+                    .bind(token.user_id)
+                    .bind(token.created)
+                    .bind(token.expired)
+                    .execute(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+                token.id = result.last_insert_id().to_string();
+                Ok(token)
+            }
+        }
+    }
+
+    async fn get_api_token(&self, token_id: &str) -> Result<APIToken> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "SELECT * FROM api_token WHERE id = ?";
+                let row = sqlx::query(query).bind(token_id).fetch_one(self.get_sqlite_pool()?).await.map_err(|e| match e {
+                    sqlx::Error::RowNotFound => Error::NotFound("Токен не найден".to_string()),
+                    _ => Error::Database(e),
+                })?;
+                Ok(APIToken {
+                    id: row.get("id"),
+                    user_id: row.get("user_id"),
+                    created: row.get("created"),
+                    expired: row.get("expired"),
+                })
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "SELECT * FROM api_token WHERE id = $1";
+                let row = sqlx::query(query).bind(token_id).fetch_one(self.get_postgres_pool()?).await.map_err(|e| match e {
+                    sqlx::Error::RowNotFound => Error::NotFound("Токен не найден".to_string()),
+                    _ => Error::Database(e),
+                })?;
+                Ok(APIToken {
+                    id: row.get("id"),
+                    user_id: row.get("user_id"),
+                    created: row.get("created"),
+                    expired: row.get("expired"),
+                })
+            }
+            SqlDialect::MySQL => {
+                let query = "SELECT * FROM `api_token` WHERE id = ?";
+                let row = sqlx::query(query).bind(token_id).fetch_one(self.get_mysql_pool()?).await.map_err(|e| match e {
+                    sqlx::Error::RowNotFound => Error::NotFound("Токен не найден".to_string()),
+                    _ => Error::Database(e),
+                })?;
+                Ok(APIToken {
+                    id: row.get("id"),
+                    user_id: row.get("user_id"),
+                    created: row.get("created"),
+                    expired: row.get("expired"),
+                })
+            }
+        }
+    }
+
+    async fn expire_api_token(&self, _user_id: i32, token_id: &str) -> Result<()> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "UPDATE api_token SET expired = 1 WHERE id = ?";
+                sqlx::query(query).bind(token_id).execute(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "UPDATE api_token SET expired = TRUE WHERE id = $1";
+                sqlx::query(query).bind(token_id).execute(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::MySQL => {
+                let query = "UPDATE `api_token` SET expired = 1 WHERE id = ?";
+                sqlx::query(query).bind(token_id).execute(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn delete_api_token(&self, _user_id: i32, token_id: &str) -> Result<()> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "DELETE FROM api_token WHERE id = ?";
+                sqlx::query(query).bind(token_id).execute(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "DELETE FROM api_token WHERE id = $1";
+                sqlx::query(query).bind(token_id).execute(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::MySQL => {
+                let query = "DELETE FROM `api_token` WHERE id = ?";
+                sqlx::query(query).bind(token_id).execute(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+            }
+        }
+        Ok(())
+    }
 }
 
 #[async_trait]
 impl EventManager for SqlStore {
-    async fn get_events(&self, _project_id: Option<i32>, _limit: usize) -> Result<Vec<Event>> { Ok(vec![]) }
-    async fn create_event(&self, _event: Event) -> Result<Event> { Err(Error::Other("Не реализовано".to_string())) }
+    async fn get_events(&self, project_id: Option<i32>, limit: usize) -> Result<Vec<Event>> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = if project_id.is_some() {
+                    "SELECT * FROM event WHERE project_id = ? ORDER BY created DESC LIMIT ?"
+                } else {
+                    "SELECT * FROM event ORDER BY created DESC LIMIT ?"
+                };
+                let mut q = sqlx::query(query);
+                if let Some(pid) = project_id {
+                    q = q.bind(pid);
+                }
+                let rows = q.bind(limit as i64).fetch_all(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+                Ok(rows.into_iter().map(|row| Event {
+                    id: row.get("id"),
+                    project_id: row.try_get("project_id").ok(),
+                    user_id: row.try_get("user_id").ok(),
+                    object_id: row.try_get("object_id").ok(),
+                    object_type: row.get("object_type"),
+                    description: row.get("description"),
+                    created: row.get("created"),
+                }).collect())
+            }
+            SqlDialect::PostgreSQL => {
+                let query = if project_id.is_some() {
+                    "SELECT * FROM event WHERE project_id = $1 ORDER BY created DESC LIMIT $2"
+                } else {
+                    "SELECT * FROM event ORDER BY created DESC LIMIT $1"
+                };
+                let mut q = sqlx::query(query);
+                if let Some(pid) = project_id {
+                    q = q.bind(pid);
+                }
+                let rows = q.bind(limit as i64).fetch_all(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+                Ok(rows.into_iter().map(|row| Event {
+                    id: row.get("id"),
+                    project_id: row.try_get("project_id").ok(),
+                    user_id: row.try_get("user_id").ok(),
+                    object_id: row.try_get("object_id").ok(),
+                    object_type: row.get("object_type"),
+                    description: row.get("description"),
+                    created: row.get("created"),
+                }).collect())
+            }
+            SqlDialect::MySQL => {
+                let query = if project_id.is_some() {
+                    "SELECT * FROM `event` WHERE project_id = ? ORDER BY created DESC LIMIT ?"
+                } else {
+                    "SELECT * FROM `event` ORDER BY created DESC LIMIT ?"
+                };
+                let mut q = sqlx::query(query);
+                if let Some(pid) = project_id {
+                    q = q.bind(pid);
+                }
+                let rows = q.bind(limit as i64).fetch_all(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+                Ok(rows.into_iter().map(|row| Event {
+                    id: row.get("id"),
+                    project_id: row.try_get("project_id").ok(),
+                    user_id: row.try_get("user_id").ok(),
+                    object_id: row.try_get("object_id").ok(),
+                    object_type: row.get("object_type"),
+                    description: row.get("description"),
+                    created: row.get("created"),
+                }).collect())
+            }
+        }
+    }
+
+    async fn create_event(&self, mut event: Event) -> Result<Event> {
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                let query = "INSERT INTO event (project_id, user_id, object_id, object_type, description, created) VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
+                let id: i32 = sqlx::query_scalar(query)
+                    .bind(&event.project_id)
+                    .bind(&event.user_id)
+                    .bind(&event.object_id)
+                    .bind(&event.object_type)
+                    .bind(&event.description)
+                    .bind(event.created)
+                    .fetch_one(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
+                event.id = id;
+                Ok(event)
+            }
+            SqlDialect::PostgreSQL => {
+                let query = "INSERT INTO event (project_id, user_id, object_id, object_type, description, created) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id";
+                let id: i32 = sqlx::query_scalar(query)
+                    .bind(&event.project_id)
+                    .bind(&event.user_id)
+                    .bind(&event.object_id)
+                    .bind(&event.object_type)
+                    .bind(&event.description)
+                    .bind(event.created)
+                    .fetch_one(self.get_postgres_pool()?).await.map_err(|e| Error::Database(e))?;
+                event.id = id;
+                Ok(event)
+            }
+            SqlDialect::MySQL => {
+                let query = "INSERT INTO `event` (project_id, user_id, object_id, object_type, description, created) VALUES (?, ?, ?, ?, ?, ?)";
+                let result = sqlx::query(query)
+                    .bind(&event.project_id)
+                    .bind(&event.user_id)
+                    .bind(&event.object_id)
+                    .bind(&event.object_type)
+                    .bind(&event.description)
+                    .bind(event.created)
+                    .execute(self.get_mysql_pool()?).await.map_err(|e| Error::Database(e))?;
+                event.id = result.last_insert_id() as i32;
+                Ok(event)
+            }
+        }
+    }
 }
 
 #[async_trait]
