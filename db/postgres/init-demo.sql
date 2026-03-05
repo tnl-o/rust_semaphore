@@ -261,7 +261,6 @@ INSERT INTO project_user (project_id, user_id, role, created) VALUES
 (4, 1, 'owner', NOW()),
 -- John Doe работает с Web Application
 (2, 2, 'manager', NOW()),
-(2, 2, 'task_runner', NOW()),
 -- Jane Smith работает с Database и Security
 (3, 3, 'manager', NOW()),
 (4, 3, 'task_runner', NOW()),
