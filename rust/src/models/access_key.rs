@@ -227,6 +227,10 @@ pub struct AccessKey {
     /// ID окружения
     #[serde(skip_serializing_if = "Option::is_none")]
     pub environment_id: Option<i32>,
+
+    /// Дата создания
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created: Option<chrono::DateTime<Utc>>,
 }
 
 impl AccessKey {

@@ -86,6 +86,10 @@ pub struct Repository {
     /// Путь к файлу (для file-типа)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub git_path: Option<String>,
+
+    /// Дата создания
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created: Option<chrono::DateTime<Utc>>,
 }
 
 impl Repository {

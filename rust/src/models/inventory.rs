@@ -135,6 +135,10 @@ pub struct Inventory {
     #[sqlx(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vaults: Option<String>,
+
+    /// Дата создания
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created: Option<chrono::DateTime<Utc>>,
 }
 
 impl Inventory {

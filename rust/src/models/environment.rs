@@ -86,6 +86,10 @@ pub struct Environment {
     #[sqlx(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub secrets: Option<String>,
+
+    /// Дата создания
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created: Option<chrono::DateTime<Utc>>,
 }
 
 impl Environment {
