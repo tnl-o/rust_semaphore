@@ -3905,6 +3905,8 @@ impl TokenManager for SqlStore {
                 Ok(rows.into_iter().map(|row| APIToken {
                     id: row.get("id"),
                     user_id: row.get("user_id"),
+                    name: row.get("name"),
+                    token: row.get("token"),
                     created: row.get("created"),
                     expired: row.get("expired"),
                 }).collect())
@@ -3915,6 +3917,8 @@ impl TokenManager for SqlStore {
                 Ok(rows.into_iter().map(|row| APIToken {
                     id: row.get("id"),
                     user_id: row.get("user_id"),
+                    name: row.get("name"),
+                    token: row.get("token"),
                     created: row.get("created"),
                     expired: row.get("expired"),
                 }).collect())
@@ -3925,6 +3929,8 @@ impl TokenManager for SqlStore {
                 Ok(rows.into_iter().map(|row| APIToken {
                     id: row.get("id"),
                     user_id: row.get("user_id"),
+                    name: row.get("name"),
+                    token: row.get("token"),
                     created: row.get("created"),
                     expired: row.get("expired"),
                 }).collect())
@@ -3935,9 +3941,11 @@ impl TokenManager for SqlStore {
     async fn create_api_token(&self, mut token: APIToken) -> Result<APIToken> {
         match self.get_dialect() {
             SqlDialect::SQLite => {
-                let query = "INSERT INTO api_token (user_id, created, expired) VALUES (?, ?, ?) RETURNING id";
-                let id: String = sqlx::query_scalar(query)
+                let query = "INSERT INTO api_token (user_id, name, token, created, expired) VALUES (?, ?, ?, ?, ?) RETURNING id";
+                let id: i32 = sqlx::query_scalar(query)
                     .bind(token.user_id)
+                    .bind(&token.name)
+                    .bind(&token.token)
                     .bind(token.created)
                     .bind(token.expired)
                     .fetch_one(self.get_sqlite_pool()?).await.map_err(|e| Error::Database(e))?;
