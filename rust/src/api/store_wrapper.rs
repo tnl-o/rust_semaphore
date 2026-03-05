@@ -358,11 +358,11 @@ impl TokenManager for StoreWrapper {
         self.inner.as_ref().as_ref().get_api_token(token_id).await
     }
 
-    async fn expire_api_token(&self, user_id: i32, token_id: &str) -> Result<()> {
+    async fn expire_api_token(&self, user_id: i32, token_id: i32) -> Result<()> {
         self.inner.as_ref().as_ref().expire_api_token(user_id, token_id).await
     }
 
-    async fn delete_api_token(&self, user_id: i32, token_id: &str) -> Result<()> {
+    async fn delete_api_token(&self, user_id: i32, token_id: i32) -> Result<()> {
         self.inner.as_ref().as_ref().delete_api_token(user_id, token_id).await
     }
 }
