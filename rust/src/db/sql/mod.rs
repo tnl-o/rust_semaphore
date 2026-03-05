@@ -1756,6 +1756,7 @@ impl InventoryManager for SqlStore {
                     ssh_key_id: row.get("ssh_key_id"),
                     become_key_id: row.get("become_key_id"),
                     vaults: row.get("vaults"),
+                    created: row.get("created"),
                 }).collect())
             }
             SqlDialect::PostgreSQL => {
@@ -1780,6 +1781,7 @@ impl InventoryManager for SqlStore {
                     ssh_key_id: row.get("ssh_key_id"),
                     become_key_id: row.get("become_key_id"),
                     vaults: row.get("vaults"),
+                    created: row.get("created"),
                 }).collect())
             }
             SqlDialect::MySQL => {
@@ -1804,6 +1806,7 @@ impl InventoryManager for SqlStore {
                     ssh_key_id: row.get("ssh_key_id"),
                     become_key_id: row.get("become_key_id"),
                     vaults: row.get("vaults"),
+                    created: row.get("created"),
                 }).collect())
             }
         }
@@ -1837,6 +1840,7 @@ impl InventoryManager for SqlStore {
                     ssh_key_id: row.get("ssh_key_id"),
                     become_key_id: row.get("become_key_id"),
                     vaults: row.get("vaults"),
+                    created: row.get("created"),
                 })
             }
             SqlDialect::PostgreSQL => {
@@ -1865,6 +1869,7 @@ impl InventoryManager for SqlStore {
                     ssh_key_id: row.get("ssh_key_id"),
                     become_key_id: row.get("become_key_id"),
                     vaults: row.get("vaults"),
+                    created: row.get("created"),
                 })
             }
             SqlDialect::MySQL => {
@@ -1893,6 +1898,7 @@ impl InventoryManager for SqlStore {
                     ssh_key_id: row.get("ssh_key_id"),
                     become_key_id: row.get("become_key_id"),
                     vaults: row.get("vaults"),
+                    created: row.get("created"),
                 })
             }
         }
