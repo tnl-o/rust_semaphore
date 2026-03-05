@@ -2101,6 +2101,7 @@ impl RepositoryManager for SqlStore {
                     git_branch: row.get("git_branch"),
                     key_id: row.get("key_id"),
                     git_path: row.get("git_path"),
+                    created: row.get("created"),
                 }).collect())
             }
             SqlDialect::PostgreSQL => {
@@ -2120,6 +2121,7 @@ impl RepositoryManager for SqlStore {
                     git_branch: row.get("git_branch"),
                     key_id: row.get("key_id"),
                     git_path: row.get("git_path"),
+                    created: row.get("created"),
                 }).collect())
             }
             SqlDialect::MySQL => {
@@ -2139,6 +2141,7 @@ impl RepositoryManager for SqlStore {
                     git_branch: row.get("git_branch"),
                     key_id: row.get("key_id"),
                     git_path: row.get("git_path"),
+                    created: row.get("created"),
                 }).collect())
             }
         }
@@ -2167,6 +2170,7 @@ impl RepositoryManager for SqlStore {
                     git_branch: row.get("git_branch"),
                     key_id: row.get("key_id"),
                     git_path: row.get("git_path"),
+                    created: row.get("created"),
                 })
             }
             SqlDialect::PostgreSQL => {
@@ -2190,6 +2194,7 @@ impl RepositoryManager for SqlStore {
                     git_branch: row.get("git_branch"),
                     key_id: row.get("key_id"),
                     git_path: row.get("git_path"),
+                    created: row.get("created"),
                 })
             }
             SqlDialect::MySQL => {
@@ -2213,6 +2218,7 @@ impl RepositoryManager for SqlStore {
                     git_branch: row.get("git_branch"),
                     key_id: row.get("key_id"),
                     git_path: row.get("git_path"),
+                    created: row.get("created"),
                 })
             }
         }
@@ -2383,6 +2389,7 @@ impl EnvironmentManager for SqlStore {
                     json: row.get("json"),
                     secret_storage_id: row.get("secret_storage_id"),
                     secrets: row.get("secrets"),
+                    created: row.get("created"),
                 }).collect())
             }
             SqlDialect::PostgreSQL => {
@@ -2400,6 +2407,7 @@ impl EnvironmentManager for SqlStore {
                     json: row.get("json"),
                     secret_storage_id: row.get("secret_storage_id"),
                     secrets: row.get("secrets"),
+                    created: row.get("created"),
                 }).collect())
             }
             SqlDialect::MySQL => {
@@ -2417,6 +2425,7 @@ impl EnvironmentManager for SqlStore {
                     json: row.get("json"),
                     secret_storage_id: row.get("secret_storage_id"),
                     secrets: row.get("secrets"),
+                    created: row.get("created"),
                 }).collect())
             }
         }
@@ -2443,6 +2452,7 @@ impl EnvironmentManager for SqlStore {
                     json: row.get("json"),
                     secret_storage_id: row.get("secret_storage_id"),
                     secrets: row.get("secrets"),
+                    created: row.get("created"),
                 })
             }
             SqlDialect::PostgreSQL => {
@@ -2464,6 +2474,7 @@ impl EnvironmentManager for SqlStore {
                     json: row.get("json"),
                     secret_storage_id: row.get("secret_storage_id"),
                     secrets: row.get("secrets"),
+                    created: row.get("created"),
                 })
             }
             SqlDialect::MySQL => {
@@ -2485,6 +2496,7 @@ impl EnvironmentManager for SqlStore {
                     json: row.get("json"),
                     secret_storage_id: row.get("secret_storage_id"),
                     secrets: row.get("secrets"),
+                    created: row.get("created"),
                 })
             }
         }
