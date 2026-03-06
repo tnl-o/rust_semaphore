@@ -278,7 +278,7 @@ impl RestoreEntryAsync for BackupInventory {
             ssh_key_id: None,
             become_key_id: None,
             vaults: None,
-            created: None,
+            created: chrono::Utc::now(),
         };
 
         // Находим SSH ключ по имени
@@ -367,16 +367,7 @@ impl RestoreEntryAsync for BackupTemplate {
             git_branch: None,
             created: chrono::Utc::now(),
             arguments: self.arguments.clone(),
-            template_type: None,
-            // start_version: self.start_version.clone(),  // поле удалено
-            start_version: None,
-            // build_version: self.build_version.clone(),  // поле удалено
-            build_version: None,
-            survey_vars: None,
-            vaults: None,
-            tasks: None,
             vault_key_id: None,
-            become_key_id: None,
         };
 
         let new_tpl = store.create_template(tpl).await?;
