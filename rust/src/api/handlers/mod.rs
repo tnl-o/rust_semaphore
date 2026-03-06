@@ -14,6 +14,7 @@ pub mod repository;
 pub mod environment;
 pub mod access_key;
 pub mod totp;
+pub mod mailer;
 
 // Ре-экспорт всех handlers для удобства
 pub use auth::*;
@@ -26,3 +27,4 @@ pub use repository::*;
 pub use environment::*;
 pub use access_key::*;
 pub use totp::*;
+pub use mailer::*;

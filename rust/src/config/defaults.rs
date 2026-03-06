@@ -111,6 +111,13 @@ pub fn create_default_config() -> Config {
         tmp_path: default_tmp_path(),
         cookie_hash: Vec::new(),
         cookie_encryption: Vec::new(),
+        mailer_host: String::new(),
+        mailer_port: "25".to_string(),
+        mailer_username: None,
+        mailer_password: None,
+        mailer_use_tls: false,
+        mailer_secure: false,
+        mailer_from: "noreply@localhost".to_string(),
     }
 }
 

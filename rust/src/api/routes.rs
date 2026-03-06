@@ -145,6 +145,9 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/options", get(options::get_options))
         .route("/api/options", post(options::set_option))
 
+        // Mailer - admin only
+        .route("/api/admin/mail/test", post(handlers::send_test_email))
+
         // Раннеры (Runners) - admin only
         .route("/api/runners", get(runners::get_all_runners))
         .route("/api/runners", post(runners::add_global_runner))

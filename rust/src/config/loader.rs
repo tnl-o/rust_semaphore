@@ -108,6 +108,13 @@ pub fn merge_configs(first: Config, second: Config) -> Config {
         tmp_path: if !second.tmp_path.is_empty() { second.tmp_path } else { first.tmp_path },
         cookie_hash: if !second.cookie_hash.is_empty() { second.cookie_hash } else { first.cookie_hash },
         cookie_encryption: if !second.cookie_encryption.is_empty() { second.cookie_encryption } else { first.cookie_encryption },
+        mailer_host: if !second.mailer_host.is_empty() { second.mailer_host } else { first.mailer_host },
+        mailer_port: if !second.mailer_port.is_empty() { second.mailer_port } else { first.mailer_port },
+        mailer_username: second.mailer_username.or(first.mailer_username),
+        mailer_password: second.mailer_password.or(first.mailer_password),
+        mailer_use_tls: second.mailer_use_tls || first.mailer_use_tls,
+        mailer_secure: second.mailer_secure || first.mailer_secure,
+        mailer_from: if !second.mailer_from.is_empty() { second.mailer_from } else { first.mailer_from },
     }
 }
 

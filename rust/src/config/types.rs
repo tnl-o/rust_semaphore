@@ -324,34 +324,64 @@ impl Default for HAConfig {
 pub struct Config {
     #[serde(rename = "webHost", default)]
     pub web_host: String,
-    
+
     #[serde(rename = "tcpAddress", default = "default_tcp_address")]
     pub tcp_address: String,
-    
+
     #[serde(rename = "db", default)]
     #[validate(nested)]
     pub database: DbConfig,
-    
+
     #[serde(rename = "ldap", default)]
     #[validate(nested)]
     pub ldap: Option<LdapConfig>,
-    
+
     #[serde(rename = "auth", default)]
     #[validate(nested)]
     pub auth: AuthConfig,
-    
+
     #[serde(rename = "ha", default)]
     #[validate(nested)]
     pub ha: HAConfig,
-    
+
     #[serde(rename = "tmpPath", default = "default_tmp_path")]
     pub tmp_path: String,
-    
+
     #[serde(skip)]
     pub cookie_hash: Vec<u8>,
-    
+
     #[serde(skip)]
     pub cookie_encryption: Vec<u8>,
+
+    // Mailer configuration
+    #[serde(rename = "mailerHost", default)]
+    pub mailer_host: String,
+
+    #[serde(rename = "mailerPort", default = "default_mailer_port")]
+    pub mailer_port: String,
+
+    #[serde(rename = "mailerUsername", default)]
+    pub mailer_username: Option<String>,
+
+    #[serde(rename = "mailerPassword", default)]
+    pub mailer_password: Option<String>,
+
+    #[serde(rename = "mailerUseTls", default)]
+    pub mailer_use_tls: bool,
+
+    #[serde(rename = "mailerSecure", default)]
+    pub mailer_secure: bool,
+
+    #[serde(rename = "mailerFrom", default = "default_mailer_from")]
+    pub mailer_from: String,
+}
+
+fn default_mailer_port() -> String {
+    "25".to_string()
+}
+
+fn default_mailer_from() -> String {
+    "noreply@localhost".to_string()
 }
 
 fn default_tcp_address() -> String {
@@ -374,6 +404,13 @@ impl Default for Config {
             tmp_path: default_tmp_path(),
             cookie_hash: Vec::new(),
             cookie_encryption: Vec::new(),
+            mailer_host: String::new(),
+            mailer_port: default_mailer_port(),
+            mailer_username: None,
+            mailer_password: None,
+            mailer_use_tls: false,
+            mailer_secure: false,
+            mailer_from: default_mailer_from(),
         }
     }
 }
