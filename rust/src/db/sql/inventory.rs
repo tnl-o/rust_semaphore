@@ -1,6 +1,8 @@
 //! Inventory CRUD Operations
 //!
-//! Операции с инвентарями в SQL
+//! Адаптер для декомпозированных модулей
+//!
+//! Новые модули: sqlite::inventory, postgres::inventory, mysql::inventory
 
 use crate::db::sql::types::SqlDb;
 use crate::error::{Error, Result};
@@ -11,17 +13,17 @@ impl SqlDb {
     pub async fn get_inventories(&self, project_id: i32) -> Result<Vec<Inventory>> {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
-                let inventories = sqlx::query_as::<_, Inventory>(
-                    "SELECT * FROM inventory WHERE project_id = ? ORDER BY name"
-                )
-                .bind(project_id)
-                .fetch_all(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
-                .await
-                .map_err(|e| Error::Database(e))?;
-
-                Ok(inventories)
+                let pool = self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?;
+                crate::db::sql::sqlite::inventory::get_inventories(pool, project_id).await
             }
-            _ => Err(Error::Other("Only SQLite supported for now".to_string()))
+            crate::db::sql::types::SqlDialect::PostgreSQL => {
+                let pool = self.get_postgres_pool().ok_or(Error::Other("PostgreSQL pool not found".to_string()))?;
+                crate::db::sql::postgres::inventory::get_inventories(pool, project_id).await
+            }
+            crate::db::sql::types::SqlDialect::MySQL => {
+                let pool = self.get_mysql_pool().ok_or(Error::Other("MySQL pool not found".to_string()))?;
+                crate::db::sql::mysql::inventory::get_inventories(pool, project_id).await
+            }
         }
     }
 
@@ -29,42 +31,35 @@ impl SqlDb {
     pub async fn get_inventory(&self, project_id: i32, inventory_id: i32) -> Result<Inventory> {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
-                let inventory = sqlx::query_as::<_, Inventory>(
-                    "SELECT * FROM inventory WHERE id = ? AND project_id = ?"
-                )
-                .bind(inventory_id)
-                .bind(project_id)
-                .fetch_optional(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
-                .await
-                .map_err(|e| Error::Database(e))?;
-
-                inventory.ok_or(Error::NotFound("Inventory not found".to_string()))
+                let pool = self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?;
+                crate::db::sql::sqlite::inventory::get_inventory(pool, project_id, inventory_id).await
             }
-            _ => Err(Error::Other("Only SQLite supported for now".to_string()))
+            crate::db::sql::types::SqlDialect::PostgreSQL => {
+                let pool = self.get_postgres_pool().ok_or(Error::Other("PostgreSQL pool not found".to_string()))?;
+                crate::db::sql::postgres::inventory::get_inventory(pool, project_id, inventory_id).await
+            }
+            crate::db::sql::types::SqlDialect::MySQL => {
+                let pool = self.get_mysql_pool().ok_or(Error::Other("MySQL pool not found".to_string()))?;
+                crate::db::sql::mysql::inventory::get_inventory(pool, project_id, inventory_id).await
+            }
         }
     }
 
     /// Создаёт инвентарь
-    pub async fn create_inventory(&self, mut inventory: Inventory) -> Result<Inventory> {
+    pub async fn create_inventory(&self, inventory: Inventory) -> Result<Inventory> {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
-                let result = sqlx::query(
-                    "INSERT INTO inventory (project_id, name, type, inventory_data, ssh_key_id)
-                     VALUES (?, ?, ?, ?, ?)"
-                )
-                .bind(inventory.project_id)
-                .bind(&inventory.name)
-                .bind(&inventory.inventory_type)
-                .bind(&inventory.inventory_data)
-                .bind(inventory.ssh_key_id)
-                .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
-                .await
-                .map_err(|e| Error::Database(e))?;
-
-                inventory.id = result.last_insert_rowid() as i32;
-                Ok(inventory)
+                let pool = self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?;
+                crate::db::sql::sqlite::inventory::create_inventory(pool, inventory).await
             }
-            _ => Err(Error::Other("Only SQLite supported for now".to_string()))
+            crate::db::sql::types::SqlDialect::PostgreSQL => {
+                let pool = self.get_postgres_pool().ok_or(Error::Other("PostgreSQL pool not found".to_string()))?;
+                crate::db::sql::postgres::inventory::create_inventory(pool, inventory).await
+            }
+            crate::db::sql::types::SqlDialect::MySQL => {
+                let pool = self.get_mysql_pool().ok_or(Error::Other("MySQL pool not found".to_string()))?;
+                crate::db::sql::mysql::inventory::create_inventory(pool, inventory).await
+            }
         }
     }
 
@@ -72,23 +67,17 @@ impl SqlDb {
     pub async fn update_inventory(&self, inventory: Inventory) -> Result<()> {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
-                sqlx::query(
-                    "UPDATE inventory SET name = ?, type = ?, inventory_data = ?, ssh_key_id = ?
-                     WHERE id = ? AND project_id = ?"
-                )
-                .bind(&inventory.name)
-                .bind(&inventory.inventory_type)
-                .bind(&inventory.inventory_data)
-                .bind(inventory.ssh_key_id)
-                .bind(inventory.id)
-                .bind(inventory.project_id)
-                .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
-                .await
-                .map_err(|e| Error::Database(e))?;
-
-                Ok(())
+                let pool = self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?;
+                crate::db::sql::sqlite::inventory::update_inventory(pool, inventory).await
             }
-            _ => Err(Error::Other("Only SQLite supported for now".to_string()))
+            crate::db::sql::types::SqlDialect::PostgreSQL => {
+                let pool = self.get_postgres_pool().ok_or(Error::Other("PostgreSQL pool not found".to_string()))?;
+                crate::db::sql::postgres::inventory::update_inventory(pool, inventory).await
+            }
+            crate::db::sql::types::SqlDialect::MySQL => {
+                let pool = self.get_mysql_pool().ok_or(Error::Other("MySQL pool not found".to_string()))?;
+                crate::db::sql::mysql::inventory::update_inventory(pool, inventory).await
+            }
         }
     }
 
@@ -96,16 +85,17 @@ impl SqlDb {
     pub async fn delete_inventory(&self, project_id: i32, inventory_id: i32) -> Result<()> {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
-                sqlx::query("DELETE FROM inventory WHERE id = ? AND project_id = ?")
-                    .bind(inventory_id)
-                    .bind(project_id)
-                    .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
-                    .await
-                    .map_err(|e| Error::Database(e))?;
-
-                Ok(())
+                let pool = self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?;
+                crate::db::sql::sqlite::inventory::delete_inventory(pool, project_id, inventory_id).await
             }
-            _ => Err(Error::Other("Only SQLite supported for now".to_string()))
+            crate::db::sql::types::SqlDialect::PostgreSQL => {
+                let pool = self.get_postgres_pool().ok_or(Error::Other("PostgreSQL pool not found".to_string()))?;
+                crate::db::sql::postgres::inventory::delete_inventory(pool, project_id, inventory_id).await
+            }
+            crate::db::sql::types::SqlDialect::MySQL => {
+                let pool = self.get_mysql_pool().ok_or(Error::Other("MySQL pool not found".to_string()))?;
+                crate::db::sql::mysql::inventory::delete_inventory(pool, project_id, inventory_id).await
+            }
         }
     }
 }

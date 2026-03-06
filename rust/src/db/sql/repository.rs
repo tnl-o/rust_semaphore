@@ -1,6 +1,8 @@
 //! Repository CRUD Operations
 //!
-//! Операции с репозиториями в SQL
+//! Адаптер для декомпозированных модулей
+//!
+//! Новые модули: sqlite::repository, postgres::repository, mysql::repository
 
 use crate::db::sql::types::SqlDb;
 use crate::error::{Error, Result};
@@ -11,99 +13,89 @@ impl SqlDb {
     pub async fn get_repositories(&self, project_id: i32) -> Result<Vec<Repository>> {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
-                let repos = sqlx::query_as::<_, Repository>(
-                    "SELECT * FROM repository WHERE project_id = ? ORDER BY name"
-                )
-                .bind(project_id)
-                .fetch_all(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
-                .await
-                .map_err(|e| Error::Database(e))?;
-
-                Ok(repos)
+                let pool = self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?;
+                crate::db::sql::sqlite::repository::get_repositories(pool, project_id).await
             }
-            _ => Err(Error::Other("Only SQLite supported for now".to_string()))
+            crate::db::sql::types::SqlDialect::PostgreSQL => {
+                let pool = self.get_postgres_pool().ok_or(Error::Other("PostgreSQL pool not found".to_string()))?;
+                crate::db::sql::postgres::repository::get_repositories(pool, project_id).await
+            }
+            crate::db::sql::types::SqlDialect::MySQL => {
+                let pool = self.get_mysql_pool().ok_or(Error::Other("MySQL pool not found".to_string()))?;
+                crate::db::sql::mysql::repository::get_repositories(pool, project_id).await
+            }
         }
     }
 
     /// Получает репозиторий по ID
-    pub async fn get_repository(&self, project_id: i32, repo_id: i32) -> Result<Repository> {
+    pub async fn get_repository(&self, project_id: i32, repository_id: i32) -> Result<Repository> {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
-                let repo = sqlx::query_as::<_, Repository>(
-                    "SELECT * FROM repository WHERE id = ? AND project_id = ?"
-                )
-                .bind(repo_id)
-                .bind(project_id)
-                .fetch_optional(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
-                .await
-                .map_err(|e| Error::Database(e))?;
-
-                repo.ok_or(Error::NotFound("Repository not found".to_string()))
+                let pool = self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?;
+                crate::db::sql::sqlite::repository::get_repository(pool, project_id, repository_id).await
             }
-            _ => Err(Error::Other("Only SQLite supported for now".to_string()))
+            crate::db::sql::types::SqlDialect::PostgreSQL => {
+                let pool = self.get_postgres_pool().ok_or(Error::Other("PostgreSQL pool not found".to_string()))?;
+                crate::db::sql::postgres::repository::get_repository(pool, project_id, repository_id).await
+            }
+            crate::db::sql::types::SqlDialect::MySQL => {
+                let pool = self.get_mysql_pool().ok_or(Error::Other("MySQL pool not found".to_string()))?;
+                crate::db::sql::mysql::repository::get_repository(pool, project_id, repository_id).await
+            }
         }
     }
 
     /// Создаёт репозиторий
-    pub async fn create_repository(&self, mut repo: Repository) -> Result<Repository> {
+    pub async fn create_repository(&self, repository: Repository) -> Result<Repository> {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
-                let result = sqlx::query(
-                    "INSERT INTO repository (project_id, name, git_url, key_id)
-                     VALUES (?, ?, ?, ?)"
-                )
-                .bind(repo.project_id)
-                .bind(&repo.name)
-                .bind(&repo.git_url)
-                .bind(repo.key_id)
-                .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
-                .await
-                .map_err(|e| Error::Database(e))?;
-
-                repo.id = result.last_insert_rowid() as i32;
-                Ok(repo)
+                let pool = self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?;
+                crate::db::sql::sqlite::repository::create_repository(pool, repository).await
             }
-            _ => Err(Error::Other("Only SQLite supported for now".to_string()))
+            crate::db::sql::types::SqlDialect::PostgreSQL => {
+                let pool = self.get_postgres_pool().ok_or(Error::Other("PostgreSQL pool not found".to_string()))?;
+                crate::db::sql::postgres::repository::create_repository(pool, repository).await
+            }
+            crate::db::sql::types::SqlDialect::MySQL => {
+                let pool = self.get_mysql_pool().ok_or(Error::Other("MySQL pool not found".to_string()))?;
+                crate::db::sql::mysql::repository::create_repository(pool, repository).await
+            }
         }
     }
 
     /// Обновляет репозиторий
-    pub async fn update_repository(&self, repo: Repository) -> Result<()> {
+    pub async fn update_repository(&self, repository: Repository) -> Result<()> {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
-                sqlx::query(
-                    "UPDATE repository SET name = ?, git_url = ?, key_id = ?
-                     WHERE id = ? AND project_id = ?"
-                )
-                .bind(&repo.name)
-                .bind(&repo.git_url)
-                .bind(repo.key_id)
-                .bind(repo.id)
-                .bind(repo.project_id)
-                .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
-                .await
-                .map_err(|e| Error::Database(e))?;
-
-                Ok(())
+                let pool = self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?;
+                crate::db::sql::sqlite::repository::update_repository(pool, repository).await
             }
-            _ => Err(Error::Other("Only SQLite supported for now".to_string()))
+            crate::db::sql::types::SqlDialect::PostgreSQL => {
+                let pool = self.get_postgres_pool().ok_or(Error::Other("PostgreSQL pool not found".to_string()))?;
+                crate::db::sql::postgres::repository::update_repository(pool, repository).await
+            }
+            crate::db::sql::types::SqlDialect::MySQL => {
+                let pool = self.get_mysql_pool().ok_or(Error::Other("MySQL pool not found".to_string()))?;
+                crate::db::sql::mysql::repository::update_repository(pool, repository).await
+            }
         }
     }
 
     /// Удаляет репозиторий
-    pub async fn delete_repository(&self, project_id: i32, repo_id: i32) -> Result<()> {
+    pub async fn delete_repository(&self, project_id: i32, repository_id: i32) -> Result<()> {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
-                sqlx::query("DELETE FROM repository WHERE id = ? AND project_id = ?")
-                    .bind(repo_id)
-                    .bind(project_id)
-                    .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
-                    .await
-                    .map_err(|e| Error::Database(e))?;
-
-                Ok(())
+                let pool = self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?;
+                crate::db::sql::sqlite::repository::delete_repository(pool, project_id, repository_id).await
             }
-            _ => Err(Error::Other("Only SQLite supported for now".to_string()))
+            crate::db::sql::types::SqlDialect::PostgreSQL => {
+                let pool = self.get_postgres_pool().ok_or(Error::Other("PostgreSQL pool not found".to_string()))?;
+                crate::db::sql::postgres::repository::delete_repository(pool, project_id, repository_id).await
+            }
+            crate::db::sql::types::SqlDialect::MySQL => {
+                let pool = self.get_mysql_pool().ok_or(Error::Other("MySQL pool not found".to_string()))?;
+                crate::db::sql::mysql::repository::delete_repository(pool, project_id, repository_id).await
+            }
         }
     }
 }
