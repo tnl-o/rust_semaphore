@@ -19,6 +19,69 @@ use crate::error::{Error, Result};
 use crate::models::{User, APIToken};
 use crate::db::store::{UserManager, TokenManager};
 
+// ============================================================================
+// Свободные функции для использования в routes
+// ============================================================================
+
+/// Получает API токены пользователя
+pub async fn get_api_tokens(
+    State(state): State<Arc<AppState>>,
+    auth_user: AuthUser,
+) -> std::result::Result<Json<Vec<APIToken>>, (StatusCode, Json<crate::api::middleware::ErrorResponse>)> {
+    let tokens = state.store.get_api_tokens(auth_user.user_id).await
+        .map_err(|e| (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(crate::api::middleware::ErrorResponse::new(e.to_string()))
+        ))?;
+
+    Ok(Json(tokens))
+}
+
+/// Создаёт новый API токен
+pub async fn create_api_token(
+    State(state): State<Arc<AppState>>,
+    auth_user: AuthUser,
+) -> std::result::Result<(StatusCode, Json<APIToken>), (StatusCode, Json<crate::api::middleware::ErrorResponse>)> {
+    // Генерируем случайный токен
+    let mut token_bytes = vec![0u8; 32];
+    rand::thread_rng().fill_bytes(&mut token_bytes);
+    let token_str = base64::engine::general_purpose::STANDARD.encode(&token_bytes);
+
+    let token = state.store.create_api_token(APIToken {
+        id: 0, // Будет установлен БД
+        user_id: auth_user.user_id,
+        name: format!("Token {}", Utc::now().format("%Y-%m-%d %H:%M")),
+        token: token_str.to_lowercase(),
+        created: Utc::now(),
+        expired: false,
+    }).await
+    .map_err(|e| (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(crate::api::middleware::ErrorResponse::new(e.to_string()))
+    ))?;
+
+    Ok((StatusCode::CREATED, Json(token)))
+}
+
+/// Удаляет API токен
+pub async fn delete_api_token(
+    State(state): State<Arc<AppState>>,
+    auth_user: AuthUser,
+    Path(token_id): Path<i32>,
+) -> std::result::Result<StatusCode, (StatusCode, Json<crate::api::middleware::ErrorResponse>)> {
+    state.store.delete_api_token(auth_user.user_id, token_id).await
+        .map_err(|e| (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(crate::api::middleware::ErrorResponse::new(e.to_string()))
+        ))?;
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+// ============================================================================
+// Контроллер пользователя (существующий код)
+// ============================================================================
+
 /// Контроллер пользователя
 pub struct UserController {
     // TODO: Интеграция с subscription service

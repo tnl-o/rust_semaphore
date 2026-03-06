@@ -135,6 +135,30 @@ pub async fn delete_project(
     Ok(StatusCode::NO_CONTENT)
 }
 
+/// Получает роль пользователя в проекте
+pub async fn get_user_role(
+    State(state): State<Arc<AppState>>,
+    Path(project_id): Path<i32>,
+    AuthUser { user_id, .. }: AuthUser,
+) -> std::result::Result<Json<String>, (StatusCode, Json<ErrorResponse>)> {
+    let users = state.store.get_project_users(project_id, crate::db::store::RetrieveQueryParams::default())
+        .await
+        .map_err(|e| (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse::new(e.to_string()))
+        ))?;
+
+    let project_user = users.into_iter()
+        .find(|u| u.id == user_id)
+        .ok_or_else(|| Error::NotFound("User not found in project".to_string()))
+        .map_err(|e| (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse::new(e.to_string()))
+        ))?;
+
+    Ok(Json(project_user.role.to_string()))
+}
+
 // ============================================================================
 // Tests
 // ============================================================================

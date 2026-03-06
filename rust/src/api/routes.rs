@@ -5,6 +5,8 @@ use std::sync::Arc;
 use crate::api::state::AppState;
 use crate::api::handlers;
 use crate::api::websocket::websocket_handler;
+use crate::api::handlers::projects::{schedules, views, integration as project_integration, secret_storages, users as project_users, tasks};
+use crate::api::{events, apps, options, runners, cache, system_info, user};
 use tower_http::services::{ServeDir, ServeFile};
 
 /// Создаёт маршруты API
@@ -76,8 +78,79 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/projects/{project_id}/keys/{id}", put(handlers::update_access_key))
         .route("/api/projects/{project_id}/keys/{id}", delete(handlers::delete_access_key))
 
+        // Расписания (Schedules)
+        .route("/api/projects/{project_id}/schedules", get(schedules::get_project_schedules))
+        .route("/api/projects/{project_id}/schedules", post(schedules::add_schedule))
+        .route("/api/projects/{project_id}/schedules/{id}", get(schedules::get_schedule))
+        .route("/api/projects/{project_id}/schedules/{id}", put(schedules::update_schedule))
+        .route("/api/projects/{project_id}/schedules/{id}", delete(schedules::delete_schedule))
+
+        // Представления (Views)
+        .route("/api/projects/{project_id}/views", get(views::get_views))
+        .route("/api/projects/{project_id}/views", post(views::add_view))
+        .route("/api/projects/{project_id}/views/{id}", get(views::get_view))
+        .route("/api/projects/{project_id}/views/{id}", put(views::update_view))
+        .route("/api/projects/{project_id}/views/{id}", delete(views::delete_view))
+
+        // Интеграции (Integrations)
+        .route("/api/projects/{project_id}/integrations", get(project_integration::get_integrations))
+        .route("/api/projects/{project_id}/integrations", post(project_integration::add_integration))
+        .route("/api/projects/{project_id}/integrations/{id}", get(project_integration::get_integration))
+        .route("/api/projects/{project_id}/integrations/{id}", put(project_integration::update_integration))
+        .route("/api/projects/{project_id}/integrations/{id}", delete(project_integration::delete_integration))
+
+        // Хранилища секретов (Secret Storages)
+        .route("/api/projects/{project_id}/secret_storages", get(secret_storages::get_secret_storages))
+        .route("/api/projects/{project_id}/secret_storages", post(secret_storages::add_secret_storage))
+        .route("/api/projects/{project_id}/secret_storages/{id}", get(secret_storages::get_secret_storage))
+        .route("/api/projects/{project_id}/secret_storages/{id}", put(secret_storages::update_secret_storage))
+        .route("/api/projects/{project_id}/secret_storages/{id}", delete(secret_storages::delete_secret_storage))
+
+        // Пользователи проекта (Project Users)
+        .route("/api/projects/{project_id}/users", get(project_users::get_users))
+        .route("/api/projects/{project_id}/users", post(project_users::add_user))
+        .route("/api/projects/{project_id}/users/{user_id}", put(project_users::update_user_role))
+        .route("/api/projects/{project_id}/users/{user_id}", delete(project_users::delete_user))
+
+        // Задачи (Tasks) - дополнительные endpoints
+        .route("/api/projects/{project_id}/tasks/{id}/stop", post(tasks::stop_task))
+
+        // Роль пользователя в проекте
+        .route("/api/projects/{project_id}/role", get(handlers::get_user_role))
+
         // WebSocket
         .route("/api/ws", get(websocket_handler))
+
+        // События (Events)
+        .route("/api/events", get(events::get_all_events))
+        .route("/api/events/last", get(events::get_last_events))
+        .route("/api/projects/{project_id}/events", get(events::get_project_events))
+
+        // Приложения (Apps)
+        .route("/api/apps", get(apps::get_apps))
+        .route("/api/apps/{id}", get(apps::get_app))
+        .route("/api/apps/{id}", delete(apps::delete_app))
+
+        // Опции (Options) - admin only
+        .route("/api/options", get(options::get_options))
+        .route("/api/options", post(options::set_option))
+
+        // Раннеры (Runners) - admin only
+        .route("/api/runners", get(runners::get_all_runners))
+        .route("/api/runners", post(runners::add_global_runner))
+        .route("/api/runners/{id}", put(runners::update_runner))
+        .route("/api/runners/{id}", delete(runners::delete_runner))
+
+        // Кэш (Cache) - admin only
+        .route("/api/cache", delete(cache::clear_cache))
+
+        // Системная информация (System Info)
+        .route("/api/info", get(system_info::get_system_info))
+
+        // Пользовательские API токены (User Tokens)
+        .route("/api/user/tokens", get(user::get_api_tokens))
+        .route("/api/user/tokens", post(user::create_api_token))
+        .route("/api/user/tokens/{id}", delete(user::delete_api_token))
 }
 
 /// Создаёт маршруты для статических файлов

@@ -3,7 +3,7 @@
 //! Обработчики для интеграций в проектах
 
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, State},
     http::StatusCode,
     Json,
 };
@@ -18,7 +18,6 @@ use crate::db::store::{RetrieveQueryParams, IntegrationManager};
 pub async fn get_integrations(
     State(state): State<Arc<AppState>>,
     Path(project_id): Path<i32>,
-    Query(params): Query<RetrieveQueryParams>,
 ) -> std::result::Result<Json<Vec<Integration>>, (StatusCode, Json<ErrorResponse>)> {
     let integrations = state.store.get_integrations(project_id)
         .await
