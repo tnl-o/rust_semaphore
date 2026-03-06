@@ -206,9 +206,9 @@ impl BackupDB {
             version: "1.0".to_string(),
             project: BackupProject {
                 name: project.name.clone(),
-                alert: project.alert,
+                alert: Some(project.alert),
                 alert_chat: project.alert_chat.clone(),
-                max_parallel_tasks: project.max_parallel_tasks,
+                max_parallel_tasks: Some(project.max_parallel_tasks),
             },
             templates: Vec::new(),
             repositories: Vec::new(),

@@ -126,7 +126,7 @@ impl TaskPool {
         while !self.is_shutdown().await {
             // Проверяем количество запущенных задач
             let running_count = self.running_tasks.read().await.len();
-            let max_parallel = self.project.max_parallel_tasks.unwrap_or(5) as usize;
+            let max_parallel = self.project.max_parallel_tasks as usize;
 
             if running_count >= max_parallel {
                 tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;

@@ -145,7 +145,6 @@ mod tests {
                 r#type: crate::models::template::TemplateType::Default,
                 app: crate::models::template::TemplateApp::Ansible,
                 git_branch: "main".to_string(),
-                deleted: false,
                 created: Utc::now(),
             },
             inventory: crate::models::Inventory {

@@ -1368,7 +1368,6 @@ impl TemplateManager for SqlStore {
                     r#type: row.get("type"),
                     app: row.get("app"),
                     git_branch: row.try_get("git_branch").ok().flatten(),
-                    deleted: row.get("deleted"),
                     created: row.get("created"),
                     arguments: row.get("arguments"),
                     template_type: row.get("template_type"),
@@ -1482,7 +1481,6 @@ impl TemplateManager for SqlStore {
                     r#type: row.get("type"),
                     app: row.get("app"),
                     git_branch: row.get("git_branch"),
-                    deleted: row.get("deleted"),
                     created: row.get("created"),
                     arguments: row.get("arguments"),
                     template_type: row.get("template_type"),
@@ -1501,7 +1499,7 @@ impl TemplateManager for SqlStore {
     async fn create_template(&self, mut template: Template) -> Result<Template> {
         match self.get_dialect() {
             SqlDialect::SQLite => {
-                let query = "INSERT INTO template (project_id, name, playbook, description, inventory_id, repository_id, environment_id, type, app, git_branch, deleted, created, arguments, template_type, start_version, build_version, survey_vars, vaults, tasks, vault_key_id, become_key_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+                let query = "INSERT INTO template (project_id, name, playbook, description, inventory_id, repository_id, environment_id, type, app, git_branch, created, arguments, template_type, start_version, build_version, survey_vars, vaults, tasks, vault_key_id, become_key_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
                 let id: i32 = sqlx::query_scalar(query)
                     .bind(template.project_id)
                     .bind(&template.name)
@@ -1513,7 +1511,6 @@ impl TemplateManager for SqlStore {
                     .bind(&template.r#type)
                     .bind(&template.app)
                     .bind(&template.git_branch)
-                    .bind(template.deleted)
                     .bind(template.created)
                     .bind(&template.arguments)
                     .bind(&template.template_type)
@@ -1532,7 +1529,7 @@ impl TemplateManager for SqlStore {
                 Ok(template)
             }
             SqlDialect::PostgreSQL => {
-                let query = "INSERT INTO template (project_id, name, playbook, description, inventory_id, repository_id, environment_id, type, app, git_branch, deleted, created, arguments, template_type, start_version, build_version, survey_vars, vaults, tasks, vault_key_id, become_key_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) RETURNING id";
+                let query = "INSERT INTO template (project_id, name, playbook, description, inventory_id, repository_id, environment_id, type, app, git_branch, created, arguments, template_type, start_version, build_version, survey_vars, vaults, tasks, vault_key_id, become_key_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING id";
                 let id: i32 = sqlx::query_scalar(query)
                     .bind(template.project_id)
                     .bind(&template.name)
@@ -1544,7 +1541,6 @@ impl TemplateManager for SqlStore {
                     .bind(&template.r#type)
                     .bind(&template.app)
                     .bind(&template.git_branch)
-                    .bind(template.deleted)
                     .bind(template.created)
                     .bind(&template.arguments)
                     .bind(&template.template_type)
@@ -1563,7 +1559,7 @@ impl TemplateManager for SqlStore {
                 Ok(template)
             }
             SqlDialect::MySQL => {
-                let query = "INSERT INTO `template` (project_id, name, playbook, description, inventory_id, repository_id, environment_id, type, app, git_branch, deleted, created, arguments, template_type, start_version, build_version, survey_vars, vaults, tasks, vault_key_id, become_key_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                let query = "INSERT INTO `template` (project_id, name, playbook, description, inventory_id, repository_id, environment_id, type, app, git_branch, created, arguments, template_type, start_version, build_version, survey_vars, vaults, tasks, vault_key_id, become_key_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 sqlx::query(query)
                     .bind(template.project_id)
                     .bind(&template.name)
@@ -1575,7 +1571,6 @@ impl TemplateManager for SqlStore {
                     .bind(&template.r#type)
                     .bind(&template.app)
                     .bind(&template.git_branch)
-                    .bind(template.deleted)
                     .bind(template.created)
                     .bind(&template.arguments)
                     .bind(&template.template_type)

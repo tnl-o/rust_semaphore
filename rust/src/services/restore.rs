@@ -437,7 +437,7 @@ impl BackupFormat {
             alert: self.project.alert.unwrap_or(false),
             alert_chat: self.project.alert_chat.clone(),
             max_parallel_tasks: self.project.max_parallel_tasks.unwrap_or(0),
-            r#type: self.project.r#type.clone().unwrap_or_else(|| "default".to_string()),
+            r#type: "default".to_string(),
             default_secret_storage_id: None,
         };
 
