@@ -1079,8 +1079,24 @@ function showCreateTemplateModal() {
 
 function selectProject(projectId) {
     CURRENT_PROJECT_ID = projectId;
-    showPage('templates-page');
+    
+    // Загружаем все данные выбранного проекта
     loadTemplates();
+    loadTasks();
+    loadInventory();
+    loadRepositories();
+    loadEnvironments();
+    loadKeys();
+    loadSchedules();
+    
+    // Переключаем на вкладку шаблонов
+    showPage('templates-page');
+    
+    // Показываем уведомление
+    const project = window.CACHED_PROJECTS?.find(p => p.id === projectId);
+    if (project) {
+        showToast(`Открыт проект: ${project.name}`, 'success');
+    }
 }
 
 function loadPageData(pageId) {
