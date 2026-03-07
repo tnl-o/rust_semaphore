@@ -21,6 +21,39 @@ pub fn extract_token_from_header(auth_header: Option<&str>) -> Option<&str> {
     auth_header.and_then(|h| h.strip_prefix("Bearer "))
 }
 
+/// Извлекает JWT из Cookie "semaphore" (совместимость с Vue upstream)
+fn extract_token_from_cookie(cookie_header: Option<&str>) -> Option<String> {
+    let cookie_header = cookie_header?;
+    for part in cookie_header.split(';') {
+        let part = part.trim();
+        if let Some((name, value)) = part.split_once('=') {
+            if name.trim() == "semaphore" {
+                let value = value.trim();
+                if !value.is_empty() {
+                    return Some(value.to_string());
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Извлекает токен из запроса: сначала Authorization, затем Cookie (для Vue)
+pub fn extract_token_from_parts(parts: &Parts) -> Option<String> {
+    let auth_header = parts
+        .headers
+        .get(axum::http::header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok());
+    if let Some(token) = extract_token_from_header(auth_header) {
+        return Some(token.to_string());
+    }
+    let cookie_header = parts
+        .headers
+        .get(axum::http::header::COOKIE)
+        .and_then(|v| v.to_str().ok());
+    extract_token_from_cookie(cookie_header)
+}
+
 /// Извлекатель для аутентифицированного пользователя
 ///
 /// Используется в обработчиках для получения информации о пользователе:
@@ -48,13 +81,8 @@ impl FromRequestParts<Arc<AppState>> for AuthUser {
         parts: &mut Parts,
         state: &Arc<AppState>,
     ) -> Result<Self, Self::Rejection> {
-        // Получаем токен из заголовка
-        let auth_header = parts
-            .headers
-            .get(axum::http::header::AUTHORIZATION)
-            .and_then(|v| v.to_str().ok());
-
-        let token = extract_token_from_header(auth_header)
+        // Токен из Authorization или Cookie (Vue upstream использует cookie)
+        let token = extract_token_from_parts(parts)
             .ok_or((
                 StatusCode::UNAUTHORIZED,
                 Json(ErrorResponse::new("Требуется аутентификация")
@@ -65,7 +93,7 @@ impl FromRequestParts<Arc<AppState>> for AuthUser {
         let auth_service = LocalAuthService::new(state.store.clone());
 
         // Проверяем токен
-        let claims = auth_service.verify_token(token)
+        let claims = auth_service.verify_token(&token)
             .map_err(|_| {
                 (
                     StatusCode::UNAUTHORIZED,

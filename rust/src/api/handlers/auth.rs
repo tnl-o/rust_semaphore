@@ -4,7 +4,8 @@
 
 use axum::{
     extract::State,
-    http::StatusCode,
+    http::{header, StatusCode},
+    response::AppendHeaders,
     Json,
 };
 use std::sync::Arc;
@@ -26,7 +27,10 @@ pub async fn health() -> &'static str {
 pub async fn login(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<LoginPayload>,
-) -> Result<Json<LoginResponse>, (StatusCode, Json<ErrorResponse>)> {
+) -> Result<
+    (AppendHeaders<[(axum::http::HeaderName, String); 1]>, Json<LoginResponse>),
+    (StatusCode, Json<ErrorResponse>),
+> {
     use crate::api::auth_local::{LocalAuthService, verify_password};
     use crate::services::totp::verify_totp_code;
 
@@ -81,12 +85,24 @@ pub async fn login(
                 .with_code("TOKEN_GENERATION_ERROR")),
         ))?;
 
-    Ok(Json(LoginResponse {
-        token: token_info.token,
-        token_type: token_info.token_type,
-        expires_in: token_info.expires_in,
-        totp_required: None,
-    }))
+    // Устанавливаем cookie "semaphore" для Vue upstream (как в Go backend)
+    let cookie_value = format!(
+        "semaphore={}; Path=/; HttpOnly; SameSite=Lax; Max-Age={}",
+        token_info.token,
+        token_info.expires_in
+    );
+
+    let headers = AppendHeaders([(header::SET_COOKIE, cookie_value)]);
+
+    Ok((
+        headers,
+        Json(LoginResponse {
+            token: token_info.token,
+            token_type: token_info.token_type,
+            expires_in: token_info.expires_in,
+            totp_required: None,
+        }),
+    ))
 }
 
 /// Выход из системы
@@ -94,9 +110,16 @@ pub async fn login(
 /// POST /api/auth/logout
 pub async fn logout(
     State(_state): State<Arc<AppState>>,
-) -> Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
-    // TODO: Реализовать выход (добавление токена в чёрный список)
-    Ok(StatusCode::OK)
+) -> Result<
+    (AppendHeaders<[(axum::http::HeaderName, &'static str); 1]>, StatusCode),
+    (StatusCode, Json<ErrorResponse>),
+> {
+    // Очищаем cookie для Vue (как в Go backend)
+    let headers = AppendHeaders([(
+        header::SET_COOKIE,
+        "semaphore=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0",
+    )]);
+    Ok((headers, StatusCode::OK))
 }
 
 /// Верификация сессии (TOTP)
@@ -256,9 +279,10 @@ pub async fn get_current_user(
 // Types
 // ============================================================================
 
-/// Payload для входа
+/// Payload для входа (Vue отправляет auth, Go — auth)
 #[derive(Debug, Deserialize)]
 pub struct LoginPayload {
+    #[serde(alias = "auth")]
     pub username: String,
     pub password: String,
     #[serde(default)]
@@ -323,6 +347,19 @@ mod tests {
         assert_eq!(payload.username, "admin");
         assert_eq!(payload.password, "password123");
         assert_eq!(payload.totp_code, None);
+    }
+
+    #[test]
+    fn test_login_payload_deserialize_auth_alias() {
+        // Vue отправляет "auth" вместо "username"
+        let json = r#"{
+            "auth": "admin",
+            "password": "admin123"
+        }"#;
+        
+        let payload: LoginPayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.username, "admin");
+        assert_eq!(payload.password, "admin123");
     }
 
     #[test]

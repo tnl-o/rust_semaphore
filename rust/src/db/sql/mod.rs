@@ -7,6 +7,9 @@ pub mod migrations;
 pub mod queries;
 pub mod utils;
 
+#[cfg(test)]
+pub mod test_helpers;
+
 // Decomposed modules by dialect
 pub mod sqlite;
 pub mod postgres;
@@ -58,7 +61,132 @@ impl SqlStore {
         // Используем функцию создания подключения из init.rs
         let db = init::create_database_connection(database_url).await?;
 
-        Ok(Self { db })
+        let store = Self { db };
+        store.ensure_schema().await?;
+        Ok(store)
+    }
+
+    /// Инициализирует схему БД при первом запуске (если таблицы не существуют)
+    async fn ensure_schema(&self) -> Result<()> {
+        if self.get_dialect() != SqlDialect::SQLite {
+            return Ok(());
+        }
+        let pool = self.get_sqlite_pool()?;
+
+        // Проверяем, есть ли таблица project (основная для CRUD)
+        let project_exists: Option<String> = sqlx::query_scalar(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='project'",
+        )
+        .fetch_optional(pool)
+        .await
+        .map_err(|e| Error::Database(e))?;
+
+        if project_exists.is_some() {
+            return Ok(());
+        }
+
+        // Проверяем, есть ли таблица user (для обратной совместимости со старыми БД)
+        let user_exists: Option<String> = sqlx::query_scalar(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='user'",
+        )
+        .fetch_optional(pool)
+        .await
+        .map_err(|e| Error::Database(e))?;
+
+        tracing::info!("Инициализация схемы БД (создание недостающих таблиц)...");
+
+        // Таблица миграций
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS migration (version INTEGER PRIMARY KEY, name TEXT)",
+        )
+        .execute(pool)
+        .await
+        .map_err(|e| Error::Database(e))?;
+
+        if user_exists.is_none() {
+            // Таблица пользователей (только при первом запуске)
+            sqlx::query(
+                "CREATE TABLE IF NOT EXISTS user (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    email TEXT NOT NULL,
+                    password TEXT NOT NULL,
+                    admin INTEGER NOT NULL,
+                    external INTEGER NOT NULL,
+                    alert INTEGER NOT NULL,
+                    pro INTEGER NOT NULL,
+                    created DATETIME NOT NULL,
+                    totp TEXT,
+                    email_otp TEXT
+                )",
+            )
+            .execute(pool)
+            .await
+            .map_err(|e| Error::Database(e))?;
+
+            // Таблица опций
+            sqlx::query(
+                "CREATE TABLE IF NOT EXISTS option (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
+            )
+            .execute(pool)
+            .await
+            .map_err(|e| Error::Database(e))?;
+
+            sqlx::query("INSERT OR IGNORE INTO migration (version, name) VALUES (1, 'initial_schema')")
+                .execute(pool)
+                .await
+                .map_err(|e| Error::Database(e))?;
+        }
+
+        // Таблица проектов (для CRUD) — создаём если отсутствует
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS project (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                created DATETIME NOT NULL,
+                alert INTEGER NOT NULL DEFAULT 0,
+                alert_chat TEXT,
+                max_parallel_tasks INTEGER NOT NULL DEFAULT 0,
+                type TEXT NOT NULL DEFAULT '',
+                default_secret_storage_id INTEGER
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(|e| Error::Database(e))?;
+
+        // project__user для связи пользователей с проектами
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS project__user (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+                role TEXT NOT NULL,
+                UNIQUE(project_id, user_id)
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(|e| Error::Database(e))?;
+
+        // task_output для логов задач (GET /api/.../tasks/{id}/output)
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS task_output (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id INTEGER NOT NULL,
+                project_id INTEGER NOT NULL,
+                output TEXT NOT NULL,
+                time DATETIME NOT NULL,
+                stage_id INTEGER
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(|e| Error::Database(e))?;
+
+        tracing::info!("Схема БД инициализирована");
+        Ok(())
     }
 
     #[cfg(test)]
@@ -1275,6 +1403,40 @@ impl ProjectStore for SqlStore {
                 let query = "DELETE FROM project WHERE id = ?";
                 sqlx::query(query)
                     .bind(project_id)
+                    .execute(self.get_mysql_pool()?)
+                    .await
+                    .map_err(|e| Error::Database(e))?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn create_project_user(&self, project_user: ProjectUser) -> Result<()> {
+        let role_str = project_user.role.to_string();
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                sqlx::query("INSERT INTO project__user (project_id, user_id, role) VALUES (?, ?, ?)")
+                    .bind(project_user.project_id)
+                    .bind(project_user.user_id)
+                    .bind(&role_str)
+                    .execute(self.get_sqlite_pool()?)
+                    .await
+                    .map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::PostgreSQL => {
+                sqlx::query("INSERT INTO project__user (project_id, user_id, role) VALUES ($1, $2, $3)")
+                    .bind(project_user.project_id)
+                    .bind(project_user.user_id)
+                    .bind(&role_str)
+                    .execute(self.get_postgres_pool()?)
+                    .await
+                    .map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::MySQL => {
+                sqlx::query("INSERT INTO project__user (project_id, user_id, `role`) VALUES (?, ?, ?)")
+                    .bind(project_user.project_id)
+                    .bind(project_user.user_id)
+                    .bind(&role_str)
                     .execute(self.get_mysql_pool()?)
                     .await
                     .map_err(|e| Error::Database(e))?;

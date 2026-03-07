@@ -105,19 +105,22 @@ mod tests {
 
     #[tokio::test]
     async fn test_sqlite_template_crud() {
-        let pool = create_test_pool().await.unwrap();
-        
+        let (pool, _temp) = create_test_pool().await.unwrap();
+        crate::db::sql::test_helpers::init_project_table(&pool).await.unwrap();
+        crate::db::sql::test_helpers::init_template_table(&pool).await.unwrap();
+
         // Сначала создаём проект
         let project_query = "INSERT INTO project (name, created, alert, max_parallel_tasks, type) VALUES (?, ?, ?, ?, ?)";
-        let project_id: i32 = sqlx::query_scalar(project_query)
+        let result = sqlx::query(project_query)
             .bind("Test Project")
             .bind(Utc::now())
             .bind(false)
             .bind(0i32)
             .bind("default")
-            .fetch_one(&pool)
+            .execute(&pool)
             .await
             .unwrap();
+        let project_id = result.last_insert_rowid() as i32;
         
         // Create
         let template = Template {

@@ -6,6 +6,7 @@
 .env
 .env.local
 .env.*.local
+.env.backup*
 
 # Lock-файлы (разрешаем только корневой Cargo.lock)
 Cargo.lock
@@ -41,3 +42,7 @@ test_errors.txt
 
 # Файлы отладки
 *.dSYM/
+
+# Node.js
+web/node_modules/
+web/dist/

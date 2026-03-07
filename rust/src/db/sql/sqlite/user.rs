@@ -167,6 +167,15 @@ pub async fn delete_user(pool: &Pool<Sqlite>, user_id: i32) -> Result<()> {
     Ok(())
 }
 
+/// Получает количество пользователей SQLite
+pub async fn get_user_count(pool: &Pool<Sqlite>) -> Result<usize> {
+    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM user")
+        .fetch_one(pool)
+        .await
+        .map_err(|e| Error::Database(e))?;
+    Ok(count as usize)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -174,8 +183,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_sqlite_user_crud() {
-        let pool = create_test_pool().await.unwrap();
-        
+        let (pool, _temp) = create_test_pool().await.unwrap();
+        crate::db::sql::test_helpers::init_user_table(&pool).await.unwrap();
+
         // Create
         let user = User {
             id: 0,

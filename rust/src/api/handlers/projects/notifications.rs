@@ -20,7 +20,7 @@ use crate::db::store::ProjectStore;
 pub async fn send_test_notification(
     State(state): State<Arc<AppState>>,
     Path(project_id): Path<i32>,
-    Json(payload): Json<TestNotificationPayload>,
+    payload: Option<Json<TestNotificationPayload>>,
 ) -> std::result::Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
     // Получаем проект
     let project = state.store.get_project(project_id)

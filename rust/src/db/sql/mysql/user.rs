@@ -166,3 +166,12 @@ pub async fn delete_user(pool: &Pool<MySql>, user_id: i32) -> Result<()> {
 
     Ok(())
 }
+
+/// Получает количество пользователей MySQL
+pub async fn get_user_count(pool: &Pool<MySql>) -> Result<usize> {
+    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM `user`")
+        .fetch_one(pool)
+        .await
+        .map_err(|e| Error::Database(e))?;
+    Ok(count as usize)
+}

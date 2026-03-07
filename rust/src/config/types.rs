@@ -456,8 +456,15 @@ impl Config {
             Ok(url.clone())
         } else if let Some(ref path) = self.database.path {
             Ok(path.clone())
+        } else if self.db_dialect() == DbDialect::SQLite {
+            // Значение по умолчанию: data/semaphore.db (абсолютный путь от cwd)
+            let default = std::env::current_dir()
+                .unwrap_or_else(|_| std::path::PathBuf::from("."))
+                .join("data")
+                .join("semaphore.db");
+            Ok(default.to_string_lossy().to_string())
         } else {
-            Err(crate::error::Error::Other("Database URL not configured".to_string()))
+            Err(crate::error::Error::Other("Database URL not configured. Set SEMAPHORE_DB_URL for PostgreSQL/MySQL or SEMAPHORE_DB_PATH for SQLite.".to_string()))
         }
     }
 

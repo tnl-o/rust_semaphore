@@ -154,7 +154,7 @@ mod tests {
         template.project_id = 1;
         template.name = "Test Template".to_string();
         template.playbook = "test.yml".to_string();
-        template.template_type = Some(TemplateType::Task);
+        template.r#type = TemplateType::Task;
         template.created = Utc::now();
         
         let created = db.create_template(template.clone()).await.unwrap();
@@ -178,7 +178,7 @@ mod tests {
             template.project_id = 1;
             template.name = format!("Template {}", i);
             template.playbook = format!("test{}.yml", i);
-            template.template_type = Some(TemplateType::Task);
+            template.r#type = TemplateType::Task;
             template.created = Utc::now();
             db.create_template(template).await.unwrap();
         }
@@ -198,7 +198,7 @@ mod tests {
         template.project_id = 1;
         template.name = "Test Template".to_string();
         template.playbook = "test.yml".to_string();
-        template.template_type = Some(TemplateType::Task);
+        template.r#type = TemplateType::Task;
         template.created = Utc::now();
         
         let created = db.create_template(template).await.unwrap();
@@ -225,7 +225,7 @@ mod tests {
         template.project_id = 1;
         template.name = "Test Template".to_string();
         template.playbook = "test.yml".to_string();
-        template.template_type = Some(TemplateType::Task);
+        template.r#type = TemplateType::Task;
         template.created = Utc::now();
         
         let created = db.create_template(template).await.unwrap();

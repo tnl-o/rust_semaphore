@@ -115,6 +115,7 @@ impl LocalJob {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::TemplateType;
     use chrono::Utc;
     use std::sync::Arc;
     use crate::services::task_logger::BasicLogger;

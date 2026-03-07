@@ -162,6 +162,9 @@ impl ProjectStore for MockStore {
         self.projects.write().unwrap().remove(&project_id);
         Ok(())
     }
+    async fn create_project_user(&self, _project_user: crate::models::ProjectUser) -> Result<()> {
+        Ok(())
+    }
 }
 
 #[async_trait]

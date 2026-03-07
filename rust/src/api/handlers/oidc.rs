@@ -99,6 +99,7 @@ pub async fn get_login_metadata(
         oidc_providers,
         totp_enabled: state.config.auth.totp.enable,
         email_enabled: false, // TODO: добавить email в AuthConfig
+        login_with_password: true, // Включаем форму username+password для локальной аутентификации
     }))
 }
 
@@ -121,6 +122,9 @@ pub struct LoginMetadataResponse {
     pub oidc_providers: Vec<OidcProviderMetadata>,
     pub totp_enabled: bool,
     pub email_enabled: bool,
+    /// Когда true, Vue показывает форму username+password вместо magic link
+    #[serde(rename = "login_with_password")]
+    pub login_with_password: bool,
 }
 
 // ============================================================================
@@ -151,6 +155,7 @@ mod tests {
             oidc_providers: vec![],
             totp_enabled: false,
             email_enabled: true,
+            login_with_password: true,
         };
 
         let json = serde_json::to_string(&response).unwrap();
