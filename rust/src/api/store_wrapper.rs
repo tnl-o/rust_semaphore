@@ -19,6 +19,11 @@ impl StoreWrapper {
     pub fn new(store: Arc<Box<dyn Store>>) -> Self {
         Self { inner: store }
     }
+
+    /// Получает доступ к внутреннему Store
+    pub fn store(&self) -> &dyn Store {
+        self.inner.as_ref().as_ref()
+    }
 }
 
 #[async_trait]
@@ -115,6 +120,18 @@ impl UserManager for StoreWrapper {
     async fn get_project_users(&self, project_id: i32, params: RetrieveQueryParams) -> Result<Vec<ProjectUser>> {
         self.inner.as_ref().as_ref().get_project_users(project_id, params).await
     }
+    
+    async fn get_user_totp(&self, user_id: i32) -> Result<Option<UserTotp>> {
+        self.inner.as_ref().as_ref().get_user_totp(user_id).await
+    }
+    
+    async fn set_user_totp(&self, user_id: i32, totp: &UserTotp) -> Result<()> {
+        self.inner.as_ref().as_ref().set_user_totp(user_id, totp).await
+    }
+    
+    async fn delete_user_totp(&self, user_id: i32) -> Result<()> {
+        self.inner.as_ref().as_ref().delete_user_totp(user_id).await
+    }
 }
 
 #[async_trait]
@@ -164,6 +181,13 @@ impl TemplateManager for StoreWrapper {
 
     async fn delete_template(&self, project_id: i32, template_id: i32) -> Result<()> {
         self.inner.as_ref().as_ref().delete_template(project_id, template_id).await
+    }
+}
+
+#[async_trait]
+impl HookManager for StoreWrapper {
+    async fn get_hooks_by_template(&self, template_id: i32) -> Result<Vec<Hook>> {
+        self.inner.as_ref().as_ref().get_hooks_by_template(template_id).await
     }
 }
 

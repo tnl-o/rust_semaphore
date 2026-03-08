@@ -128,12 +128,22 @@ impl UsersController {
         State(state): State<Arc<AppState>>,
         AuthUser { user_id, .. }: AuthUser,
     ) -> Result<Json<TotpSecretResponse>> {
-        // TODO: Интеграция с TOTP сервисом
-        // let totp_secret = crate::services::totp::generate_totp_secret(&user, "Semaphore")?;
+        use crate::services::totp::generate_totp_secret;
+
+        // Получаем пользователя
+        let user = state.store.get_user(user_id).await?;
+
+        // Если TOTP уже настроен, возвращаем ошибку
+        if user.totp.is_some() {
+            return Err(Error::Other("TOTP already enabled".to_string()));
+        }
+
+        // Генерируем секрет
+        let totp_secret = generate_totp_secret(&user, "Semaphore UI")?;
 
         Ok(Json(TotpSecretResponse {
-            secret: String::new(), // TODO: Реальный секрет
-            url: String::new(),    // TODO: Реальный URL
+            secret: totp_secret.secret,
+            url: totp_secret.url,
         }))
     }
 
@@ -143,15 +153,20 @@ impl UsersController {
         AuthUser { user_id, .. }: AuthUser,
         Json(request): Json<TotpVerifyRequest>,
     ) -> Result<StatusCode> {
-        // TODO: Интеграция с TOTP сервисом
-        // let is_valid = crate::services::totp::verify_totp(&request.passcode, &user.totp.secret);
+        use crate::services::totp::verify_totp_code;
 
-        if request.passcode.is_empty() {
-            return Err(Error::Other("Invalid passcode".to_string()));
+        // Получаем пользователя
+        let user = state.store.get_user(user_id).await?;
+
+        // Проверяем что TOTP настроен
+        let totp = user.totp
+            .ok_or_else(|| Error::Other("TOTP not enabled".to_string()))?;
+
+        // Проверяем код
+        let is_valid = verify_totp_code(&totp.url, &request.passcode);
+        if !is_valid {
+            return Err(Error::Other("Invalid TOTP code".to_string()));
         }
-
-        // TODO: Сохранить TOTP для пользователя
-        // state.store.set_user_totp(user_id, totp_secret).await?;
 
         Ok(StatusCode::NO_CONTENT)
     }

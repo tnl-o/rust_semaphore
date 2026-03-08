@@ -41,7 +41,7 @@ pub mod session;
 pub mod view;
 
 use crate::db::store::*;
-use crate::models::{User, Project, Task, TaskWithTpl, TaskOutput, TaskStage, Template, Inventory, Repository, Environment, AccessKey, Integration, Schedule, Session, APIToken, Event, Runner, View, Role, ProjectInvite, ProjectInviteWithUser, ProjectUser, RetrieveQueryParams, TerraformInventoryAlias, TerraformInventoryState, SecretStorage, SessionVerificationMethod};
+use crate::models::{User, UserTotp, Hook, Project, Task, TaskWithTpl, TaskOutput, TaskStage, Template, Inventory, Repository, Environment, AccessKey, Integration, Schedule, Session, APIToken, Event, Runner, View, Role, ProjectInvite, ProjectInviteWithUser, ProjectUser, RetrieveQueryParams, TerraformInventoryAlias, TerraformInventoryState, SecretStorage, SessionVerificationMethod};
 use crate::error::{Error, Result};
 use crate::services::task_logger::TaskStatus;
 use crate::db::sql::types::{SqlDb, SqlDialect};
@@ -1163,6 +1163,83 @@ impl UserManager for SqlStore {
                 }).collect())
             }
         }
+    }
+
+    async fn get_user_totp(&self, user_id: i32) -> Result<Option<UserTotp>> {
+        // Получаем пользователя и возвращаем его TOTP
+        let user = self.get_user(user_id).await?;
+        Ok(user.totp)
+    }
+
+    async fn set_user_totp(&self, user_id: i32, totp: &UserTotp) -> Result<()> {
+        // Сериализуем TOTP в JSON
+        let totp_json = serde_json::to_string(totp)
+            .map_err(|e| Error::Other(format!("Failed to serialize TOTP: {}", e)))?;
+        
+        // Обновляем user.totp
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                sqlx::query("UPDATE user SET totp = ? WHERE id = ?")
+                    .bind(&totp_json)
+                    .bind(user_id)
+                    .execute(self.get_sqlite_pool()?)
+                    .await
+                    .map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::PostgreSQL => {
+                sqlx::query("UPDATE \"user\" SET totp = $1 WHERE id = $2")
+                    .bind(&totp_json)
+                    .bind(user_id)
+                    .execute(self.get_postgres_pool()?)
+                    .await
+                    .map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::MySQL => {
+                sqlx::query("UPDATE `user` SET totp = ? WHERE id = ?")
+                    .bind(&totp_json)
+                    .bind(user_id)
+                    .execute(self.get_mysql_pool()?)
+                    .await
+                    .map_err(|e| Error::Database(e))?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn delete_user_totp(&self, user_id: i32) -> Result<()> {
+        // Удаляем TOTP (устанавливаем в NULL)
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                sqlx::query("UPDATE user SET totp = NULL WHERE id = ?")
+                    .bind(user_id)
+                    .execute(self.get_sqlite_pool()?)
+                    .await
+                    .map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::PostgreSQL => {
+                sqlx::query("UPDATE \"user\" SET totp = NULL WHERE id = $1")
+                    .bind(user_id)
+                    .execute(self.get_postgres_pool()?)
+                    .await
+                    .map_err(|e| Error::Database(e))?;
+            }
+            SqlDialect::MySQL => {
+                sqlx::query("UPDATE `user` SET totp = NULL WHERE id = ?")
+                    .bind(user_id)
+                    .execute(self.get_mysql_pool()?)
+                    .await
+                    .map_err(|e| Error::Database(e))?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl HookManager for SqlStore {
+    async fn get_hooks_by_template(&self, template_id: i32) -> Result<Vec<Hook>> {
+        // Заглушка - возвращаем пустой список
+        Ok(Vec::new())
     }
 }
 

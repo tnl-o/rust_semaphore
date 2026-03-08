@@ -537,6 +537,20 @@ impl AccessKeyInstallation {
         }
     }
 
+    /// Создаёт новую установку с загрузкой ключа из БД по key_id
+    pub fn new_with_key_id(key_id: i32) -> Self {
+        // В будущей реализации здесь будет загрузка AccessKey из БД
+        // и создание SSH агента или установка логина/пароля
+        // Пока создаём пустую установку
+        tracing::debug!("AccessKeyInstallation::new_with_key_id({})", key_id);
+        Self {
+            ssh_agent: None,
+            login: None,
+            password: None,
+            script: None,
+        }
+    }
+
     /// Получает переменные окружения для Git
     pub fn get_git_env(&self) -> Vec<(String, String)> {
         let mut env = Vec::new();

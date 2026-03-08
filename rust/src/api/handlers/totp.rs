@@ -100,17 +100,20 @@ pub async fn confirm_totp_setup(
     }
 
     // Сохраняем TOTP в БД
-    let _totp = UserTotp {
+    let totp = UserTotp {
         id: 0,
         created: Utc::now(),
         user_id: user.id,
-        url: totp_secret.url,
-        recovery_hash: totp_secret.recovery_hash,
+        url: totp_secret.url.clone(),
+        recovery_hash: totp_secret.recovery_hash.clone(),
         recovery_code: None,
     };
 
-    // TODO: Реализовать сохранение TOTP в store
-    // state.store.create_totp(totp).await?;
+    // Сохраняем TOTP через store
+    state.store.set_user_totp(user.id, &totp).await.map_err(|e| (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(ErrorResponse::new(format!("Ошибка сохранения TOTP: {}", e))),
+    ))?;
 
     Ok(StatusCode::OK)
 }
@@ -150,8 +153,11 @@ pub async fn disable_totp(
         ));
     }
 
-    // TODO: Реализовать удаление TOTP из store
-    // state.store.delete_totp(user.id).await?;
+    // Удаляем TOTP из store
+    state.store.delete_user_totp(user.id).await.map_err(|e| (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(ErrorResponse::new(format!("Ошибка удаления TOTP: {}", e))),
+    ))?;
 
     Ok(StatusCode::OK)
 }

@@ -233,31 +233,67 @@ impl<T: Clone + Send + 'static> TypeExporter for ValueMap<T> {
 /// ExporterChain - цепочка экспортеров
 pub struct ExporterChain {
     exporters: HashMap<String, Box<dyn TypeExporter>>,
+    /// Маппинг старых ключей в новые (для импорта)
+    key_mapping: HashMap<String, HashMap<EntityKey, EntityKey>>,
+    /// Маппинг старых integer ключей в новые
+    int_key_mapping: HashMap<String, HashMap<i32, i32>>,
+    /// Игнорировать отсутствующие ключи
+    ignore_key_not_found: bool,
 }
 
 impl KeyMapper for ExporterChain {
-    fn get_new_key(&mut self, _name: &str, _scope: &str, old_key: &EntityKey, _err_handler: &dyn ErrorHandler) -> Result<EntityKey, String> {
-        Ok(old_key.clone())  // TODO: реализовать маппинг ключей
+    fn get_new_key(&mut self, name: &str, _scope: &str, old_key: &EntityKey, _err_handler: &dyn ErrorHandler) -> Result<EntityKey, String> {
+        // Проверяем маппинг
+        if let Some(mapping) = self.key_mapping.get(name) {
+            if let Some(new_key) = mapping.get(old_key) {
+                return Ok(new_key.clone());
+            }
+        }
+        // Если маппинга нет, возвращаем старый ключ
+        Ok(old_key.clone())
     }
-    
-    fn get_new_key_int(&mut self, _name: &str, _scope: &str, old_key: i32, _err_handler: &dyn ErrorHandler) -> Result<i32, String> {
-        Ok(old_key)  // TODO: реализовать маппинг ключей
+
+    fn get_new_key_int(&mut self, name: &str, _scope: &str, old_key: i32, _err_handler: &dyn ErrorHandler) -> Result<i32, String> {
+        // Проверяем маппинг
+        if let Some(mapping) = self.int_key_mapping.get(name) {
+            if let Some(new_key) = mapping.get(&old_key) {
+                return Ok(*new_key);
+            }
+        }
+        // Если маппинга нет, возвращаем старый ключ
+        Ok(old_key)
     }
-    
-    fn get_new_key_int_ref(&mut self, _name: &str, _scope: &str, old_key: Option<i32>, _err_handler: &dyn ErrorHandler) -> Result<Option<i32>, String> {
-        Ok(old_key)  // TODO: реализовать маппинг ключей
+
+    fn get_new_key_int_ref(&mut self, name: &str, _scope: &str, old_key: Option<i32>, _err_handler: &dyn ErrorHandler) -> Result<Option<i32>, String> {
+        match old_key {
+            Some(key) => {
+                let mapped = self.get_new_key_int(name, _scope, key, _err_handler)?;
+                Ok(Some(mapped))
+            }
+            None => Ok(None),
+        }
     }
-    
-    fn map_keys(&mut self, _name: &str, _scope: &str, _old_key: &EntityKey, _new_key: &EntityKey) -> Result<(), String> {
-        Ok(())  // TODO: реализовать маппинг ключей
+
+    fn map_keys(&mut self, name: &str, _scope: &str, old_key: &EntityKey, new_key: &EntityKey) -> Result<(), String> {
+        // Сохраняем маппинг
+        self.key_mapping
+            .entry(name.to_string())
+            .or_insert_with(HashMap::new)
+            .insert(old_key.clone(), new_key.clone());
+        Ok(())
     }
-    
-    fn map_int_keys(&mut self, _name: &str, _scope: &str, _old_key: i32, _new_key: i32) -> Result<(), String> {
-        Ok(())  // TODO: реализовать маппинг ключей
+
+    fn map_int_keys(&mut self, name: &str, _scope: &str, old_key: i32, new_key: i32) -> Result<(), String> {
+        // Сохраняем маппинг integer ключей
+        self.int_key_mapping
+            .entry(name.to_string())
+            .or_insert_with(HashMap::new)
+            .insert(old_key, new_key);
+        Ok(())
     }
-    
+
     fn ignore_key_not_found(&self) -> bool {
-        false  // TODO: настроить игнорирование отсутствующих ключей
+        self.ignore_key_not_found
     }
 }
 
@@ -286,6 +322,19 @@ impl ExporterChain {
     pub fn new() -> Self {
         Self {
             exporters: HashMap::new(),
+            key_mapping: HashMap::new(),
+            int_key_mapping: HashMap::new(),
+            ignore_key_not_found: false,
+        }
+    }
+
+    /// Создаёт новый ExporterChain с настройками
+    pub fn with_options(ignore_key_not_found: bool) -> Self {
+        Self {
+            exporters: HashMap::new(),
+            key_mapping: HashMap::new(),
+            int_key_mapping: HashMap::new(),
+            ignore_key_not_found,
         }
     }
 

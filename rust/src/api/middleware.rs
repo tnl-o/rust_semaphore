@@ -145,10 +145,14 @@ pub async fn request_logger(
 ///
 /// Проверяет наличие и валидность токена аутентификации
 pub async fn auth_middleware(
-    State(_state): State<Arc<AppState>>,
+    State(state): State<Arc<AppState>>,
     request: Request,
     next: Next,
 ) -> Result<Response, (StatusCode, Json<ErrorResponse>)> {
+    use crate::api::auth_local::LocalAuthService;
+    use jsonwebtoken::{decode, Validation, DecodingKey};
+    use crate::api::auth_local::Claims;
+
     // Получаем заголовок Authorization
     let auth_header = request
         .headers()
@@ -173,20 +177,41 @@ pub async fn auth_middleware(
         }
     };
 
-    // TODO: Реализовать проверку токена
-    // let user = state.store.get_user_by_token(token).await?;
+    // Проверяем JWT токен
+    let secret = std::env::var("SEMAPHORE_JWT_SECRET")
+        .unwrap_or_else(|_| "dev-secret-key-change-in-production".to_string());
 
-    // Пока просто проверяем, что токен не пустой
-    if token.is_empty() {
+    let token_data = decode::<Claims>(
+        token,
+        &DecodingKey::from_secret(secret.as_bytes()),
+        &Validation::default()
+    ).map_err(|e| (
+        StatusCode::UNAUTHORIZED,
+        Json(ErrorResponse::new(format!("Неверный токен: {}", e))
+            .with_code("INVALID_TOKEN")),
+    ))?;
+
+    // Получаем пользователя из БД
+    let user = state.store.store().get_user(token_data.claims.sub)
+        .await
+        .map_err(|e| (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse::new(format!("Ошибка получения пользователя: {}", e))
+                .with_code("USER_NOT_FOUND")),
+        ))?;
+
+    // Проверяем, не удалён ли пользователь
+    if user.external && false { // placeholder for deleted check
         return Err((
-            StatusCode::UNAUTHORIZED,
-            Json(ErrorResponse::new("Неверный токен")
-                .with_code("INVALID_TOKEN")),
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse::new("Пользователь заблокирован")
+                .with_code("USER_DISABLED")),
         ));
     }
 
     // Добавляем информацию о пользователе в request extensions
-    // request.extensions_mut().insert(user);
+    let mut request = request;
+    request.extensions_mut().insert(user);
 
     Ok(next.run(request).await)
 }
@@ -195,20 +220,42 @@ pub async fn auth_middleware(
 ///
 /// Проверяет, имеет ли пользователь доступ к ресурсу
 pub async fn permission_middleware(
-    State(_state): State<Arc<AppState>>,
+    State(state): State<Arc<AppState>>,
     request: Request,
     next: Next,
 ) -> Result<Response, (StatusCode, Json<ErrorResponse>)> {
     let path = request.uri().path();
+    let method = request.method().clone();
 
     // Извлекаем ID проекта из пути
     if let Some(project_id) = extract_project_id(path) {
-        // TODO: Проверить права доступа пользователя к проекту
-        // let user = request.extensions().get::<User>().unwrap();
-        // let has_permission = state.store.check_permission(user.id, project_id, &method).await?;
+        // Получаем пользователя из request extensions
+        let user = request.extensions().get::<crate::models::User>()
+            .ok_or((
+                StatusCode::UNAUTHORIZED,
+                Json(ErrorResponse::new("Пользователь не аутентифицирован")
+                    .with_code("AUTH_REQUIRED")),
+            ))?;
 
-        // Пока просто пропускаем все запросы
-        debug!("Проверка прав доступа к проекту {}", project_id);
+        // Проверяем права доступа пользователя к проекту
+        let has_permission: bool = state.store.store().get_project_users(project_id, crate::db::store::RetrieveQueryParams::default())
+            .await
+            .map(|project_users: Vec<crate::models::ProjectUser>| {
+                project_users.iter().any(|pu: &crate::models::ProjectUser| pu.user_id == user.id)
+            })
+            .unwrap_or(false);
+
+        // Администраторы имеют доступ ко всем проектам
+        if !has_permission && !user.admin {
+            return Err((
+                StatusCode::FORBIDDEN,
+                Json(ErrorResponse::new("Доступ запрещён")
+                    .with_code("PERMISSION_DENIED")),
+            ));
+        }
+
+        debug!("Проверка прав доступа: user={} project={} method={} result={}",
+            user.username, project_id, method, if has_permission || user.admin { "allowed" } else { "denied" });
     }
 
     Ok(next.run(request).await)

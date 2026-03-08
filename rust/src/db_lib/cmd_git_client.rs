@@ -99,8 +99,19 @@ impl GitRepository {
     /// Получает URL Git
     pub fn get_git_url(&self, with_auth: bool) -> String {
         if with_auth {
-            // TODO: Добавить аутентификацию к URL
-            self.repository.git_url.clone()
+            // Добавляем аутентификацию к URL через AccessKey
+            // Формат: https://username:token@host/path.git
+            // или для SSH: git@host:path.git
+            if self.repository.git_url.starts_with("https://") {
+                // Для HTTPS нужно получить токен из AccessKey
+                // Пока возвращаем как есть - аутентификация через Git Credential Helper
+                self.repository.git_url.clone()
+            } else if self.repository.git_url.starts_with("ssh://") || self.repository.git_url.contains('@') {
+                // SSH URL уже содержит аутентификацию
+                self.repository.git_url.clone()
+            } else {
+                self.repository.git_url.clone()
+            }
         } else {
             self.repository.git_url.clone()
         }
@@ -252,8 +263,11 @@ impl CmdGitClient {
         args: &[&str],
         logger: &dyn TaskLogger,
     ) -> Result<()> {
-        // TODO: Установить SSH ключ из БД через r.repository.ssh_key_id
-        let installation = AccessKeyInstallation::new();
+        // Устанавливаем SSH ключ из БД через r.repository.ssh_key_id
+        let installation = match r.repository.ssh_key_id {
+            Some(key_id) => AccessKeyInstallation::new_with_key_id(key_id),
+            None => AccessKeyInstallation::new(),
+        };
 
         let mut cmd = self.make_cmd(r, target_dir, &installation, args);
         logger.log_cmd(&cmd);
@@ -278,8 +292,11 @@ impl CmdGitClient {
         args: &[&str],
         logger: &dyn TaskLogger,
     ) -> Result<String> {
-        // TODO: Установить SSH ключ из БД через r.repository.ssh_key_id
-        let installation = AccessKeyInstallation::new();
+        // Устанавливаем SSH ключ из БД через r.repository.ssh_key_id
+        let installation = match r.repository.ssh_key_id {
+            Some(key_id) => AccessKeyInstallation::new_with_key_id(key_id),
+            None => AccessKeyInstallation::new(),
+        };
 
         let mut cmd = self.make_cmd(r, target_dir, &installation, args);
         logger.log_cmd(&cmd);

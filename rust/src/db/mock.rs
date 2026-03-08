@@ -132,6 +132,40 @@ impl UserManager for MockStore {
     async fn get_project_users(&self, _project_id: i32, _params: RetrieveQueryParams) -> Result<Vec<ProjectUser>> {
         Ok(vec![])
     }
+    
+    async fn get_user_totp(&self, user_id: i32) -> Result<Option<UserTotp>> {
+        // Mock implementation - возвращаем None
+        Ok(self.users.read().unwrap().get(&user_id).and_then(|u| u.totp.clone()))
+    }
+    
+    async fn set_user_totp(&self, user_id: i32, totp: &UserTotp) -> Result<()> {
+        // Mock implementation - обновляем пользователя
+        if let Some(user) = self.users.write().unwrap().get_mut(&user_id) {
+            user.totp = Some(totp.clone());
+        }
+        Ok(())
+    }
+    
+    async fn delete_user_totp(&self, user_id: i32) -> Result<()> {
+        // Mock implementation - удаляем TOTP
+        if let Some(user) = self.users.write().unwrap().get_mut(&user_id) {
+            user.totp = None;
+        }
+        Ok(())
+    }
+
+    async fn get_hooks_by_template(&self, _template_id: i32) -> Result<Vec<Hook>> {
+        // Mock - возвращаем пустой список
+        Ok(Vec::new())
+    }
+}
+
+#[async_trait]
+impl HookManager for MockStore {
+    async fn get_hooks_by_template(&self, _template_id: i32) -> Result<Vec<Hook>> {
+        // Mock - возвращаем пустой список
+        Ok(Vec::new())
+    }
 }
 
 #[async_trait]
