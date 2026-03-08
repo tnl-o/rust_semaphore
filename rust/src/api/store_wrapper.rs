@@ -19,6 +19,11 @@ impl StoreWrapper {
     pub fn new(store: Arc<Box<dyn Store>>) -> Self {
         Self { inner: store }
     }
+
+    /// Получает доступ к внутреннему Store
+    pub fn store(&self) -> &dyn Store {
+        self.inner.as_ref().as_ref()
+    }
 }
 
 #[async_trait]
