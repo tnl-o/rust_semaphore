@@ -39,10 +39,11 @@ pub fn create_app(store: Box<dyn crate::db::Store + Send + Sync>) -> Router {
         crate::config::Config::default(),
     ));
 
-    let cors = CorsLayer::new()
-        .allow_origin(Any)
-        .allow_methods(Any)
-        .allow_headers(Any);
+    // Временно отключаем CORS для отладки
+    // let cors = CorsLayer::new()
+    //     .allow_origin(Any)
+    //     .allow_methods(Any)
+    //     .allow_headers(Any);
 
     Router::new()
         // Static files (должны быть перед API для корректного fallback)
@@ -51,6 +52,6 @@ pub fn create_app(store: Box<dyn crate::db::Store + Send + Sync>) -> Router {
         .merge(routes::api_routes())
         // Middleware
         .layer(TraceLayer::new_for_http())
-        .layer(cors)
+        // .layer(cors)
         .with_state(state)
 }

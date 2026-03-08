@@ -90,18 +90,14 @@ impl UserAddCommand {
                 .map_err(|e| crate::error::Error::Other(e.to_string()))?;
             let store = SqlStore::new(&url).await?;
 
-            // Хешируем пароль
-            use crate::api::auth_local::hash_password;
-            let password_hash = hash_password(&self.password)?;
-
-            // Создаём пользователя
+            // Создаём пользователя - create_user сам захэширует пароль
             let user = User {
                 id: 0,
                 created: Utc::now(),
                 username: self.username.clone(),
                 name: self.name.clone(),
                 email: self.email.clone(),
-                password: password_hash.clone(),
+                password: String::new(), // Будет заменён в create_user
                 admin: self.admin,
                 external: false,
                 alert: false,
@@ -110,7 +106,7 @@ impl UserAddCommand {
                 email_otp: None,
             };
 
-            store.create_user(user, &password_hash).await?;
+            store.create_user(user, &self.password).await?;
 
             println!("User {} successfully created", self.username);
             Ok::<(), crate::error::Error>(())

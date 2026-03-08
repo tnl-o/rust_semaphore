@@ -820,6 +820,11 @@ impl UserManager for SqlStore {
     }
 
     async fn create_user(&self, user: User, password: &str) -> Result<User> {
+        use crate::api::auth_local::hash_password;
+        
+        // Хешируем пароль перед сохранением
+        let password_hash = hash_password(password)?;
+        
         match self.get_dialect() {
             SqlDialect::SQLite => {
                 let query = "INSERT INTO user (username, name, email, password, admin, external, alert, pro, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -827,7 +832,7 @@ impl UserManager for SqlStore {
                     .bind(&user.username)
                     .bind(&user.name)
                     .bind(&user.email)
-                    .bind(password)
+                    .bind(&password_hash)
                     .bind(user.admin)
                     .bind(user.external)
                     .bind(user.alert)
@@ -843,7 +848,7 @@ impl UserManager for SqlStore {
                     .bind(&user.username)
                     .bind(&user.name)
                     .bind(&user.email)
-                    .bind(password)
+                    .bind(&password_hash)
                     .bind(user.admin)
                     .bind(user.external)
                     .bind(user.alert)
@@ -859,7 +864,7 @@ impl UserManager for SqlStore {
                     .bind(&user.username)
                     .bind(&user.name)
                     .bind(&user.email)
-                    .bind(password)
+                    .bind(&password_hash)
                     .bind(user.admin)
                     .bind(user.external)
                     .bind(user.alert)

@@ -5,7 +5,7 @@
 use axum::{
     extract::State,
     http::{header, StatusCode},
-    response::AppendHeaders,
+    response::{AppendHeaders, IntoResponse},
     Json,
 };
 use std::sync::Arc;
@@ -27,63 +27,78 @@ pub async fn health() -> &'static str {
 pub async fn login(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<LoginPayload>,
-) -> Result<
-    (AppendHeaders<[(axum::http::HeaderName, String); 1]>, Json<LoginResponse>),
-    (StatusCode, Json<ErrorResponse>),
-> {
+) -> impl IntoResponse {
     use crate::api::auth_local::{LocalAuthService, verify_password};
     use crate::services::totp::verify_totp_code;
 
+    tracing::info!("Login attempt for user: {}", payload.username);
+
     // Находим пользователя
-    let user = state.store.get_user_by_login_or_email(&payload.username, &payload.username)
-        .await
-        .map_err(|e| match e {
-            Error::NotFound(_) => (
+    let user = match state.store.get_user_by_login_or_email(&payload.username, &payload.username).await {
+        Ok(u) => u,
+        Err(e) => {
+            tracing::warn!("User not found: {}, error: {}", payload.username, e);
+            return (
                 StatusCode::UNAUTHORIZED,
                 Json(ErrorResponse::new("Неверный логин или пароль")
                     .with_code("INVALID_CREDENTIALS")),
-            ),
-            _ => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ErrorResponse::new("Ошибка сервера")),
-            ),
-        })?;
+            ).into_response();
+        }
+    };
+
+    tracing::info!("User found: id={}, username={}", user.id, user.username);
 
     // Проверяем пароль
-    if !verify_password(&payload.password, &user.password) {
-        return Err((
+    let password_valid = verify_password(&payload.password, &user.password);
+
+    if !password_valid {
+        // Debug информация в ответе (удалить в production)
+        let debug_info = format!(
+            "Password len: {}, Hash len: {}",
+            payload.password.len(),
+            user.password.len()
+        );
+        tracing::warn!("Invalid password for user: {}. Debug: {}", user.username, debug_info);
+        return (
             StatusCode::UNAUTHORIZED,
-            Json(ErrorResponse::new("Неверный логин или пароль")
-                .with_code("INVALID_CREDENTIALS")),
-        ));
+            Json(serde_json::json!({
+                "error": "Неверный логин или пароль",
+                "code": "INVALID_CREDENTIALS",
+                "debug": debug_info
+            })),
+        ).into_response();
     }
 
     // Проверяем TOTP, если настроен
     if let Some(ref totp) = user.totp {
-        let totp_code = payload.totp_code
-            .ok_or((
+        let totp_code = match payload.totp_code {
+            Some(code) => code,
+            None => return (
                 StatusCode::UNAUTHORIZED,
                 Json(ErrorResponse::new("Требуется TOTP код")
                     .with_code("TOTP_REQUIRED")),
-            ))?;
+            ).into_response(),
+        };
 
         if !verify_totp_code(&totp.url, &totp_code) {
-            return Err((
+            return (
                 StatusCode::UNAUTHORIZED,
                 Json(ErrorResponse::new("Неверный TOTP код")
                     .with_code("INVALID_TOTP")),
-            ));
+            ).into_response();
         }
     }
 
     // Генерируем токен
     let auth_service = LocalAuthService::new(state.store.clone());
-    let token_info = auth_service.generate_token(&user)
-        .map_err(|e| (
+    let token_info = match auth_service.generate_token(&user) {
+        Ok(info) => info,
+        Err(e) => return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ErrorResponse::new(format!("Ошибка генерации токена: {}", e))
                 .with_code("TOKEN_GENERATION_ERROR")),
-        ))?;
+        ).into_response(),
+    };
 
     // Устанавливаем cookie "semaphore" для Vue upstream (как в Go backend)
     let cookie_value = format!(
@@ -94,15 +109,15 @@ pub async fn login(
 
     let headers = AppendHeaders([(header::SET_COOKIE, cookie_value)]);
 
-    Ok((
+    (
         headers,
         Json(LoginResponse {
             token: token_info.token,
             token_type: token_info.token_type,
             expires_in: token_info.expires_in,
             totp_required: None,
-        }),
-    ))
+        })
+    ).into_response()
 }
 
 /// Выход из системы
