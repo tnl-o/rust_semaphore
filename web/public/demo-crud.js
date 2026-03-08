@@ -122,21 +122,22 @@ function showPage(pageId) {
         page.classList.add('hidden');
         page.classList.remove('active');
     });
-    
+
     const targetPage = document.getElementById(pageId);
     if (targetPage) {
         targetPage.classList.remove('hidden');
         targetPage.classList.add('active');
     }
-    
+
     // Update nav links
+    const pageName = pageId.replace('-page', '');
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
-        if (link.dataset.page === pageId) {
+        if (link.dataset.page === pageName) {
             link.classList.add('active');
         }
     });
-    
+
     // Load page data
     loadPageData(pageId);
 }
@@ -464,6 +465,11 @@ function renderTasks(tasks) {
                 <p><strong>Создана:</strong> ${formatDate(task.created)}</p>
                 ${task.message ? `<p><strong>Сообщение:</strong> ${escapeHtml(task.message)}</p>` : ''}
             </div>
+            <div class="card-footer">
+                <div class="card-actions">
+                    <button class="card-btn" onclick="editTask(${task.id})">📋</button>
+                </div>
+            </div>
         </div>
     `).join('');
 }
@@ -483,6 +489,36 @@ async function createTask(taskData) {
         throw error;
     }
 }
+
+window.editTask = async function(id) {
+    try {
+        const task = await apiRequest(`/projects/${CURRENT_PROJECT_ID}/tasks/${id}`);
+
+        document.getElementById('modal-title').textContent = `Задача #${id}`;
+        document.getElementById('modal-body').innerHTML = `
+            <div class="task-details">
+                <p><strong>Статус:</strong> <span class="status-badge status-${task.status}">${task.status}</span></p>
+                <p><strong>Шаблон:</strong> ${task.template_id}</p>
+                <p><strong>Playbook:</strong> ${escapeHtml(task.playbook || '-')}</p>
+                <p><strong>Создана:</strong> ${formatDate(task.created)}</p>
+                ${task.message ? `<p><strong>Сообщение:</strong> ${escapeHtml(task.message)}</p>` : ''}
+                ${task.output ? `<pre style="background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; overflow-x: auto;">${escapeHtml(task.output)}</pre>` : ''}
+                <div class="form-actions" style="margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary modal-close">Закрыть</button>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('modal').classList.remove('hidden');
+
+        document.querySelector('.modal-close').addEventListener('click', () => {
+            document.getElementById('modal').classList.add('hidden');
+        });
+
+    } catch (error) {
+        showToast('Ошибка загрузки задачи: ' + error.message, 'error');
+    }
+};
 
 // --------------------------- Inventory CRUD ---------------------------
 
@@ -1101,29 +1137,35 @@ function selectProject(projectId) {
 
 function loadPageData(pageId) {
     switch (pageId) {
-        case 'dashboard':
+        case 'dashboard-page':
             loadDashboardStats();
             break;
-        case 'projects':
+        case 'projects-page':
             loadProjects();
             break;
-        case 'templates':
+        case 'templates-page':
             loadTemplates();
             break;
-        case 'tasks':
+        case 'tasks-page':
             loadTasks();
             break;
-        case 'inventory':
+        case 'inventory-page':
             loadInventory();
             break;
-        case 'repositories':
+        case 'repositories-page':
             loadRepositories();
             break;
-        case 'environments':
+        case 'environments-page':
             loadEnvironments();
             break;
-        case 'keys':
+        case 'keys-page':
             loadKeys();
+            break;
+        case 'schedules-page':
+            loadSchedules();
+            break;
+        case 'events-page':
+            loadEvents();
             break;
     }
 }
@@ -1236,6 +1278,58 @@ async function deleteSchedule(scheduleId) {
         showToast('Ошибка удаления расписания: ' + error.message, 'error');
         throw error;
     }
+}
+
+// ============================================================================
+// Events (заглушка для будущего расширения)
+// ============================================================================
+
+async function loadEvents() {
+    if (!CURRENT_PROJECT_ID) {
+        document.getElementById('events-list').innerHTML = `
+            <div class="empty-state">
+                <p>Выберите проект для просмотра событий</p>
+            </div>
+        `;
+        return [];
+    }
+
+    try {
+        const events = await apiRequest(`/projects/${CURRENT_PROJECT_ID}/events`);
+        renderEvents(events);
+        document.getElementById('events-count').textContent = events.length;
+        return events;
+    } catch (error) {
+        showToast('Ошибка загрузки событий: ' + error.message, 'error');
+        return [];
+    }
+}
+
+function renderEvents(events) {
+    const container = document.getElementById('events-list');
+
+    if (events.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <h3>Нет событий</h3>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = events.map(event => `
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Событие #${event.id}</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Объект:</strong> ${escapeHtml(event.object_type || '-')}</p>
+                <p><strong>Действие:</strong> ${escapeHtml(event.action || '-')}</p>
+                <p><strong>Дата:</strong> ${formatDate(event.created)}</p>
+            </div>
+        </div>
+    `).join('');
 }
 
 // ============================================================================
@@ -1530,7 +1624,7 @@ window.editRepository = async function(id) {
 
 window.editEnvironment = async function(id) {
     try {
-        const env = await apiRequest(`/projects/${CURRENT_PROJECT_ID}/environmentss/${id}`);
+        const env = await apiRequest(`/projects/${CURRENT_PROJECT_ID}/environments/${id}`);
         
         document.getElementById('modal-title').textContent = 'Редактировать окружение';
         document.getElementById('modal-body').innerHTML = `
@@ -1641,7 +1735,7 @@ window.editKey = async function(id) {
             
             await updateKey(id, updatedData);
             document.getElementById('modal').classList.add('hidden');
-            await loadAccessKeys();
+            await loadKeys();
         });
         
         document.querySelector('.modal-close').addEventListener('click', () => {
@@ -1655,7 +1749,7 @@ window.editKey = async function(id) {
 
 window.editSchedule = async function(id) {
     try {
-        const schedule = await apiRequest(`/projects/${CURRENT_PROJECT_ID}/schedules/${id}`);
+        const schedule = await apiRequest(`/projects/${CURRENT_PROJECT_ID}/schedule/${id}`);
         
         document.getElementById('modal-title').textContent = 'Редактировать расписание';
         document.getElementById('modal-body').innerHTML = `
