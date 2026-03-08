@@ -38,14 +38,16 @@ impl SqlDb {
         match self.get_dialect() {
             crate::db::sql::types::SqlDialect::SQLite => {
                 let result = sqlx::query(
-                    "INSERT INTO project_invite (project_id, user_id, role, created, updated)
-                     VALUES (?, ?, ?, ?, ?)"
+                    "INSERT INTO project_invite (project_id, user_id, role, created, updated, token, inviter_user_id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)"
                 )
                 .bind(invite.project_id)
                 .bind(invite.user_id)
                 .bind(&invite.role)
                 .bind(invite.created)
                 .bind(invite.updated)
+                .bind(&invite.token)
+                .bind(invite.inviter_user_id)
                 .execute(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
                 .await
                 .map_err(|e| Error::Database(e))?;
@@ -78,8 +80,20 @@ impl SqlDb {
 
     /// Получает приглашение по токену
     pub async fn get_project_invite_by_token(&self, token: &str) -> Result<ProjectInvite> {
-        // TODO: Реализовать когда будет поле token в ProjectInvite
-        Err(Error::NotImplemented("get_project_invite_by_token not implemented".to_string()))
+        match self.get_dialect() {
+            crate::db::sql::types::SqlDialect::SQLite => {
+                let invite = sqlx::query_as::<_, ProjectInvite>(
+                    "SELECT * FROM project_invite WHERE token = ?"
+                )
+                .bind(token)
+                .fetch_optional(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
+                .await
+                .map_err(|e| Error::Database(e))?;
+
+                invite.ok_or(Error::NotFound("Project invite not found or expired".to_string()))
+            }
+            _ => Err(Error::Other("Only SQLite supported for now".to_string()))
+        }
     }
 
     /// Обновляет приглашение

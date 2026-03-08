@@ -6,10 +6,12 @@ use std::sync::Arc;
 use tokio::sync::{RwLock, Mutex};
 use tracing::{info, warn, error};
 
-use crate::models::Task;
+use crate::models::{Task, Inventory, Repository, Environment};
 use crate::services::task_logger::TaskStatus;
 use crate::services::task_pool_types::{TaskPool, RunningTask};
 use crate::services::task_logger::{TaskLogger, BasicLogger};
+use crate::services::local_job::LocalJob;
+use crate::db_lib::AccessKeyInstallerImpl;
 
 impl TaskPool {
     /// Запускает задачу
@@ -50,29 +52,96 @@ impl TaskPool {
         Ok(())
     }
     
-    /// Выполняет задачу
+    /// Выполняет задачу через LocalJob
     pub async fn execute_task(&self, task: Task) -> Result<(), String> {
         // Обновляем статус на Running
         self.update_task_status(task.id, TaskStatus::Running).await?;
-        
-        // TODO: Здесь будет логика выполнения задачи
-        // LocalJob::run() или аналогичная логика
-        
-        // Симуляция выполнения
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-        
-        // Обновляем статус на Success
-        self.update_task_status(task.id, TaskStatus::Success).await?;
-        
+
+        // Получаем шаблон
+        let template = self.store.get_template(task.project_id, task.template_id)
+            .await
+            .map_err(|e| format!("Failed to get template: {}", e))?;
+
+        // Получаем инвентарь, репозиторий, окружение
+        let inventory_id = task.inventory_id.or(template.inventory_id);
+        let inventory = match inventory_id {
+            Some(id) => self.store.get_inventory(task.project_id, id)
+                .await
+                .map_err(|e| format!("Failed to get inventory: {}", e))?,
+            None => Inventory::default(),
+        };
+
+        let repository_id = task.repository_id.or(template.repository_id);
+        let repository = match repository_id {
+            Some(id) => self.store.get_repository(task.project_id, id)
+                .await
+                .map_err(|e| format!("Failed to get repository: {}", e))?,
+            None => Repository::default(),
+        };
+
+        let environment_id = task.environment_id.or(template.environment_id);
+        let environment = match environment_id {
+            Some(id) => self.store.get_environment(task.project_id, id)
+                .await
+                .map_err(|e| format!("Failed to get environment: {}", e))?,
+            None => Environment::default(),
+        };
+
+        // Получаем логгер из running_task
+        let logger = {
+            let running = self.running_tasks.read().await;
+            running.get(&task.id)
+                .map(|rt| rt.logger.clone())
+                .unwrap_or_else(|| Arc::new(BasicLogger::new()))
+        };
+
+        // Создаём рабочие директории
+        let work_dir = std::env::temp_dir().join(format!("semaphore_task_{}_{}", task.project_id, task.id));
+        let tmp_dir = work_dir.join("tmp");
+        if let Err(e) = tokio::fs::create_dir_all(&tmp_dir).await {
+            self.update_task_status(task.id, TaskStatus::Error).await.ok();
+            let mut running = self.running_tasks.write().await;
+            running.remove(&task.id);
+            return Err(format!("Failed to create work dir: {}", e));
+        }
+
+        let key_installer = AccessKeyInstallerImpl::new();
+        let mut job = LocalJob::new(
+            task.clone(),
+            template,
+            inventory,
+            repository,
+            environment,
+            logger,
+            key_installer,
+            work_dir.clone(),
+            tmp_dir.clone(),
+        );
+
+        job.set_run_params("runner".to_string(), None, "default".to_string());
+
+        let result = job.run("runner", None, "default").await;
+
         // Удаляем из запущенных
         {
             let mut running = self.running_tasks.write().await;
             running.remove(&task.id);
         }
-        
-        info!("Task {} completed", task.id);
-        
-        Ok(())
+
+        match result {
+            Ok(()) => {
+                job.cleanup();
+                self.update_task_status(task.id, TaskStatus::Success).await?;
+                info!("Task {} completed", task.id);
+                Ok(())
+            }
+            Err(e) => {
+                job.cleanup();
+                error!("Task {} failed: {}", task.id, e);
+                self.update_task_status(task.id, TaskStatus::Error).await?;
+                Err(e.to_string())
+            }
+        }
     }
     
     /// Останавливает задачу
@@ -175,10 +244,10 @@ mod tests {
             id: 1,
             name: "Test Project".to_string(),
             created: Utc::now(),
-            alert: None,
+            alert: false,
             alert_chat: None,
-            max_parallel_tasks: Some(5),
-            r#type: None,
+            max_parallel_tasks: 5,
+            r#type: "default".to_string(),
             default_secret_storage_id: None,
         };
         

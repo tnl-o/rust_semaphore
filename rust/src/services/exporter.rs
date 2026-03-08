@@ -263,16 +263,22 @@ impl KeyMapper for ExporterChain {
 
 impl DataExporter for ExporterChain {
     fn get_type_exporter(&mut self, name: &str) -> &mut dyn TypeExporter {
-        // TODO: реализовать правильное получение экспортера
-        unimplemented!("get_type_exporter not implemented yet")
+        self.exporters.get_mut(name)
+            .map(|b| b.as_mut())
+            .unwrap_or_else(|| panic!("Exporter {} not found", name))
     }
     
-    fn get_loaded_keys(&self, _name: &str, _scope: &str) -> Result<Vec<EntityKey>, String> {
-        Ok(vec![])  // TODO: реализовать получение ключей
+    fn get_loaded_keys(&self, name: &str, scope: &str) -> Result<Vec<EntityKey>, String> {
+        if let Some(exporter) = self.exporters.get(name) {
+            exporter.get_loaded_keys(scope)
+        } else {
+            Err(format!("Exporter {} not found", name))
+        }
     }
     
-    fn get_loaded_keys_int(&self, _name: &str, _scope: &str) -> Result<Vec<i32>, String> {
-        Ok(vec![])  // TODO: реализовать получение ключей int
+    fn get_loaded_keys_int(&self, name: &str, scope: &str) -> Result<Vec<i32>, String> {
+        let keys = self.get_loaded_keys(name, scope)?;
+        Ok(keys.into_iter().filter_map(|k| k.parse::<i32>().ok()).collect())
     }
 }
 

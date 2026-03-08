@@ -19,4 +19,48 @@ logs/
 # Environment
 .env
 .env.local
-*.env.*
+.env.*.local
+.env.backup*
+
+# Lock-файлы (разрешаем только корневой Cargo.lock)
+Cargo.lock
+
+# Временные файлы
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Логи
+*.log
+
+# Базы данных (для тестов)
+*.db
+*.sqlite
+*.bolt
+
+# Тестовые артефакты
+coverage/
+*.profraw
+*.profdata
+test_output*.txt
+test_errors.txt
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Таргеты кросс-компиляции
+**/target-*/
+
+# Файлы отладки
+*.dSYM/
+
+# Node.js
+web/node_modules/
+web/dist/
+
+# Upstream reference (не коммитить)
+semaphore-upstream/
+rust/semaphore-upstream/

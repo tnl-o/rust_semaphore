@@ -111,12 +111,16 @@ impl SqlDb {
     }
     
     /// Создаёт БД если она не существует (для SQLite)
+    /// sqlx требует существования файла БД перед подключением (в отличие от rusqlite)
     pub async fn create_database_if_not_exists(database_path: &str) -> Result<()> {
         use std::path::Path;
         use tokio::fs;
         
-        // Убираем ведущие слэши из URL-пути (sqlite:///C:/path -> C:/path)
-        let path_str = database_path.trim_start_matches('/');
+        // Извлекаем путь к файлу: sqlite:///C:/path -> C:/path, path/to/db.db -> path/to/db.db
+        let path_str = database_path
+            .trim_start_matches("sqlite:")
+            .trim_start_matches('/')
+            .trim_start_matches('/');
         let path = Path::new(path_str);
         
         if let Some(parent) = path.parent() {
@@ -124,6 +128,16 @@ impl SqlDb {
                 fs::create_dir_all(parent).await
                     .map_err(|e| Error::Other(format!("Failed to create database directory: {}", e)))?;
             }
+        }
+        
+        // Создаём пустой файл БД если не существует (sqlx не создаёт его автоматически)
+        if !path.starts_with(":memory") && !path.as_os_str().is_empty() {
+            fs::OpenOptions::new()
+                .write(true)
+                .create(true)
+                .open(path)
+                .await
+                .map_err(|e| Error::Other(format!("Failed to create database file: {}", e)))?;
         }
         
         Ok(())

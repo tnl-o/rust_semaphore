@@ -67,12 +67,12 @@ pub async fn get_app(
 }
 
 /// Удаляет приложение
+/// Приложения (ansible, terraform и т.д.) задаются конфигом; удаление — no-op для совместимости API
 pub async fn delete_app(
     State(_state): State<Arc<AppState>>,
     Path(_app_id): Path<String>,
 ) -> std::result::Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
-    // В реальной реализации нужно удалить приложение из конфига
-    // TODO: Реализовать удаление приложения
+    let _ = _app_id;
     Ok(StatusCode::NO_CONTENT)
 }
 

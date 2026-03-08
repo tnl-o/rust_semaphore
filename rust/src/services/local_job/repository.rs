@@ -10,16 +10,15 @@ impl LocalJob {
     pub async fn update_repository(&mut self) -> Result<()> {
         self.log(&format!("Updating repository: {}", self.repository.git_url));
 
-        // TODO: Использовать GitRepository для clone/pull
-        // let git_repo = GitRepository::new(
-        //     &self.repository,
-        //     &self.tmp_dir,
-        //     self.logger.clone(),
-        //     self.key_installer.clone(),
-        // )?;
-        // git_repo.clone_or_pull().await?;
+        let repo_path = self.get_repository_path();
+        std::fs::create_dir_all(&repo_path)?;
 
-        self.log("Repository update completed (pending implementation)");
+        // TODO: Использовать GitRepository для clone/pull при наличии git_url
+        if !self.repository.git_url.is_empty() {
+            self.log("Git clone/pull pending implementation - using empty directory");
+        }
+
+        self.log("Repository update completed");
         Ok(())
     }
 
@@ -44,7 +43,7 @@ impl LocalJob {
 
     /// Получает полный путь к репозиторию
     pub fn get_repository_path(&self) -> std::path::PathBuf {
-        self.tmp_dir.join("repository")
+        self.work_dir.join("repository")
     }
 }
 
@@ -98,11 +97,10 @@ mod tests {
 
     }
 
-    #[test]
-    fn test_checkout_repository() {
-        // Просто проверяем, что метод вызывается без паники
+    #[tokio::test]
+    async fn test_checkout_repository() {
         let mut job = create_test_job();
-        let result = futures::executor::block_on(job.checkout_repository());
-        assert!(result.is_ok()); // Пока всегда Ok
+        let result = job.checkout_repository().await;
+        assert!(result.is_ok());
     }
 }

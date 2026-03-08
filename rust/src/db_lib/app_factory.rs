@@ -1,38 +1,22 @@
 //! App Factory
 //!
-//! Фабрика для создания приложений
+//! Фабрика для создания приложений (Shell/Bash/Python/PowerShell).
+//! Ansible и Terraform создаются напрямую в LocalJob::prepare_run.
 
 use std::sync::Arc;
 use crate::models::{Template, Repository, Inventory};
 use crate::services::task_logger::TaskLogger;
 use super::{LocalApp, ShellApp};
-// TODO: Реализовать LocalApp для AnsibleApp и TerraformApp
-// use super::{AnsibleApp, TerraformApp};
-// use super::ansible_playbook::AnsiblePlaybook;
 
 /// Создаёт приложение для шаблона
 pub fn create_app(
     template: Template,
     repository: Repository,
     inventory: Inventory,
-    logger: Arc<dyn TaskLogger>,
+    _logger: Arc<dyn TaskLogger>,
 ) -> Box<dyn LocalApp> {
-    // TODO: Восстановить полную реализацию после реализации LocalApp
     let app = template.app.clone();
-    match template.app {
-        // crate::models::template::TemplateApp::Ansible => {
-        //     let playbook = AnsiblePlaybook::new(template.id, repository.clone(), logger.clone());
-        //     Box::new(AnsibleApp::new(template, repository, logger, Box::new(playbook)))
-        // }
-        // crate::models::template::TemplateApp::Terraform |
-        // crate::models::template::TemplateApp::Tofu |
-        // crate::models::template::TemplateApp::Terragrunt => {
-        //     Box::new(TerraformApp::new(template, repository, inventory, logger))
-        // }
-        _ => {
-            Box::new(ShellApp::new(template, repository, app))
-        }
-    }
+    Box::new(ShellApp::new(template, repository, app))
 }
 
 // ============================================================================

@@ -4,7 +4,8 @@
 
 use axum::{
     extract::State,
-    http::StatusCode,
+    http::{header, StatusCode},
+    response::{AppendHeaders, IntoResponse, Response},
     Json,
 };
 use std::sync::Arc;
@@ -26,67 +27,104 @@ pub async fn health() -> &'static str {
 pub async fn login(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<LoginPayload>,
-) -> Result<Json<LoginResponse>, (StatusCode, Json<ErrorResponse>)> {
+) -> impl IntoResponse {
     use crate::api::auth_local::{LocalAuthService, verify_password};
     use crate::services::totp::verify_totp_code;
 
+    tracing::info!("Login attempt for user: {}", payload.username);
+
     // Находим пользователя
-    let user = state.store.get_user_by_login_or_email(&payload.username, &payload.username)
-        .await
-        .map_err(|e| match e {
-            Error::NotFound(_) => (
+    let user = match state.store.get_user_by_login_or_email(&payload.username, &payload.username).await {
+        Ok(u) => u,
+        Err(e) => {
+            tracing::warn!("User not found: {}, error: {}", payload.username, e);
+            return (
                 StatusCode::UNAUTHORIZED,
                 Json(ErrorResponse::new("Неверный логин или пароль")
                     .with_code("INVALID_CREDENTIALS")),
-            ),
-            _ => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ErrorResponse::new("Ошибка сервера")),
-            ),
-        })?;
+            ).into_response();
+        }
+    };
+
+    tracing::info!("User found: id={}, username={}", user.id, user.username);
 
     // Проверяем пароль
-    if !verify_password(&payload.password, &user.password) {
-        return Err((
-            StatusCode::UNAUTHORIZED,
-            Json(ErrorResponse::new("Неверный логин или пароль")
-                .with_code("INVALID_CREDENTIALS")),
-        ));
+    let password_valid = verify_password(&payload.password, &user.password);
+
+    if !password_valid {
+        // Debug информация в ответе (удалить в production)
+        let debug_info = format!(
+            "Password len: {}, Hash len: {}",
+            payload.password.len(),
+            user.password.len()
+        );
+        tracing::warn!("Invalid password for user: {}. Debug: {}", user.username, debug_info);
+        
+        // Используем Response напрямую для обхода проблемы с (StatusCode, Json)
+        let error_response = serde_json::json!({
+            "error": "Неверный логин или пароль",
+            "code": "INVALID_CREDENTIALS",
+            "debug": debug_info
+        });
+        
+        return Response::builder()
+            .status(StatusCode::UNAUTHORIZED)
+            .header("Content-Type", "application/json")
+            .header("X-Correlation-Id", uuid::Uuid::new_v4().to_string())
+            .body(axum::body::Body::from(error_response.to_string()))
+            .unwrap()
+            .into_response();
     }
 
     // Проверяем TOTP, если настроен
     if let Some(ref totp) = user.totp {
-        let totp_code = payload.totp_code
-            .ok_or((
+        let totp_code = match payload.totp_code {
+            Some(code) => code,
+            None => return (
                 StatusCode::UNAUTHORIZED,
                 Json(ErrorResponse::new("Требуется TOTP код")
                     .with_code("TOTP_REQUIRED")),
-            ))?;
+            ).into_response(),
+        };
 
         if !verify_totp_code(&totp.url, &totp_code) {
-            return Err((
+            return (
                 StatusCode::UNAUTHORIZED,
                 Json(ErrorResponse::new("Неверный TOTP код")
                     .with_code("INVALID_TOTP")),
-            ));
+            ).into_response();
         }
     }
 
     // Генерируем токен
     let auth_service = LocalAuthService::new(state.store.clone());
-    let token_info = auth_service.generate_token(&user)
-        .map_err(|e| (
+    let token_info = match auth_service.generate_token(&user) {
+        Ok(info) => info,
+        Err(e) => return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ErrorResponse::new(format!("Ошибка генерации токена: {}", e))
                 .with_code("TOKEN_GENERATION_ERROR")),
-        ))?;
+        ).into_response(),
+    };
 
-    Ok(Json(LoginResponse {
-        token: token_info.token,
-        token_type: token_info.token_type,
-        expires_in: token_info.expires_in,
-        totp_required: None,
-    }))
+    // Устанавливаем cookie "semaphore" для Vue upstream (как в Go backend)
+    let cookie_value = format!(
+        "semaphore={}; Path=/; HttpOnly; SameSite=Lax; Max-Age={}",
+        token_info.token,
+        token_info.expires_in
+    );
+
+    let headers = AppendHeaders([(header::SET_COOKIE, cookie_value)]);
+
+    (
+        headers,
+        Json(LoginResponse {
+            token: token_info.token,
+            token_type: token_info.token_type,
+            expires_in: token_info.expires_in,
+            totp_required: None,
+        })
+    ).into_response()
 }
 
 /// Выход из системы
@@ -94,9 +132,16 @@ pub async fn login(
 /// POST /api/auth/logout
 pub async fn logout(
     State(_state): State<Arc<AppState>>,
-) -> Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
-    // TODO: Реализовать выход (добавление токена в чёрный список)
-    Ok(StatusCode::OK)
+) -> Result<
+    (AppendHeaders<[(axum::http::HeaderName, &'static str); 1]>, StatusCode),
+    (StatusCode, Json<ErrorResponse>),
+> {
+    // Очищаем cookie для Vue (как в Go backend)
+    let headers = AppendHeaders([(
+        header::SET_COOKIE,
+        "semaphore=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0",
+    )]);
+    Ok((headers, StatusCode::OK))
 }
 
 /// Верификация сессии (TOTP)
@@ -256,9 +301,10 @@ pub async fn get_current_user(
 // Types
 // ============================================================================
 
-/// Payload для входа
+/// Payload для входа (Vue отправляет auth, Go — auth)
 #[derive(Debug, Deserialize)]
 pub struct LoginPayload {
+    #[serde(alias = "auth")]
     pub username: String,
     pub password: String,
     #[serde(default)]
@@ -323,6 +369,19 @@ mod tests {
         assert_eq!(payload.username, "admin");
         assert_eq!(payload.password, "password123");
         assert_eq!(payload.totp_code, None);
+    }
+
+    #[test]
+    fn test_login_payload_deserialize_auth_alias() {
+        // Vue отправляет "auth" вместо "username"
+        let json = r#"{
+            "auth": "admin",
+            "password": "admin123"
+        }"#;
+        
+        let payload: LoginPayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.username, "admin");
+        assert_eq!(payload.password, "admin123");
     }
 
     #[test]

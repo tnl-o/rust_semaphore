@@ -151,4 +151,22 @@ impl SqlDb {
             }
         }
     }
+
+    /// Получает количество пользователей
+    pub async fn get_user_count(&self) -> Result<usize> {
+        match self.get_dialect() {
+            crate::db::sql::types::SqlDialect::SQLite => {
+                let pool = self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?;
+                crate::db::sql::sqlite::user::get_user_count(pool).await
+            }
+            crate::db::sql::types::SqlDialect::PostgreSQL => {
+                let pool = self.get_postgres_pool().ok_or(Error::Other("PostgreSQL pool not found".to_string()))?;
+                crate::db::sql::postgres::user::get_user_count(pool).await
+            }
+            crate::db::sql::types::SqlDialect::MySQL => {
+                let pool = self.get_mysql_pool().ok_or(Error::Other("MySQL pool not found".to_string()))?;
+                crate::db::sql::mysql::user::get_user_count(pool).await
+            }
+        }
+    }
 }

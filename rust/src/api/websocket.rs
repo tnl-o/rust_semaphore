@@ -6,15 +6,15 @@
 //! - Уведомлений об изменении статуса задач
 
 use axum::{
-    extract::State,
+    extract::{State, ws::{WebSocketUpgrade, WebSocket}},
     response::IntoResponse,
-    http::StatusCode,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{broadcast, RwLock};
 use chrono::{DateTime, Utc};
-use tracing::warn;
+use tracing::{warn, info};
+use futures::{StreamExt, SinkExt};
 
 use crate::api::state::AppState;
 
@@ -105,17 +105,55 @@ impl Default for WebSocketManager {
     }
 }
 
-/// Обработчик WebSocket подключений (заглушка)
-/// 
-/// TODO: Реализовать полноценный WebSocket на tokio-tungstenite
+/// Обработчик WebSocket подключений
 pub async fn websocket_handler(
-    State(_state): State<Arc<AppState>>,
+    State(state): State<Arc<AppState>>,
+    ws: WebSocketUpgrade,
 ) -> impl IntoResponse {
-    // Временная заглушка - возвращаем ошибку 501 Not Implemented
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        "WebSocket будет реализован в следующей версии"
-    )
+    let ws_manager = state.ws_manager.clone();
+
+    ws.on_upgrade(move |socket| handle_socket(socket, ws_manager))
+}
+
+async fn handle_socket(socket: WebSocket, ws_manager: Arc<WebSocketManager>) {
+    let (mut sender, mut receiver) = socket.split();
+    let mut ws_rx = ws_manager.subscribe();
+
+    let send_task = tokio::spawn(async move {
+        while let Ok(msg) = ws_rx.recv().await {
+            let json = match serde_json::to_string(&msg) {
+                Ok(j) => j,
+                Err(e) => {
+                    warn!("WebSocket serialize error: {}", e);
+                    continue;
+                }
+            };
+            if let Err(e) = sender.send(axum::extract::ws::Message::Text(json.into())).await {
+                warn!("WebSocket send error: {}", e);
+                break;
+            }
+        }
+    });
+
+    let recv_task = tokio::spawn(async move {
+        while let Some(Ok(msg)) = receiver.next().await {
+            match msg {
+                axum::extract::ws::Message::Text(text) => {
+                    if text == "ping" {
+                        // Клиент может отправлять ping для проверки соединения
+                        info!("WebSocket ping received");
+                    }
+                }
+                axum::extract::ws::Message::Close(_) => break,
+                _ => {}
+            }
+        }
+    });
+
+    tokio::select! {
+        _ = send_task => {}
+        _ = recv_task => {}
+    }
 }
 
 #[cfg(test)]

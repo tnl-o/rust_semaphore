@@ -87,8 +87,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_sqlite_project_crud() {
-        let pool = crate::db::sql::test_helpers::create_test_pool().await.unwrap();
-        
+        let (pool, _temp) = crate::db::sql::test_helpers::create_test_pool().await.unwrap();
+        crate::db::sql::test_helpers::init_project_table(&pool).await.unwrap();
+
         // Create
         let project = Project::new("Test Project".to_string());
         let created = create_project(&pool, project).await.unwrap();

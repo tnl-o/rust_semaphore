@@ -11,8 +11,8 @@ use std::sync::Arc;
 use serde::Deserialize;
 use crate::api::state::AppState;
 use crate::api::extractors::AuthUser;
-use crate::models::Project;
-use crate::error::Error;
+use crate::models::{Project, ProjectUser, ProjectUserRole};
+use crate::Error;
 use crate::api::middleware::ErrorResponse;
 use crate::db::store::{ProjectStore, UserManager};
 use crate::services::backup::BackupFormat;
@@ -56,8 +56,16 @@ pub async fn get_project(
 /// Создаёт новый проект
 pub async fn add_project(
     State(state): State<Arc<AppState>>,
+    AuthUser { user_id, admin, .. }: AuthUser,
     Json(payload): Json<CreateProjectPayload>,
 ) -> std::result::Result<(StatusCode, Json<Project>), (StatusCode, Json<ErrorResponse>)> {
+    if !admin && !state.config.non_admin_can_create_project() {
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(ErrorResponse::new("Not permitted to create projects".to_string())),
+        ));
+    }
+
     let project = Project {
         id: 0,
         created: chrono::Utc::now(),
@@ -77,6 +85,13 @@ pub async fn add_project(
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ErrorResponse::new(e.to_string())),
         ))?;
+
+    // Добавляем создателя в project__user с ролью owner (как в Go upstream)
+    let project_user = ProjectUser::new(created.id, user_id, ProjectUserRole::Owner);
+    state.store.create_project_user(project_user).await.map_err(|e| (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(ErrorResponse::new(e.to_string())),
+    ))?;
 
     Ok((StatusCode::CREATED, Json(created)))
 }
@@ -216,7 +231,7 @@ pub async fn delete_project(
 pub async fn get_user_role(
     State(state): State<Arc<AppState>>,
     Path(project_id): Path<i32>,
-    AuthUser { user_id, .. }: AuthUser,
+    AuthUser { user_id, admin, .. }: AuthUser,
 ) -> std::result::Result<Json<String>, (StatusCode, Json<ErrorResponse>)> {
     let users = state.store.get_project_users(project_id, crate::db::store::RetrieveQueryParams::default())
         .await
@@ -225,15 +240,19 @@ pub async fn get_user_role(
             Json(ErrorResponse::new(e.to_string()))
         ))?;
 
-    let project_user = users.into_iter()
-        .find(|u| u.id == user_id)
-        .ok_or_else(|| Error::NotFound("User not found in project".to_string()))
-        .map_err(|e| (
-            StatusCode::NOT_FOUND,
-            Json(ErrorResponse::new(e.to_string()))
-        ))?;
+    if let Some(project_user) = users.into_iter().find(|u| u.user_id == user_id) {
+        return Ok(Json(project_user.role.to_string()));
+    }
 
-    Ok(Json(project_user.role.to_string()))
+    // Админы и создатели проектов (до фикса) могут не быть в project__user — возвращаем owner
+    if admin {
+        return Ok(Json("owner".to_string()));
+    }
+
+    Err((
+        StatusCode::NOT_FOUND,
+        Json(ErrorResponse::new("User not found in project".to_string())),
+    ))
 }
 
 // ============================================================================

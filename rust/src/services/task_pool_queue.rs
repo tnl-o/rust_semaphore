@@ -99,10 +99,10 @@ mod tests {
             id: 1,
             name: "Test Project".to_string(),
             created: Utc::now(),
-            alert: None,
+            alert: false,
             alert_chat: None,
-            max_parallel_tasks: Some(5),
-            r#type: None,
+            max_parallel_tasks: 5,
+            r#type: "default".to_string(),
             default_secret_storage_id: None,
         };
         

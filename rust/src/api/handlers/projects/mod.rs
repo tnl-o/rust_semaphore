@@ -17,6 +17,7 @@ pub mod secret_storages;
 pub mod project;
 pub mod backup_restore;
 pub mod refs;
+pub mod invites;
 pub mod notifications;
 
 pub use keys::*;
@@ -34,4 +35,5 @@ pub use secret_storages::*;
 pub use project::*;
 pub use backup_restore::*;
 pub use refs::*;
+pub use invites::*;
 pub use notifications::*;

@@ -45,10 +45,10 @@ pub fn create_app(store: Box<dyn crate::db::Store + Send + Sync>) -> Router {
         .allow_headers(Any);
 
     Router::new()
-        // Static files (должны быть перед API для корректного fallback)
-        .merge(routes::static_routes())
-        // API routes
+        // API routes (должны быть перед static для корректной обработки)
         .merge(routes::api_routes())
+        // Static files с fallback
+        .merge(routes::static_routes())
         // Middleware
         .layer(TraceLayer::new_for_http())
         .layer(cors)

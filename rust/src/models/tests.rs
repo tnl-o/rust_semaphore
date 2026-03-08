@@ -101,15 +101,15 @@ mod project_tests {
             id: 0,
             created: Utc::now(),
             name: "Test Project".to_string(),
-            alert: None,
+            alert: false,
             alert_chat: None,
-            max_parallel_tasks: None,
-            r#type: None,
+            max_parallel_tasks: 0,
+            r#type: "default".to_string(),
             default_secret_storage_id: None,
         };
 
         assert_eq!(project.name, "Test Project");
-        assert!(project.max_parallel_tasks.is_none());
+        assert_eq!(project.max_parallel_tasks, 0);
         assert!(project.default_secret_storage_id.is_none());
     }
 
@@ -119,10 +119,10 @@ mod project_tests {
 
         assert_eq!(project.name, "New Project");
         assert_eq!(project.id, 0);
-        assert!(project.alert.is_none());
+        assert!(!project.alert);
         assert!(project.alert_chat.is_none());
-        assert!(project.max_parallel_tasks.is_none());
-        assert!(project.r#type.is_none());
+        assert_eq!(project.max_parallel_tasks, 0);
+        assert_eq!(project.r#type, "default");
         assert!(project.default_secret_storage_id.is_none());
     }
 

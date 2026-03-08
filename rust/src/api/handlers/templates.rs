@@ -198,9 +198,9 @@ mod tests {
         let payload: TemplateCreatePayload = serde_json::from_str(json).unwrap();
         assert_eq!(payload.name, "Test Template");
         assert_eq!(payload.playbook, "site.yml");
-        assert_eq!(payload.inventory_id, 1);
-        assert_eq!(payload.repository_id, 2);
-        assert_eq!(payload.environment_id, 3);
+        assert_eq!(payload.inventory_id, Some(1));
+        assert_eq!(payload.repository_id, Some(2));
+        assert_eq!(payload.environment_id, Some(3));
     }
 
     #[test]

@@ -52,7 +52,7 @@ mod tests {
         ));
         let result = handlers::logout(axum::extract::State(state)).await;
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), StatusCode::OK);
+        assert_eq!(result.unwrap().1, StatusCode::OK);
     }
 
     #[tokio::test]

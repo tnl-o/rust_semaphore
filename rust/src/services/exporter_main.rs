@@ -65,7 +65,7 @@ pub trait TypeExporter {
 /// Трейт для экспортера данных
 pub trait DataExporter {
     /// Получает экспортер типа
-    fn get_type_exporter(&mut self, name: &str) -> Option<&mut dyn TypeExporter>;
+    fn get_type_exporter(&mut self, name: &str) -> Option<&mut (dyn TypeExporter + '_)>;
     
     /// Получает загруженные ключи
     fn get_loaded_keys(&self, name: &str, scope: &str) -> Result<Vec<String>, String>;
@@ -75,18 +75,25 @@ pub trait DataExporter {
 }
 
 impl DataExporter for ExporterChain {
-    fn get_type_exporter(&mut self, name: &str) -> Option<&mut dyn TypeExporter> {
-        // TODO: реализовать правильное получение экспортера
-        unimplemented!("get_type_exporter not implemented yet")
+    fn get_type_exporter(&mut self, name: &str) -> Option<&mut (dyn TypeExporter + '_)> {
+        if let Some(exporter) = self.exporters.get_mut(name) {
+            Some(exporter.as_mut())
+        } else {
+            None
+        }
     }
     
-    fn get_loaded_keys(&self, _name: &str, _scope: &str) -> Result<Vec<String>, String> {
-        Ok(vec![])  // TODO: реализовать получение ключей
+    fn get_loaded_keys(&self, name: &str, scope: &str) -> Result<Vec<String>, String> {
+        if let Some(exporter) = self.exporters.get(name) {
+            exporter.get_loaded_keys(scope)
+        } else {
+            Err(format!("Exporter {} not found", name))
+        }
     }
     
-    fn get_loaded_keys_int(&self, _name: &str, _scope: &str) -> Result<Vec<i32>, String> {
-        // TODO: реализовать получение ключей int
-        Ok(vec![])
+    fn get_loaded_keys_int(&self, name: &str, scope: &str) -> Result<Vec<i32>, String> {
+        let keys = self.get_loaded_keys(name, scope)?;
+        Ok(keys.into_iter().filter_map(|k| k.parse::<i32>().ok()).collect())
     }
 }
 

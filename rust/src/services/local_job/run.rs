@@ -3,9 +3,11 @@
 //! Аналог services/tasks/local_job_run.go из Go версии
 
 use crate::error::Result;
-use crate::models::template::TemplateType;
+use crate::models::template::TemplateApp;
 use crate::services::local_job::LocalJob;
 use crate::services::task_logger::TaskStatus;
+use crate::db_lib::{create_app, AnsibleApp, TerraformApp};
+use crate::db_lib::local_app::{LocalApp, LocalAppRunningArgs, LocalAppInstallingArgs};
 
 impl LocalJob {
     /// Запускает задачу
@@ -48,44 +50,65 @@ impl LocalJob {
             return Err(e);
         }
 
-        // TODO: Запуск приложения
-        // if let Some(ref mut app) = self.app {
-        //     if let Err(e) = app.run().await {
-        //         self.log(&format!("Failed to run app: {}", e));
-        //         self.set_status(TaskStatus::Error);
-        //         return Err(e);
-        //     }
-        // }
-
         self.set_status(TaskStatus::Success);
         self.log("Job completed successfully");
 
         Ok(())
     }
 
-    /// Подготавливает запуск задачи
-    async fn prepare_run(&mut self, username: &str, incoming_version: Option<&str>, alias: &str) -> Result<()> {
+    /// Подготавливает запуск задачи — создаёт и выполняет приложение
+    async fn prepare_run(&mut self, _username: &str, _incoming_version: Option<&str>, _alias: &str) -> Result<()> {
         self.log("Preparing to run task...");
 
-        // Получаем аргументы в зависимости от типа шаблона
-        match self.template.r#type {
-            TemplateType::Ansible => {
-                self.log("Preparing Ansible playbook...");
-                // TODO: Создать AnsibleApp
-                // let args = self.get_playbook_args(username, incoming_version)?;
+        let repo_path = self.work_dir.join("repository");
+        let mut repository = self.repository.clone();
+        repository.git_path = Some(repo_path.to_string_lossy().to_string());
+
+        let install_args = LocalAppInstallingArgs::default();
+        let run_args = LocalAppRunningArgs::default();
+
+        match self.template.app {
+            TemplateApp::Ansible => {
+                self.log("Running Ansible playbook...");
+                let app = AnsibleApp::new(
+                    self.logger.clone(),
+                    self.template.clone(),
+                    repository,
+                    self.work_dir.clone(),
+                );
+                app.install_requirements(install_args).await?;
+                app.run(run_args).await?;
             }
-            TemplateType::Terraform => {
-                self.log("Preparing Terraform...");
-                // TODO: Создать TerraformApp
-                // let args = self.get_terraform_args(username, incoming_version)?;
-            }
-            TemplateType::Shell => {
-                self.log("Preparing Shell script...");
-                // TODO: Создать ShellApp
-                // let args = self.get_shell_args(username, incoming_version)?;
+            TemplateApp::Terraform | TemplateApp::Tofu | TemplateApp::Terragrunt => {
+                let name = match self.template.app {
+                    TemplateApp::Terraform => "terraform",
+                    TemplateApp::Tofu => "tofu",
+                    TemplateApp::Terragrunt => "terragrunt",
+                    _ => "terraform",
+                };
+                self.log(&format!("Running {}...", name));
+                let app = TerraformApp::new(
+                    self.logger.clone(),
+                    self.template.clone(),
+                    repository,
+                    self.inventory.clone(),
+                    name.to_string(),
+                    self.work_dir.clone(),
+                );
+                app.run(run_args).await?;
             }
             _ => {
-                self.log("Preparing local task...");
+                self.log("Running Shell script...");
+                let mut app = create_app(
+                    self.template.clone(),
+                    repository,
+                    self.inventory.clone(),
+                    self.logger.clone(),
+                );
+                app.install_requirements(install_args)?;
+                tokio::task::spawn_blocking(move || app.run(run_args))
+                    .await
+                    .map_err(|e| crate::error::Error::Other(format!("Task join error: {}", e)))??;
             }
         }
 
@@ -94,8 +117,8 @@ impl LocalJob {
 
     /// Очищает ресурсы после выполнения
     pub fn cleanup(&self) {
-        // Очищаем временные файлы
-        let _ = std::fs::remove_dir_all(&self.tmp_dir);
+        // Очищаем рабочую директорию
+        let _ = std::fs::remove_dir_all(&self.work_dir);
         self.log("Cleanup completed");
     }
 }
@@ -155,14 +178,11 @@ mod tests {
         )
     }
 
-    #[test]
-    fn test_run() {
+    #[tokio::test]
+    async fn test_run() {
         let mut job = create_test_job();
         job.set_run_params("testuser".to_string(), None, "default".to_string());
-        let result = futures::executor::block_on(
-            job.run("testuser", None, "default")
-        );
-        // Пока всегда Ok, так как методы-заглушки возвращают Ok
+        let result = job.run("testuser", None, "default").await;
         assert!(result.is_ok());
     }
 }

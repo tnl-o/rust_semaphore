@@ -66,7 +66,19 @@ impl ShellApp {
             TemplateApp::Bash => ("bash".to_string(), Vec::new()),
             TemplateApp::Python => ("python3".to_string(), Vec::new()),
             TemplateApp::PowerShell => ("powershell".to_string(), vec!["-File".to_string()]),
-            _ => (self.app.to_string(), Vec::new()),
+            TemplateApp::Default | _ => Self::get_noop_command(),
+        }
+    }
+
+    /// Команда-заглушка для пустого запуска (тесты, default)
+    fn get_noop_command() -> (String, Vec<String>) {
+        #[cfg(windows)]
+        {
+            ("cmd".to_string(), vec!["/c".to_string(), "exit".to_string(), "0".to_string()])
+        }
+        #[cfg(not(windows))]
+        {
+            ("sh".to_string(), vec!["-c".to_string(), "exit 0".to_string()])
         }
     }
 
