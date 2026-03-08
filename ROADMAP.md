@@ -305,7 +305,7 @@
 
 ## 📝 ЖУРНАЛ ИЗМЕНЕНИЙ
 
-### 2026-03-09 (03:00 MSK)
+### 2026-03-09 (04:00 MSK)
 - ✅ Создан файл ROADMAP.md
 - ✅ Исправлены маркеры слияния в `routes.rs`
 - ✅ Проведена декомпозиция 90 TODO комментариев
@@ -315,7 +315,7 @@
 - ✅ Исправлен порядок маршрутов: api_routes перед static_routes
 - ✅ Восстановлен CORS middleware
 - ⚠️ Аутентификация — POST /api/auth/login работает, но 401 возвращает пустое тело
-- ✅ Отправлено в origin/main (13 коммитов)
+- ✅ Отправлено в origin/main (14 коммитов)
 - ✅ Синхронизация semaphore/rust с rust_semaphore завершена
 - ✅ **P1-1: WebSocketManager реализация** — ЗАВЕРШЕНА
 - ✅ **P1-2: Завершение реализации TOTP/2FA** — ЗАВЕРШЕНА
@@ -325,9 +325,10 @@
 - ✅ **P2-1: Git Authentication** — ЗАВЕРШЕНА
 - ✅ **P2-3: Middleware улучшения** — ЗАВЕРШЕНА
 - ✅ **P2-4: Task Runner Hooks** — ЗАВЕРШЕНА
-  - Реализованы hooks для задач (HTTP, Bash, Python)
-  - Добавлен HookManager trait в store
-  - Поддержка типов hooks: Http, Bash, Python
+- ✅ **P2-5: Транзакции для MySQL/PostgreSQL** — ЗАВЕРШЕНА
+  - Реализована поддержка транзакций для всех БД
+  - Методы: begin(), commit(), rollback()
+  - Поддержка диалектов: SQLite, MySQL, PostgreSQL
 
 ---
 
