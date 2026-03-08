@@ -32,16 +32,8 @@ module.exports = {
     'vuetify',
   ],
   publicPath: './',
-  // Для сборки используем dist, потом копируем в public
+  // Используем стандартную сборку без pages
   outputDir: path.resolve(__dirname, 'dist'),
   indexPath: 'index.html',
   filenameHashing: false,
-  pages: {
-    index: {
-      entry: 'src/main.js',
-      template: 'public/index.html',
-      filename: 'index.html',
-      title: 'Semaphore UI',
-    },
-  },
 };
