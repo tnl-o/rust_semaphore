@@ -20,6 +20,7 @@ use crate::services::backup::BackupFormat;
 /// Получает проекты пользователя
 pub async fn get_projects(
     State(state): State<Arc<AppState>>,
+    _auth_user: AuthUser,
 ) -> std::result::Result<Json<Vec<Project>>, (StatusCode, Json<ErrorResponse>)> {
     let projects = state.store.get_projects(None)
         .await
