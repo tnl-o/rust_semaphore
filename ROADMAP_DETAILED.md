@@ -1,7 +1,7 @@
 # 🗺️ Semaphore UI Roadmap 2026-2027
 
 > **Полная декомпозиция проекта и план развития**
-> **Последнее обновление:** 9 марта 2026 г.
+> **Последнее обновление:** 10 марта 2026 г.
 
 ---
 
@@ -11,13 +11,13 @@
 
 | Метрика | Значение |
 |---------|----------|
-| **Rust файлы** | 293 |
-| **Строк кода (оценка)** | ~50,000+ |
+| **Rust файлы** | 298 |
+| **Строк кода (оценка)** | ~52,000+ |
 | **Модули** | 11 основных |
 | **API endpoints** | 100+ |
 | **Моделей данных** | 40+ |
 | **Сервисов** | 25+ |
-| **Плагинов типов** | 6 |
+| **Плагинов типов** | 7 (WASM) |
 | **Системных хуков** | 40+ |
 | **Типов событий audit** | 50+ |
 | **Типов webhook** | 5 |
@@ -283,7 +283,7 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
 
 ### Q3 2026 — Плагин система
 
-✅ **1 задача завершено**
+✅ **2 задачи завершено**
 
 1. **Плагин система**
    - 6 типов плагинов
@@ -292,6 +292,15 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
    - `plugins/base.rs`
    - `plugins/hooks.rs`
    - `PLUGINS.md`
+
+2. **WASM загрузчик плагинов** ⭐ NEW
+   - Динамическая загрузка WASM модулей
+   - Sandboxing и безопасность
+   - Хост-функции для плагинов
+   - Примеры плагинов
+   - `plugins/wasm_loader.rs`
+   - `plugins/wasm_runtime.rs`
+   - `PLUGINS_WASM.md`
 
 ---
 
@@ -306,7 +315,7 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
 | P1-1 | GraphQL API | Высокий | 5 дней | ✅ Завершено |
 | P1-2 | Telegram Bot API | Высокий | 3 дня | ✅ Завершено |
 | P1-3 | Prometheus метрики | Высокий | 4 дня | ✅ Завершено |
-| P1-4 | WASM загрузчик плагинов | Средний | 7 дней | 🔮 Будущее |
+| P1-4 | WASM загрузчик плагинов | Средний | 7 дней | ✅ Завершено |
 
 #### P2 — Важные задачи
 
@@ -464,6 +473,7 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
 | `IMAGE_OPTIMIZATION.md` | ✅ Готово | Оптимизация образов |
 | `ANALYTICS.md` | ✅ Готово | Аналитика и дашборды |
 | `PLUGINS.md` | ✅ Готово | Плагин система |
+| `PLUGINS_WASM.md` | ✅ Готово | WASM плагины ⭐ NEW |
 | `SINGLE_CONTAINER.md` | ✅ Готово | Единый контейнер |
 | `GRAPHQL_API.md` | ✅ Готово | GraphQL API ⭐ NEW |
 | `TELEGRAM_BOT.md` | ✅ Готово | Telegram Bot ⭐ NEW |
@@ -474,7 +484,7 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
 
 ## 🏷️ Версионирование
 
-### Текущая версия: 0.1.0
+### Текущая версия: 0.3.0
 
 **План релизов:**
 
@@ -482,7 +492,7 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
 |--------|------|----------|
 | 0.1.0 | Q1 2026 | Базовая функциональность |
 | 0.2.0 | Q2 2026 | Audit Log, Webhooks, Analytics |
-| 0.3.0 | Q3 2026 | Plugin System |
+| 0.3.0 | Q3 2026 | Plugin System, WASM загрузчик |
 | 0.4.0 | Q4 2026 | GraphQL, Telegram Bot, Prometheus |
 | 1.0.0 | Q1 2027 | Production ready |
 
@@ -493,6 +503,7 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
 - **GitHub:** https://github.com/alexandervashurin/semaphore
 - **Email:** alexandervashurin@yandex.ru
 - **Документация:**
+  - [PLUGINS_WASM.md](PLUGINS_WASM.md) — WASM плагины ⭐ NEW
   - [GRAPHQL_API.md](GRAPHQL_API.md) — GraphQL API
   - [TELEGRAM_BOT.md](TELEGRAM_BOT.md) — Telegram Bot
   - [PROMETHEUS_METRICS.md](PROMETHEUS_METRICS.md) — Prometheus метрики
