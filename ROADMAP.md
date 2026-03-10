@@ -303,11 +303,11 @@ docker stop semaphore && docker rm semaphore
 - [ ] Terraform провайдер
 - [ ] Grafana дашборды
 - [ ] Distributed tracing (OpenTelemetry)
-- [ ] Frontend: Audit Log UI
-- [ ] Frontend: Webhooks UI
+- [x] Frontend: Audit Log UI ✅
+- [x] Frontend: Webhooks UI ✅
 - [ ] Frontend: Analytics дашборды
 - [ ] OpenAPI спецификация (Swagger)
-- [ ] Backup strategy — автоматические бэкапы
+- [x] Backup strategy — автоматические бэкапы ✅
 
 ### 🔮 Будущее (2027+)
 
@@ -512,6 +512,18 @@ http://localhost:3000
    - `src/api/middleware/security_headers.rs` (strict_cors_headers)
    - `src/api/middleware/rate_limiter.rs`
    - `SECURITY_CONFIG.md`
+
+6. **Frontend UI Components** ⭐ NEW
+   - AuditLog.vue: просмотр audit log с фильтрацией
+   - Webhooks.vue: управление webhook (CRUD, тестирование)
+   - `web/src/views/project/AuditLog.vue`
+   - `web/src/views/project/Webhooks.vue`
+
+7. **Backup & Restore** ⭐ NEW
+   - scripts/backup.sh: бэкап БД и конфигурации
+   - scripts/restore.sh: восстановление из бэкапа
+   - BACKUP_RESTORE.md: документация
+   - Поддержка PostgreSQL, MySQL, SQLite
 
 ### Q3 2026 (Март)
 
