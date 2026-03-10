@@ -319,6 +319,31 @@ pub trait AuditLogManager: Send + Sync {
     async fn clear_audit_log(&self) -> Result<u64>;
 }
 
+/// Менеджер webhook
+#[async_trait]
+pub trait WebhookManager: Send + Sync {
+    /// Получает webhook по ID
+    async fn get_webhook(&self, webhook_id: i64) -> Result<crate::models::webhook::Webhook>;
+
+    /// Получает webhook проекта
+    async fn get_webhooks_by_project(&self, project_id: i64) -> Result<Vec<crate::models::webhook::Webhook>>;
+
+    /// Создаёт webhook
+    async fn create_webhook(&self, webhook: crate::models::webhook::Webhook) -> Result<crate::models::webhook::Webhook>;
+
+    /// Обновляет webhook
+    async fn update_webhook(&self, webhook_id: i64, webhook: crate::models::webhook::UpdateWebhook) -> Result<crate::models::webhook::Webhook>;
+
+    /// Удаляет webhook
+    async fn delete_webhook(&self, webhook_id: i64) -> Result<()>;
+
+    /// Получает логи webhook
+    async fn get_webhook_logs(&self, webhook_id: i64) -> Result<Vec<crate::models::webhook::WebhookLog>>;
+
+    /// Создаёт лог webhook
+    async fn create_webhook_log(&self, log: crate::models::webhook::WebhookLog) -> Result<crate::models::webhook::WebhookLog>;
+}
+
 /// Основной трейт хранилища - агрегирует все менеджеры
 #[async_trait]
 pub trait Store:
@@ -345,5 +370,6 @@ pub trait Store:
     + SecretStorageManager
     + HookManager
     + AuditLogManager
+    + WebhookManager
 {
 }

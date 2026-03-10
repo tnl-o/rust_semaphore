@@ -649,3 +649,34 @@ impl AuditLogManager for MockStore {
 
 #[async_trait]
 impl Store for MockStore {}
+
+#[async_trait]
+impl WebhookManager for MockStore {
+    async fn get_webhook(&self, _webhook_id: i64) -> Result<crate::models::webhook::Webhook> {
+        Err(Error::NotFound("Webhook not found".to_string()))
+    }
+
+    async fn get_webhooks_by_project(&self, _project_id: i64) -> Result<Vec<crate::models::webhook::Webhook>> {
+        Ok(Vec::new())
+    }
+
+    async fn create_webhook(&self, _webhook: crate::models::webhook::Webhook) -> Result<crate::models::webhook::Webhook> {
+        Err(Error::Database("Not implemented in mock".to_string()))
+    }
+
+    async fn update_webhook(&self, _webhook_id: i64, _webhook: crate::models::webhook::UpdateWebhook) -> Result<crate::models::webhook::Webhook> {
+        Err(Error::Database("Not implemented in mock".to_string()))
+    }
+
+    async fn delete_webhook(&self, _webhook_id: i64) -> Result<()> {
+        Ok(())
+    }
+
+    async fn get_webhook_logs(&self, _webhook_id: i64) -> Result<Vec<crate::models::webhook::WebhookLog>> {
+        Ok(Vec::new())
+    }
+
+    async fn create_webhook_log(&self, _log: crate::models::webhook::WebhookLog) -> Result<crate::models::webhook::WebhookLog> {
+        Err(Error::Database("Not implemented in mock".to_string()))
+    }
+}
