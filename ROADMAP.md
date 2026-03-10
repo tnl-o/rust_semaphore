@@ -288,6 +288,8 @@ docker stop semaphore && docker rm semaphore
 - [x] Telegram Bot API — teloxide 0.13, команды /start, /help, уведомления (план)
 - [x] Prometheus метрики — 18 метрик, endpoints /api/metrics, /api/metrics/json
 - [x] WASM загрузчик плагинов — отложен на Q1 2027
+- [x] Webhook API — CRUD операции, тестирование, история уведомлений
+- [x] Security middleware — Rate limiting, CORS, Security Headers (CSP, HSTS)
 
 ### 📅 Запланировано (Q1 2027)
 
@@ -301,6 +303,11 @@ docker stop semaphore && docker rm semaphore
 - [ ] Terraform провайдер
 - [ ] Grafana дашборды
 - [ ] Distributed tracing (OpenTelemetry)
+- [ ] Frontend: Audit Log UI
+- [ ] Frontend: Webhooks UI
+- [ ] Frontend: Analytics дашборды
+- [ ] OpenAPI спецификация (Swagger)
+- [ ] Backup strategy — автоматические бэкапы
 
 ### 🔮 Будущее (2027+)
 
@@ -456,7 +463,7 @@ http://localhost:3000
 
 ---
 
-*Последнее обновление: 10 марта 2026 г.*
+*Последнее обновление: 10 марта 2026 г. (Webhook API + Security)*
 
 ---
 
@@ -489,6 +496,22 @@ http://localhost:3000
    - Системные метрики
    - `src/services/metrics.rs`
    - `PROMETHEUS_METRICS.md`
+
+4. **Webhook API** ⭐ NEW
+   - CRUD операции: create, read, update, delete, test
+   - История webhook уведомлений
+   - 5 типов webhook: Generic, Slack, Teams, Discord, Telegram
+   - `src/api/handlers/webhooks.rs`
+   - `src/db/store.rs` (WebhookManager trait)
+   - `src/db/sql/webhook.rs`
+
+5. **Security Middleware** ⭐ NEW
+   - Rate limiting: 100 запросов/мин (API), 5 (auth)
+   - Security headers: CSP, HSTS, X-Frame-Options, X-Content-Type-Options
+   - CORS: development (открытый) и production (строгий) режимы
+   - `src/api/middleware/security_headers.rs` (strict_cors_headers)
+   - `src/api/middleware/rate_limiter.rs`
+   - `SECURITY_CONFIG.md`
 
 ### Q3 2026 (Март)
 
