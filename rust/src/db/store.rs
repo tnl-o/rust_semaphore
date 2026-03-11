@@ -3,7 +3,8 @@
 //! Агрегирует все специализированные трейты для работы с данными
 
 use crate::models::*;
-use crate::models::audit_log::{AuditAction, AuditObjectType, AuditLevel, AuditLog, AuditLogFilter, AuditLogResult};
+use crate::models::audit_log::{AuditAction, AuditObjectType, AuditLevel, AuditLog, AuditLogResult};
+use crate::models::playbook::{Playbook, PlaybookCreate, PlaybookUpdate};
 use crate::models::Hook;
 use crate::error::Result;
 use crate::services::task_logger::TaskStatus;
@@ -344,6 +345,16 @@ pub trait WebhookManager: Send + Sync {
     async fn create_webhook_log(&self, log: crate::models::webhook::WebhookLog) -> Result<crate::models::webhook::WebhookLog>;
 }
 
+/// Менеджер Playbook
+#[async_trait]
+pub trait PlaybookManager: Send + Sync {
+    async fn get_playbooks(&self, project_id: i32) -> Result<Vec<Playbook>>;
+    async fn get_playbook(&self, id: i32, project_id: i32) -> Result<Playbook>;
+    async fn create_playbook(&self, project_id: i32, playbook: PlaybookCreate) -> Result<Playbook>;
+    async fn update_playbook(&self, id: i32, project_id: i32, playbook: PlaybookUpdate) -> Result<Playbook>;
+    async fn delete_playbook(&self, id: i32, project_id: i32) -> Result<()>;
+}
+
 /// Основной трейт хранилища - агрегирует все менеджеры
 #[async_trait]
 pub trait Store:
@@ -371,5 +382,6 @@ pub trait Store:
     + HookManager
     + AuditLogManager
     + WebhookManager
+    + PlaybookManager
 {
 }

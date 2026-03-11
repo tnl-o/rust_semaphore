@@ -44,6 +44,7 @@ pub mod view;
 
 use crate::db::store::*;
 use crate::models::{User, UserTotp, Hook, Project, Task, TaskWithTpl, TaskOutput, TaskStage, Template, Inventory, Repository, Environment, AccessKey, Integration, Schedule, Session, APIToken, Event, Runner, View, Role, ProjectInvite, ProjectInviteWithUser, ProjectUser, RetrieveQueryParams, TerraformInventoryAlias, TerraformInventoryState, SecretStorage, SessionVerificationMethod};
+use crate::models::playbook::{Playbook, PlaybookCreate, PlaybookUpdate};
 use crate::models::audit_log::{AuditAction, AuditObjectType, AuditLevel, AuditLog, AuditLogFilter, AuditLogResult};
 use crate::error::{Error, Result};
 use crate::services::task_logger::TaskStatus;
@@ -4894,3 +4895,70 @@ impl WebhookManager for SqlStore {
 
 #[async_trait]
 impl Store for SqlStore {}
+
+#[async_trait]
+impl PlaybookManager for SqlStore {
+    async fn get_playbooks(&self, project_id: i32) -> Result<Vec<Playbook>> {
+        let query = "SELECT * FROM playbook WHERE project_id = $1 ORDER BY name";
+        let playbooks = sqlx::query_as::<_, Playbook>(query)
+            .bind(project_id)
+            .fetch_all(&self.pool.db)
+            .await
+            .map_err(|e| Error::Database(format!("Failed to get playbooks: {}", e)))?;
+        Ok(playbooks)
+    }
+
+    async fn get_playbook(&self, id: i32, project_id: i32) -> Result<Playbook> {
+        let query = "SELECT * FROM playbook WHERE id = $1 AND project_id = $2";
+        let playbook = sqlx::query_as::<_, Playbook>(query)
+            .bind(id)
+            .bind(project_id)
+            .fetch_one(&self.pool.db)
+            .await
+            .map_err(|e| Error::Database(format!("Playbook not found: {}", e)))?;
+        Ok(playbook)
+    }
+
+    async fn create_playbook(&self, project_id: i32, playbook: PlaybookCreate) -> Result<Playbook> {
+        let query = "INSERT INTO playbook (project_id, name, content, description, playbook_type, repository_id, created, updated) 
+                     VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *";
+        let created = sqlx::query_as::<_, Playbook>(query)
+            .bind(project_id)
+            .bind(&playbook.name)
+            .bind(&playbook.content)
+            .bind(&playbook.description)
+            .bind(&playbook.playbook_type)
+            .bind(&playbook.repository_id)
+            .fetch_one(&self.pool.db)
+            .await
+            .map_err(|e| Error::Database(format!("Failed to create playbook: {}", e)))?;
+        Ok(created)
+    }
+
+    async fn update_playbook(&self, id: i32, project_id: i32, playbook: PlaybookUpdate) -> Result<Playbook> {
+        let query = "UPDATE playbook SET name = $1, content = $2, description = $3, playbook_type = $4, updated = NOW() 
+                     WHERE id = $5 AND project_id = $6 RETURNING *";
+        let updated = sqlx::query_as::<_, Playbook>(query)
+            .bind(&playbook.name)
+            .bind(&playbook.content)
+            .bind(&playbook.description)
+            .bind(&playbook.playbook_type)
+            .bind(id)
+            .bind(project_id)
+            .fetch_one(&self.pool.db)
+            .await
+            .map_err(|e| Error::Database(format!("Failed to update playbook: {}", e)))?;
+        Ok(updated)
+    }
+
+    async fn delete_playbook(&self, id: i32, project_id: i32) -> Result<()> {
+        let query = "DELETE FROM playbook WHERE id = $1 AND project_id = $2";
+        sqlx::query(query)
+            .bind(id)
+            .bind(project_id)
+            .execute(&self.pool.db)
+            .await
+            .map_err(|e| Error::Database(format!("Failed to delete playbook: {}", e)))?;
+        Ok(())
+    }
+}
