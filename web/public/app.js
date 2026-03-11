@@ -1,6 +1,6 @@
 /**
  * Semaphore UI - Vanilla JavaScript Application
- * Full CRUD для всех сущностей
+ * Полный CRUD для всех сущностей с расширенными формами
  */
 const API_BASE = '/api';
 const STORAGE_KEY = 'semaphore_token';
@@ -56,6 +56,33 @@ const auth = {
         ui.showView('login');
     },
     isAuthenticated() { return !!state.token; }
+};
+
+// Модальные окна
+const modal = {
+    show(title, content, onSave) {
+        const modalHtml = `
+            <div id="modal-overlay" class="modal-overlay" onclick="if(event.target===this) modal.close()">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3>${title}</h3>
+                        <button class="btn-close" onclick="modal.close()">×</button>
+                    </div>
+                    <div class="modal-body">${content}</div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="modal.close()">Отмена</button>
+                        <button class="btn btn-primary" id="modal-save">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.getElementById('modal-save').onclick = onSave;
+    },
+    close() {
+        const overlay = document.getElementById('modal-overlay');
+        if (overlay) overlay.remove();
+    }
 };
 
 const ui = {
@@ -333,104 +360,392 @@ const app = {
     
     // === Templates CRUD ===
     async createTemplate() {
-        const name = prompt('Название шаблона:'); if (!name) return;
-        const playbook = prompt('Playbook (например, site.yml):', 'site.yml'); if (!playbook) return;
-        try { 
-            await api.post(`/project/${state.currentProjectId}/templates`, { 
-                name, playbook, type: 'ansible', app: 'ansible',
-                inventory_id: state.inventories[0]?.id || null,
-                repository_id: state.repositories[0]?.id || null,
-                environment_id: null
-            }); 
-            await ui.loadTemplates(); 
-            alert('✅ Шаблон создан!'); 
-        } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        const content = `
+            <div class="form-group">
+                <label>Название *</label>
+                <input type="text" id="tpl-name" class="form-control" placeholder="Deploy Infrastructure">
+            </div>
+            <div class="form-group">
+                <label>Playbook *</label>
+                <input type="text" id="tpl-playbook" class="form-control" placeholder="site.yml">
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea id="tpl-desc" class="form-control" rows="3" placeholder="Описание шаблона"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Тип</label>
+                <select id="tpl-type" class="form-control">
+                    <option value="ansible">Ansible</option>
+                    <option value="terraform">Terraform</option>
+                    <option value="shell">Shell</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Git ветка</label>
+                <input type="text" id="tpl-branch" class="form-control" placeholder="main">
+            </div>
+        `;
+        modal.show('Создание шаблона', content, async () => {
+            const name = document.getElementById('tpl-name').value;
+            const playbook = document.getElementById('tpl-playbook').value;
+            if (!name || !playbook) { alert('Заполните обязательные поля'); return; }
+            try { 
+                await api.post(`/project/${state.currentProjectId}/templates`, { 
+                    name, playbook, 
+                    description: document.getElementById('tpl-desc').value,
+                    type: document.getElementById('tpl-type').value,
+                    app: document.getElementById('tpl-type').value,
+                    git_branch: document.getElementById('tpl-branch').value || 'main'
+                }); 
+                modal.close();
+                await ui.loadTemplates(); 
+                alert('✅ Шаблон создан!'); 
+            } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        });
     },
     async editTemplate(id) {
         const template = state.templates.find(t => t.id === id); if (!template) return;
-        const name = prompt('Название:', template.name); if (!name) return;
-        const playbook = prompt('Playbook:', template.playbook); if (!playbook) return;
-        try { 
-            await api.put(`/project/${state.currentProjectId}/templates/${id}`, { name, playbook }); 
-            await ui.loadTemplates(); 
-            alert('✅ Шаблон обновлён!'); 
-        } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        const content = `
+            <div class="form-group">
+                <label>Название *</label>
+                <input type="text" id="tpl-name" class="form-control" value="${template.name}">
+            </div>
+            <div class="form-group">
+                <label>Playbook *</label>
+                <input type="text" id="tpl-playbook" class="form-control" value="${template.playbook || ''}">
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea id="tpl-desc" class="form-control" rows="3">${template.description || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Тип</label>
+                <select id="tpl-type" class="form-control">
+                    <option value="ansible" ${template.type === 'ansible' ? 'selected' : ''}>Ansible</option>
+                    <option value="terraform" ${template.type === 'terraform' ? 'selected' : ''}>Terraform</option>
+                    <option value="shell" ${template.type === 'shell' ? 'selected' : ''}>Shell</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Git ветка</label>
+                <input type="text" id="tpl-branch" class="form-control" value="${template.git_branch || 'main'}">
+            </div>
+        `;
+        modal.show('Редактирование шаблона', content, async () => {
+            const name = document.getElementById('tpl-name').value;
+            const playbook = document.getElementById('tpl-playbook').value;
+            if (!name || !playbook) { alert('Заполните обязательные поля'); return; }
+            try { 
+                await api.put(`/project/${state.currentProjectId}/templates/${id}`, { 
+                    name, playbook, 
+                    description: document.getElementById('tpl-desc').value,
+                    type: document.getElementById('tpl-type').value,
+                    git_branch: document.getElementById('tpl-branch').value
+                }); 
+                modal.close();
+                await ui.loadTemplates(); 
+                alert('✅ Шаблон обновлён!'); 
+            } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        });
     },
     async deleteTemplate(id) { if (!confirm('Удалить шаблон?')) return; try { await api.delete(`/project/${state.currentProjectId}/templates/${id}`); await ui.loadTemplates(); alert('✅ Шаблон удалён!'); } catch (error) { alert('❌ Ошибка: ' + error.message); } },
     
     // === Tasks CRUD ===
     async createTask() {
-        const templateId = prompt('ID шаблона:'); if (!templateId) return;
-        try { 
-            await api.post(`/project/${state.currentProjectId}/tasks`, { template_id: parseInt(templateId) }); 
-            await ui.loadTasks(); 
-            alert('✅ Задача создана!'); 
-        } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        const templateOptions = state.templates.map(t => `<option value="${t.id}">${t.name} (${t.playbook})</option>`).join('');
+        const content = `
+            <div class="form-group">
+                <label>Шаблон *</label>
+                <select id="task-tpl" class="form-control">${templateOptions}</select>
+            </div>
+        `;
+        modal.show('Создание задачи', content, async () => {
+            const templateId = document.getElementById('task-tpl').value;
+            try { 
+                await api.post(`/project/${state.currentProjectId}/tasks`, { template_id: parseInt(templateId) }); 
+                modal.close();
+                await ui.loadTasks(); 
+                alert('✅ Задача создана!'); 
+            } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        });
     },
     async viewTask(id) { alert(`Задача #${id}`); },
     
     // === Inventory CRUD ===
     async createInventory() {
-        const name = prompt('Название инвентаря:'); if (!name) return;
-        try { 
-            await api.post(`/project/${state.currentProjectId}/inventory`, { 
-                name, inventory_type: 'static', inventory_data: 'all:\n  hosts:\n    localhost:\n      ansible_connection: local' 
-            }); 
-            await ui.loadInventory(); 
-            alert('✅ Инвентарь создан!'); 
-        } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        const content = `
+            <div class="form-group">
+                <label>Название *</label>
+                <input type="text" id="inv-name" class="form-control" placeholder="Production">
+            </div>
+            <div class="form-group">
+                <label>Тип</label>
+                <select id="inv-type" class="form-control">
+                    <option value="static">Static</option>
+                    <option value="file">File</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>YAML инвентарь</label>
+                <textarea id="inv-data" class="form-control yaml-editor" rows="10" placeholder="all:
+  hosts:
+    localhost:
+      ansible_connection: local"></textarea>
+            </div>
+        `;
+        modal.show('Создание инвентаря', content, async () => {
+            const name = document.getElementById('inv-name').value;
+            if (!name) { alert('Введите название'); return; }
+            try { 
+                await api.post(`/project/${state.currentProjectId}/inventory`, { 
+                    name, 
+                    inventory_type: document.getElementById('inv-type').value,
+                    inventory_data: document.getElementById('inv-data').value
+                }); 
+                modal.close();
+                await ui.loadInventory(); 
+                alert('✅ Инвентарь создан!'); 
+            } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        });
     },
     async editInventory(id) {
         const item = state.inventories.find(i => i.id === id); if (!item) return;
-        const name = prompt('Название:', item.name); if (!name) return;
-        try { 
-            await api.put(`/project/${state.currentProjectId}/inventory/${id}`, { name }); 
-            await ui.loadInventory(); 
-            alert('✅ Инвентарь обновлён!'); 
-        } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        const content = `
+            <div class="form-group">
+                <label>Название *</label>
+                <input type="text" id="inv-name" class="form-control" value="${item.name}">
+            </div>
+            <div class="form-group">
+                <label>Тип</label>
+                <select id="inv-type" class="form-control">
+                    <option value="static" ${item.inventory_type === 'static' ? 'selected' : ''}>Static</option>
+                    <option value="file" ${item.inventory_type === 'file' ? 'selected' : ''}>File</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>YAML инвентарь</label>
+                <textarea id="inv-data" class="form-control yaml-editor" rows="10">${item.inventory_data || ''}</textarea>
+            </div>
+        `;
+        modal.show('Редактирование инвентаря', content, async () => {
+            const name = document.getElementById('inv-name').value;
+            if (!name) { alert('Введите название'); return; }
+            try { 
+                await api.put(`/project/${state.currentProjectId}/inventory/${id}`, { 
+                    name,
+                    inventory_type: document.getElementById('inv-type').value,
+                    inventory_data: document.getElementById('inv-data').value
+                }); 
+                modal.close();
+                await ui.loadInventory(); 
+                alert('✅ Инвентарь обновлён!'); 
+            } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        });
     },
     async deleteInventory(id) { if (!confirm('Удалить инвентарь?')) return; try { await api.delete(`/project/${state.currentProjectId}/inventory/${id}`); await ui.loadInventory(); alert('✅ Инвентарь удалён!'); } catch (error) { alert('❌ Ошибка: ' + error.message); } },
     
     // === Keys CRUD ===
     async createKey() {
-        const name = prompt('Название ключа:'); if (!name) return;
-        const type = prompt('Тип ключа (ssh, login_password, access_key):', 'ssh'); if (!type) return;
-        try { 
-            await api.post(`/project/${state.currentProjectId}/keys`, { name, type }); 
-            await ui.loadKeys(); 
-            alert('✅ Ключ создан!'); 
-        } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        const content = `
+            <div class="form-group">
+                <label>Название *</label>
+                <input type="text" id="key-name" class="form-control" placeholder="SSH Key">
+            </div>
+            <div class="form-group">
+                <label>Тип *</label>
+                <select id="key-type" class="form-control" onchange="app.toggleKeyFields()">
+                    <option value="ssh">SSH Key</option>
+                    <option value="login_password">Login/Password</option>
+                </select>
+            </div>
+            <div id="ssh-fields">
+                <div class="form-group">
+                    <label>SSH Private Key</label>
+                    <textarea id="key-ssh" class="form-control yaml-editor" rows="6" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Passphrase</label>
+                    <input type="text" id="key-pass" class="form-control">
+                </div>
+            </div>
+            <div id="login-fields" style="display:none">
+                <div class="form-group">
+                    <label>Login</label>
+                    <input type="text" id="key-login" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="key-password" class="form-control">
+                </div>
+            </div>
+        `;
+        modal.show('Создание ключа', content, async () => {
+            const name = document.getElementById('key-name').value;
+            const type = document.getElementById('key-type').value;
+            if (!name) { alert('Введите название'); return; }
+            const payload = { name, type };
+            if (type === 'ssh') {
+                payload.ssh_key = document.getElementById('key-ssh').value;
+                payload.ssh_passphrase = document.getElementById('key-pass').value;
+            } else {
+                payload.login_password_login = document.getElementById('key-login').value;
+                payload.login_password_password = document.getElementById('key-password').value;
+            }
+            try { 
+                await api.post(`/project/${state.currentProjectId}/keys`, payload); 
+                modal.close();
+                await ui.loadKeys(); 
+                alert('✅ Ключ создан!'); 
+            } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        });
+    },
+    toggleKeyFields() {
+        const type = document.getElementById('key-type')?.value;
+        if (type) {
+            document.getElementById('ssh-fields').style.display = type === 'ssh' ? 'block' : 'none';
+            document.getElementById('login-fields').style.display = type === 'login_password' ? 'block' : 'none';
+        }
     },
     async editKey(id) {
         const key = state.keys.find(k => k.id === id); if (!key) return;
-        const name = prompt('Название:', key.name); if (!name) return;
-        try { 
-            await api.put(`/project/${state.currentProjectId}/keys/${id}`, { name }); 
-            await ui.loadKeys(); 
-            alert('✅ Ключ обновлён!'); 
-        } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        const content = `
+            <div class="form-group">
+                <label>Название *</label>
+                <input type="text" id="key-name" class="form-control" value="${key.name}">
+            </div>
+            <div class="form-group">
+                <label>Тип</label>
+                <select id="key-type" class="form-control" onchange="app.toggleKeyFields()">
+                    <option value="ssh" ${key.type === 'ssh' ? 'selected' : ''}>SSH Key</option>
+                    <option value="login_password" ${key.type === 'login_password' ? 'selected' : ''}>Login/Password</option>
+                </select>
+            </div>
+            <div id="ssh-fields" ${key.type === 'ssh' ? '' : 'style="display:none"'}>
+                <div class="form-group">
+                    <label>SSH Private Key</label>
+                    <textarea id="key-ssh" class="form-control yaml-editor" rows="6">${key.ssh_key || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Passphrase</label>
+                    <input type="text" id="key-pass" class="form-control" value="${key.ssh_passphrase || ''}">
+                </div>
+            </div>
+            <div id="login-fields" ${key.type === 'login_password' ? '' : 'style="display:none"'}>
+                <div class="form-group">
+                    <label>Login</label>
+                    <input type="text" id="key-login" class="form-control" value="${key.login_password_login || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="key-password" class="form-control" value="${key.login_password_password ? '••••••••' : ''}">
+                </div>
+            </div>
+        `;
+        modal.show('Редактирование ключа', content, async () => {
+            const name = document.getElementById('key-name').value;
+            const type = document.getElementById('key-type').value;
+            if (!name) { alert('Введите название'); return; }
+            const payload = { name, type };
+            if (type === 'ssh') {
+                payload.ssh_key = document.getElementById('key-ssh').value;
+                payload.ssh_passphrase = document.getElementById('key-pass').value;
+            } else {
+                payload.login_password_login = document.getElementById('key-login').value;
+                const pwd = document.getElementById('key-password').value;
+                if (pwd) payload.login_password_password = pwd;
+            }
+            try { 
+                await api.put(`/project/${state.currentProjectId}/keys/${id}`, payload); 
+                modal.close();
+                await ui.loadKeys(); 
+                alert('✅ Ключ обновлён!'); 
+            } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        });
     },
     async deleteKey(id) { if (!confirm('Удалить ключ?')) return; try { await api.delete(`/project/${state.currentProjectId}/keys/${id}`); await ui.loadKeys(); alert('✅ Ключ удалён!'); } catch (error) { alert('❌ Ошибка: ' + error.message); } },
     
     // === Repositories CRUD ===
     async createRepository() {
-        const name = prompt('Название репозитория:'); if (!name) return;
-        const gitUrl = prompt('Git URL:'); if (!gitUrl) return;
-        try { 
-            await api.post(`/project/${state.currentProjectId}/repositories`, { name, git_url: gitUrl, git_type: 'git' }); 
-            await ui.loadRepositories(); 
-            alert('✅ Репозиторий создан!'); 
-        } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        const content = `
+            <div class="form-group">
+                <label>Название *</label>
+                <input type="text" id="repo-name" class="form-control" placeholder="My Playbooks">
+            </div>
+            <div class="form-group">
+                <label>Git URL *</label>
+                <input type="text" id="repo-url" class="form-control" placeholder="https://github.com/user/repo.git">
+            </div>
+            <div class="form-group">
+                <label>Git тип</label>
+                <select id="repo-type" class="form-control">
+                    <option value="git">Git</option>
+                    <option value="github">GitHub</option>
+                    <option value="gitlab">GitLab</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Ветка</label>
+                <input type="text" id="repo-branch" class="form-control" value="main">
+            </div>
+        `;
+        modal.show('Создание репозитория', content, async () => {
+            const name = document.getElementById('repo-name').value;
+            const gitUrl = document.getElementById('repo-url').value;
+            if (!name || !gitUrl) { alert('Заполните обязательные поля'); return; }
+            try { 
+                await api.post(`/project/${state.currentProjectId}/repositories`, { 
+                    name, 
+                    git_url: gitUrl, 
+                    git_type: document.getElementById('repo-type').value,
+                    git_branch: document.getElementById('repo-branch').value || 'main'
+                }); 
+                modal.close();
+                await ui.loadRepositories(); 
+                alert('✅ Репозиторий создан!'); 
+            } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        });
     },
     async editRepository(id) {
         const repo = state.repositories.find(r => r.id === id); if (!repo) return;
-        const name = prompt('Название:', repo.name); if (!name) return;
-        const gitUrl = prompt('Git URL:', repo.git_url); if (!gitUrl) return;
-        try { 
-            await api.put(`/project/${state.currentProjectId}/repositories/${id}`, { name, git_url: gitUrl }); 
-            await ui.loadRepositories(); 
-            alert('✅ Репозиторий обновлён!'); 
-        } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        const content = `
+            <div class="form-group">
+                <label>Название *</label>
+                <input type="text" id="repo-name" class="form-control" value="${repo.name}">
+            </div>
+            <div class="form-group">
+                <label>Git URL *</label>
+                <input type="text" id="repo-url" class="form-control" value="${repo.git_url}">
+            </div>
+            <div class="form-group">
+                <label>Git тип</label>
+                <select id="repo-type" class="form-control">
+                    <option value="git" ${repo.git_type === 'git' ? 'selected' : ''}>Git</option>
+                    <option value="github" ${repo.git_type === 'github' ? 'selected' : ''}>GitHub</option>
+                    <option value="gitlab" ${repo.git_type === 'gitlab' ? 'selected' : ''}>GitLab</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Ветка</label>
+                <input type="text" id="repo-branch" class="form-control" value="${repo.git_branch || 'main'}">
+            </div>
+        `;
+        modal.show('Редактирование репозитория', content, async () => {
+            const name = document.getElementById('repo-name').value;
+            const gitUrl = document.getElementById('repo-url').value;
+            if (!name || !gitUrl) { alert('Заполните обязательные поля'); return; }
+            try { 
+                await api.put(`/project/${state.currentProjectId}/repositories/${id}`, { 
+                    name, 
+                    git_url: gitUrl, 
+                    git_type: document.getElementById('repo-type').value,
+                    git_branch: document.getElementById('repo-branch').value
+                }); 
+                modal.close();
+                await ui.loadRepositories(); 
+                alert('✅ Репозиторий обновлён!'); 
+            } catch (error) { alert('❌ Ошибка: ' + error.message); }
+        });
     },
     async deleteRepository(id) { if (!confirm('Удалить репозиторий?')) return; try { await api.delete(`/project/${state.currentProjectId}/repositories/${id}`); await ui.loadRepositories(); alert('✅ Репозиторий удалён!'); } catch (error) { alert('❌ Ошибка: ' + error.message); } }
 };
