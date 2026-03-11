@@ -41,7 +41,14 @@ const auth = {
         try {
             const data = await api.post('/auth/login', { username, password, expire: true });
             state.token = data.token;
-            state.user = data.user || { username: username, name: username, role: 'user', admin: true };
+            // Backend не возвращает data.user, создаём из username
+            state.user = { 
+                username: username, 
+                name: username, 
+                email: '',
+                admin: true,
+                role: 'admin'
+            };
             localStorage.setItem(STORAGE_KEY, state.token);
             localStorage.setItem(USER_KEY, JSON.stringify(state.user));
             return { success: true };
