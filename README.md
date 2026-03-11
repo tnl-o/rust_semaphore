@@ -44,42 +44,16 @@ http://localhost/demo-crud.html
 
 ### 📋 Режимы запуска
 
-#### Режим 1: Docker Full (Frontend + БД в Docker, Backend на хосте) ⭐ Рекомендуется
+#### Режим 1: Native (чистый запуск на хосте) ⭐ Для разработки
 
-```bash
-# Запуск всех сервисов
-./start.sh docker-full
-
-# Или просто (режим по умолчанию)
-./start.sh
-```
-
-**Доступ:** http://localhost
-
-**Учётные данные (демо):**
-- `admin` / `demo123`
-- `john.doe` / `demo123`
-- `jane.smith` / `demo123`
-- `devops` / `demo123`
-
-**Полезные команды:**
-```bash
-./start.sh --stop          # Остановить сервисы
-./start.sh --logs          # Просмотр логов
-./start.sh --clean         # Очистить данные БД
-./start.sh --backend       # Запустить только backend
-```
-
----
-
-#### Режим 2: SQLite (минимальные зависимости, для тестирования)
+SQLite + Backend + Frontend на хосте. Минимальные зависимости.
 
 ```bash
 # Первый запуск с инициализацией
-./start.sh sqlite --init
+./start.sh native --init
 
 # Запуск сервера
-./start.sh sqlite
+./start.sh native
 ```
 
 **Доступ:** http://localhost:3000
@@ -89,17 +63,48 @@ http://localhost/demo-crud.html
 
 **Полезные команды:**
 ```bash
-./start.sh sqlite --stop   # Остановить backend
-./start.sh sqlite --build  # Пересобрать backend
+./start.sh native --stop   # Остановить backend
+./start.sh native --logs   # Просмотр логов
+./start.sh native --clean  # Удалить БД
+./start.sh native --init   # Инициализировать БД
 ```
 
 ---
 
-#### Режим 3: Docker All (всё в Docker, продакшен)
+#### Режим 2: Hybrid (PostgreSQL в Docker, остальное на хосте) ⭐ Рекомендуется для продакшена
+
+PostgreSQL в Docker, Backend и Frontend на хосте.
 
 ```bash
-# Запуск всех сервисов в Docker
-./start.sh docker-all
+# Первый запуск с инициализацией
+./start.sh hybrid --init
+
+# Запуск сервера
+./start.sh hybrid
+```
+
+**Доступ:** http://localhost:3000
+
+**Учётные данные (демо):**
+- `admin` / `demo123`
+
+**Полезные команды:**
+```bash
+./start.sh hybrid --stop   # Остановить сервисы
+./start.sh hybrid --logs   # Просмотр логов
+./start.sh hybrid --clean  # Очистить данные БД
+./start.sh hybrid --init   # Инициализировать БД
+```
+
+---
+
+#### Режим 3: Docker (всё в Docker)
+
+Frontend + PostgreSQL + Backend в Docker контейнерах.
+
+```bash
+# Запуск всех сервисов
+./start.sh docker
 ```
 
 **Доступ:** http://localhost
@@ -109,9 +114,9 @@ http://localhost/demo-crud.html
 
 **Полезные команды:**
 ```bash
-./start.sh docker-all --stop   # Остановить сервисы
-./start.sh docker-all --logs   # Просмотр логов
-./start.sh docker-all --clean  # Очистить volumes
+./start.sh docker --stop   # Остановить сервисы
+./start.sh docker --logs   # Просмотр логов
+./start.sh docker --clean  # Очистить volumes
 ```
 
 ---

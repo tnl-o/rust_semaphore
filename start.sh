@@ -3,24 +3,23 @@
 # Semaphore UI - Универсальный скрипт запуска
 # ============================================================================
 # Поддерживаемые режимы:
-#   1. docker-full    - Frontend + PostgreSQL в Docker + Backend на хосте
-#   2. sqlite         - SQLite + Backend на хосте (минимальные зависимости)
-#   3. docker-all     - Всё в Docker (Frontend + PostgreSQL + Backend)
+#   1. native   - Чистый запуск: SQLite + Backend + Frontend на хосте
+#   2. hybrid   - Гибрид: PostgreSQL в Docker + Backend + Frontend на хосте
+#   3. docker   - Всё в Docker: PostgreSQL + Backend + Frontend
 # ============================================================================
 # Использование: ./start.sh [РЕЖИМ] [ОПЦИИ]
 #
 # Режимы:
-#   docker-full     Frontend + БД в Docker, Backend на хосте (по умолчанию)
-#   sqlite          SQLite + Backend на хосте (для тестирования)
-#   docker-all      Всё в Docker (продакшен)
+#   native    Чистый запуск на хосте (SQLite, минимальные зависимости)
+#   hybrid    Гибрид: БД в Docker, остальное на хосте (рекомендуется)
+#   docker    Всё в Docker (продакшен)
 #
 # Опции:
 #   --stop          Остановить все сервисы
 #   --restart       Перезапустить сервисы
-#   --clean         Очистить volumes/данные
+#   --clean         Очистить данные/volumes
 #   --logs          Показать логи
 #   --build         Пересобрать образы/бинарник
-#   --backend       Запустить только backend (для docker-full)
 #   --init          Инициализировать БД (создать админа)
 #   --help, -h      Показать эту справку
 # ============================================================================
@@ -31,7 +30,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
 COMPOSE_FULL_FILE="$SCRIPT_DIR/docker-compose.full.yml"
 ENV_FILE="$SCRIPT_DIR/.env"
-LOG_FILE="$SCRIPT_DIR/logs/start.log"
+LOG_DIR="$SCRIPT_DIR/logs"
 
 # Цвета для вывода
 RED='\033[0;31m'
@@ -43,7 +42,7 @@ MAGENTA='\033[0;35m'
 NC='\033[0m'
 
 # Режим по умолчанию
-MODE="${1:-docker-full}"
+MODE="${1:-native}"
 shift 2>/dev/null || true
 
 # Флаги
@@ -52,7 +51,6 @@ RESTART_MODE=false
 CLEAN_MODE=false
 LOGS_MODE=false
 BUILD_MODE=false
-BACKEND_ONLY=false
 INIT_MODE=false
 
 # ============================================================================
@@ -107,8 +105,17 @@ check_rust() {
     success "Rust найден ($(cargo --version))"
 }
 
+check_node() {
+    if ! command -v node &> /dev/null; then
+        warning "Node.js не найден. Frontend не будет собран автоматически."
+        return 1
+    fi
+    success "Node.js найден ($(node --version))"
+    return 0
+}
+
 check_frontend() {
-    if [ ! -f "$SCRIPT_DIR/web/public/app.js" ] || [ ! -s "$SCRIPT_DIR/web/public/app.js" ]; then
+    if [ ! -f "$SCRIPT_DIR/web/public/index.html" ] && [ ! -f "$SCRIPT_DIR/web/public/app.js" ]; then
         return 1
     fi
     return 0
@@ -116,10 +123,16 @@ check_frontend() {
 
 build_frontend() {
     step "Сборка frontend..."
-    if [ -f "$SCRIPT_DIR/web/build.sh" ]; then
-        "$SCRIPT_DIR/web/build.sh"
+    cd "$SCRIPT_DIR/web"
+    if [ -f "build.sh" ]; then
+        ./build.sh
     else
-        error "Скрипт web/build.sh не найден"
+        # Попытка собрать через npm если есть package.json
+        if [ -f "package.json" ]; then
+            npm install && npm run build
+        else
+            error "Скрипт web/build.sh не найден и package.json отсутствует"
+        fi
     fi
     success "Frontend собран"
 }
@@ -132,188 +145,126 @@ build_backend() {
 }
 
 # ============================================================================
-# Управление .env файлом
+# Установка переменных окружения (вместо setenv.sh)
 # ============================================================================
 
-create_env_docker_full() {
-    step "Создание .env для режима docker-full..."
-    cat > "$ENV_FILE" << 'EOF'
-# ============================================================================
-# Semaphore UI - Конфигурация (Docker Full: Frontend+БД в Docker, Backend на хосте)
-# ============================================================================
-
-# База данных - PostgreSQL
-SEMAPHORE_DB_DIALECT=postgres
-SEMAPHORE_DB_URL=postgres://semaphore:semaphore_pass@localhost:5432/semaphore
-
-# JWT Secret (генерируется автоматически при первом запуске)
-SEMAPHORE_JWT_SECRET=
-
-# Веб-интерфейс
-SEMAPHORE_WEB_PATH=./web/public
-
-# Временная директория
-SEMAPHORE_TMP_PATH=/tmp/semaphore
-
-# Порт сервера
-SEMAPHORE_TCP_ADDRESS=0.0.0.0:3000
-
-# Логирование
-RUST_LOG=info
-
-# Демо режим (опционально)
-# SEMAPHORE_DEMO_MODE=true
-EOF
-    success ".env создан"
-}
-
-create_env_sqlite() {
-    step "Создание .env для режима sqlite..."
-    cat > "$ENV_FILE" << 'EOF'
-# ============================================================================
-# Semaphore UI - Конфигурация (SQLite)
-# ============================================================================
-
-# База данных - SQLite
+setup_env_native() {
+    step "Настройка переменных окружения для native режима..."
+    
+    # Очистка старых переменных
+    unset SEMAPHORE_DB_URL
+    unset SEMAPHORE_DB_HOST
+    unset SEMAPHORE_DB_PORT
+    
+    # Установка переменных для SQLite
+    export SEMAPHORE_DB_DIALECT=sqlite
+    export SEMAPHORE_DB_PATH="${SEMAPHORE_DB_PATH:-$SCRIPT_DIR/data/semaphore.db}"
+    export SEMAPHORE_WEB_PATH="$SCRIPT_DIR/web/public"
+    export SEMAPHORE_TMP_PATH="/tmp/semaphore"
+    export SEMAPHORE_TCP_ADDRESS="0.0.0.0:3000"
+    export RUST_LOG="${RUST_LOG:-info}"
+    
+    # Создание директорий
+    mkdir -p "$(dirname "$SEMAPHORE_DB_PATH")"
+    mkdir -p "$LOG_DIR"
+    
+    # Создание .env файла
+    cat > "$ENV_FILE" << EOF
+# Semaphore UI - Native Mode (SQLite)
 SEMAPHORE_DB_DIALECT=sqlite
-SEMAPHORE_DB_PATH=/tmp/semaphore.db
-
-# JWT Secret (генерируется автоматически при первом запуске)
-SEMAPHORE_JWT_SECRET=
-
-# Веб-интерфейс
-SEMAPHORE_WEB_PATH=./web/public
-
-# Временная директория
-SEMAPHORE_TMP_PATH=/tmp/semaphore
-
-# Порт сервера
-SEMAPHORE_TCP_ADDRESS=0.0.0.0:3000
-
-# Логирование
-RUST_LOG=info
+SEMAPHORE_DB_PATH=$SEMAPHORE_DB_PATH
+SEMAPHORE_WEB_PATH=$SEMAPHORE_WEB_PATH
+SEMAPHORE_TMP_PATH=$SEMAPHORE_TMP_PATH
+SEMAPHORE_TCP_ADDRESS=$SEMAPHORE_TCP_ADDRESS
+RUST_LOG=$RUST_LOG
 EOF
-    success ".env создан"
+    
+    success "Переменные окружения установлены"
+    info "  DB: SQLite ($SEMAPHORE_DB_PATH)"
+    info "  Web: $SEMAPHORE_WEB_PATH"
+    info "  Port: 3000"
 }
 
-create_env_docker_all() {
-    step "Создание .env для режима docker-all..."
-    cat > "$ENV_FILE" << 'EOF'
-# ============================================================================
-# Semaphore UI - Конфигурация (Docker All: всё в Docker)
-# ============================================================================
+setup_env_hybrid() {
+    step "Настройка переменных окружения для hybrid режима..."
+    
+    # Очистка старых переменных
+    unset SEMAPHORE_DB_PATH
+    
+    # Установка переменных для PostgreSQL
+    export SEMAPHORE_DB_DIALECT=postgres
+    export SEMAPHORE_DB_HOST="localhost"
+    export SEMAPHORE_DB_PORT="5432"
+    export SEMAPHORE_DB_USER="semaphore"
+    export SEMAPHORE_DB_PASSWORD="semaphore_pass"
+    export SEMAPHORE_DB_NAME="semaphore"
+    export SEMAPHORE_DB_URL="postgres://semaphore:semaphore_pass@localhost:5432/semaphore"
+    export SEMAPHORE_WEB_PATH="$SCRIPT_DIR/web/public"
+    export SEMAPHORE_TMP_PATH="/tmp/semaphore"
+    export SEMAPHORE_TCP_ADDRESS="0.0.0.0:3000"
+    export RUST_LOG="${RUST_LOG:-info}"
+    
+    # Создание директорий
+    mkdir -p "$LOG_DIR"
+    
+    # Создание .env файла
+    cat > "$ENV_FILE" << EOF
+# Semaphore UI - Hybrid Mode (PostgreSQL in Docker)
+SEMAPHORE_DB_DIALECT=postgres
+SEMAPHORE_DB_URL=$SEMAPHORE_DB_URL
+SEMAPHORE_WEB_PATH=$SEMAPHORE_WEB_PATH
+SEMAPHORE_TMP_PATH=$SEMAPHORE_TMP_PATH
+SEMAPHORE_TCP_ADDRESS=$SEMAPHORE_TCP_ADDRESS
+RUST_LOG=$RUST_LOG
+EOF
+    
+    success "Переменные окружения установлены"
+    info "  DB: PostgreSQL (localhost:5432)"
+    info "  Web: $SEMAPHORE_WEB_PATH"
+    info "  Port: 3000"
+}
 
-# База данных - PostgreSQL (внутри Docker сети)
+setup_env_docker() {
+    step "Настройка переменных окружения для docker режима..."
+    
+    # Для docker режима переменные нужны только для docker-compose
+    # Создаём .env файл для docker-compose
+    cat > "$ENV_FILE" << EOF
+# Semaphore UI - Docker Mode
 SEMAPHORE_DB_DIALECT=postgres
 SEMAPHORE_DB_URL=postgres://semaphore:semaphore_pass@db:5432/semaphore
-
-# JWT Secret (генерируется автоматически при первом запуске)
-SEMAPHORE_JWT_SECRET=
-
-# Веб-интерфейс
 SEMAPHORE_WEB_PATH=/app/web/public
-
-# Временная директория
 SEMAPHORE_TMP_PATH=/tmp/semaphore
-
-# Порт сервера
 SEMAPHORE_TCP_ADDRESS=0.0.0.0:3000
-
-# Логирование
 RUST_LOG=info
 EOF
-    success ".env создан"
+    
+    success "Переменные окружения установлены для Docker"
 }
 
 # ============================================================================
-# Режим 1: Docker Full (Frontend + БД в Docker, Backend на хосте)
+# Режим 1: Native (чистый запуск на хосте)
 # ============================================================================
 
-mode_docker_full() {
-    info "Режим: docker-full (Frontend + БД в Docker, Backend на хосте)"
+mode_native() {
+    info "Режим: native (SQLite + Backend + Frontend на хосте)"
     
-    # Создание .env
-    create_env_docker_full
-    
-    # Проверка зависимостей
-    check_docker
-    check_rust
-    
-    # Проверка и сборка frontend
-    if ! check_frontend; then
-        build_frontend
-    else
-        success "Frontend уже собран"
-    fi
-    
-    # Запуск Docker сервисов
-    if [ "$STOP_MODE" = true ]; then
-        step "Остановка Docker сервисов..."
-        $COMPOSE_CMD -f "$COMPOSE_FILE" down
-        success "Сервисы остановлены"
-        return
-    fi
-    
-    if [ "$CLEAN_MODE" = true ]; then
-        step "Очистка volumes..."
-        $COMPOSE_CMD -f "$COMPOSE_FILE" down -v
-        success "Volumes очищены"
-        return
-    fi
-    
-    if [ "$LOGS_MODE" = true ]; then
-        $COMPOSE_CMD -f "$COMPOSE_FILE" logs -f
-        return
-    fi
-    
-    if [ "$RESTART_MODE" = true ]; then
-        step "Перезапуск сервисов..."
-        $COMPOSE_CMD -f "$COMPOSE_FILE" restart
-        success "Сервисы перезапущены"
-        return
-    fi
-    
-    # Запуск сервисов
-    step "Запуск PostgreSQL и Frontend..."
-    $COMPOSE_CMD -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
-    $COMPOSE_CMD -f "$COMPOSE_FILE" up -d --remove-orphans
-    
-    # Ожидание готовности PostgreSQL
-    wait_for_postgres
-    
-    success "Docker сервисы запущены"
-    
-    # Запуск backend
-    if [ "$BACKEND_ONLY" = true ] || [ "$INIT_MODE" = false ]; then
-        start_backend
-    fi
-    
-    print_status_docker_full
-}
-
-# ============================================================================
-# Режим 2: SQLite (минимальные зависимости)
-# ============================================================================
-
-mode_sqlite() {
-    info "Режим: sqlite (SQLite + Backend на хосте)"
-    
-    # Создание .env
-    create_env_sqlite
+    # Настройка окружения
+    setup_env_native
     
     # Проверка зависимостей
     check_rust
     
     # Проверка и сборка frontend
     if ! check_frontend; then
-        warning "Frontend не собран"
-        if [ "$BUILD_MODE" = true ]; then
+        warning "Frontend не найден"
+        if check_node || [ "$BUILD_MODE" = true ]; then
             build_frontend
         else
             warning "Запуск без frontend (только API)"
         fi
     else
-        success "Frontend уже собран"
+        success "Frontend найден"
     fi
     
     # Сборка backend если нужно
@@ -321,44 +272,123 @@ mode_sqlite() {
         build_backend
     fi
     
-    # Остановка Docker если запущен
+    # Обработка команд управления
     if [ "$STOP_MODE" = true ]; then
-        step "Остановка backend..."
-        pkill -f "semaphore server" 2>/dev/null || true
-        success "Backend остановлен"
+        stop_native
+        return
+    fi
+    
+    if [ "$CLEAN_MODE" = true ]; then
+        clean_native
+        return
+    fi
+    
+    if [ "$LOGS_MODE" = true ]; then
+        logs_native
         return
     fi
     
     # Инициализация БД
     if [ "$INIT_MODE" = true ]; then
-        init_sqlite_db
+        init_native
         return
     fi
     
-    # Запуск backend
-    start_backend_sqlite
+    # Запуск сервера
+    start_native
     
-    print_status_sqlite
+    print_status_native
 }
 
 # ============================================================================
-# Режим 3: Docker All (всё в Docker)
+# Режим 2: Hybrid (PostgreSQL в Docker, остальное на хосте)
 # ============================================================================
 
-mode_docker_all() {
-    info "Режим: docker-all (всё в Docker)"
+mode_hybrid() {
+    info "Режим: hybrid (PostgreSQL в Docker + Backend + Frontend на хосте)"
     
-    # Создание .env
-    create_env_docker_all
+    # Настройка окружения
+    setup_env_hybrid
+    
+    # Проверка зависимостей
+    check_docker
+    check_rust
+    
+    # Проверка и сборка frontend
+    if ! check_frontend; then
+        warning "Frontend не найден"
+        if check_node || [ "$BUILD_MODE" = true ]; then
+            build_frontend
+        else
+            warning "Запуск без frontend (только API)"
+        fi
+    else
+        success "Frontend найден"
+    fi
+    
+    # Сборка backend если нужно
+    if [ "$BUILD_MODE" = true ]; then
+        build_backend
+    fi
+    
+    # Обработка команд управления
+    if [ "$STOP_MODE" = true ]; then
+        stop_hybrid
+        return
+    fi
+    
+    if [ "$CLEAN_MODE" = true ]; then
+        clean_hybrid
+        return
+    fi
+    
+    if [ "$LOGS_MODE" = true ]; then
+        logs_hybrid
+        return
+    fi
+    
+    if [ "$RESTART_MODE" = true ]; then
+        restart_hybrid
+        return
+    fi
+    
+    # Инициализация БД
+    if [ "$INIT_MODE" = true ]; then
+        init_hybrid
+        return
+    fi
+    
+    # Запуск PostgreSQL в Docker
+    start_postgres_docker
+    
+    # Запуск сервера
+    start_hybrid
+    
+    print_status_hybrid
+}
+
+# ============================================================================
+# Режим 3: Docker (всё в Docker)
+# ============================================================================
+
+mode_docker() {
+    info "Режим: docker (всё в Docker)"
+    
+    # Настройка окружения
+    setup_env_docker
     
     # Проверка зависимостей
     check_docker
     
     # Проверка и сборка frontend
     if ! check_frontend; then
-        build_frontend
+        if check_node || [ "$BUILD_MODE" = true ]; then
+            build_frontend
+        else
+            warning "Frontend не найден, используем заглушку"
+        fi
     else
-        success "Frontend уже собран"
+        success "Frontend найден"
     fi
     
     # Сборка backend если нужно
@@ -366,101 +396,38 @@ mode_docker_all() {
         build_backend
     fi
     
-    # Остановка Docker
+    # Обработка команд управления
     if [ "$STOP_MODE" = true ]; then
-        step "Остановка Docker сервисов..."
-        $COMPOSE_CMD -f "$COMPOSE_FULL_FILE" down
-        success "Сервисы остановлены"
+        stop_docker
         return
     fi
     
     if [ "$CLEAN_MODE" = true ]; then
-        step "Очистка volumes..."
-        $COMPOSE_CMD -f "$COMPOSE_FULL_FILE" down -v
-        success "Volumes очищены"
+        clean_docker
         return
     fi
     
     if [ "$LOGS_MODE" = true ]; then
-        $COMPOSE_CMD -f "$COMPOSE_FULL_FILE" logs -f
+        logs_docker
         return
     fi
     
     if [ "$RESTART_MODE" = true ]; then
-        step "Перезапуск сервисов..."
-        $COMPOSE_CMD -f "$COMPOSE_FULL_FILE" restart
-        success "Сервисы перезапущены"
+        restart_docker
         return
     fi
     
-    # Запуск сервисов
-    step "Запуск всех сервисов..."
-    $COMPOSE_CMD -f "$COMPOSE_FULL_FILE" down --remove-orphans 2>/dev/null || true
-    $COMPOSE_CMD -f "$COMPOSE_FULL_FILE" up -d --remove-orphans --build
+    # Запуск всех сервисов
+    start_docker
     
-    # Ожидание готовности
-    wait_for_postgres
-    sleep 5
-    
-    success "Все сервисы запущены"
-    
-    print_status_docker_all
+    print_status_docker
 }
 
 # ============================================================================
-# Вспомогательные функции
+# Функции для Native режима
 # ============================================================================
 
-wait_for_postgres() {
-    step "Ожидание готовности PostgreSQL..."
-    local max_attempts=30
-    local attempt=1
-    
-    while [ $attempt -le $max_attempts ]; do
-        if docker exec semaphore-db pg_isready -U semaphore -d semaphore &> /dev/null 2>&1; then
-            success "PostgreSQL готов"
-            return 0
-        fi
-        sleep 1
-        ((attempt++))
-    done
-    
-    error "PostgreSQL не запустился за $max_attempts секунд"
-}
-
-start_backend() {
-    step "Запуск backend..."
-    cd "$SCRIPT_DIR/rust"
-    
-    # Остановка предыдущего backend
-    pkill -f "semaphore server" 2>/dev/null || true
-    sleep 1
-    
-    # Запуск в фоне
-    nohup cargo run --release -- server --host 0.0.0.0 --port 3000 > "$SCRIPT_DIR/logs/backend.log" 2>&1 &
-    BACKEND_PID=$!
-    echo $BACKEND_PID > "$SCRIPT_DIR/logs/backend.pid"
-    
-    success "Backend запущен (PID: $BACKEND_PID)"
-}
-
-start_backend_sqlite() {
-    step "Запуск backend с SQLite..."
-    cd "$SCRIPT_DIR/rust"
-    
-    # Остановка предыдущего backend
-    pkill -f "semaphore server" 2>/dev/null || true
-    sleep 1
-    
-    # Запуск в фоне
-    nohup cargo run --release -- server --host 0.0.0.0 --port 3000 > "$SCRIPT_DIR/logs/backend.log" 2>&1 &
-    BACKEND_PID=$!
-    echo $BACKEND_PID > "$SCRIPT_DIR/logs/backend.pid"
-    
-    success "Backend запущен (PID: $BACKEND_PID)"
-}
-
-init_sqlite_db() {
+init_native() {
     step "Инициализация SQLite БД..."
     cd "$SCRIPT_DIR/rust"
     
@@ -479,70 +446,282 @@ init_sqlite_db() {
     
     success "Пользователь admin создан"
     echo ""
-    info "Теперь запустите сервер: ./start.sh sqlite"
+    info "Теперь запустите сервер: ./start.sh native"
 }
 
-# ============================================================================
-# Вывод статуса
-# ============================================================================
-
-print_status_docker_full() {
-    echo ""
-    echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║         Semaphore UI запущен!                          ║${NC}"
-    echo -e "${BLUE}╚════════════════════════════════════════════════════════╝${NC}"
-    echo ""
-    echo -e "${GREEN}🌐 Frontend:${NC} http://localhost"
-    echo -e "${GREEN}💾 PostgreSQL:${NC} localhost:5432"
-    echo -e "${GREEN}🔧 Backend:${NC} http://localhost:3000/api"
-    echo ""
-    echo -e "${YELLOW}Учётные данные (демо):${NC}"
-    echo -e "   admin / demo123"
-    echo ""
-    echo -e "${YELLOW}Полезные команды:${NC}"
-    echo -e "   ${CYAN}./start.sh --stop${NC}           - Остановить сервисы"
-    echo -e "   ${CYAN}./start.sh --logs${NC}           - Просмотр логов"
-    echo -e "   ${CYAN}./start.sh --clean${NC}          - Очистить данные"
-    echo -e "   ${CYAN}docker logs semaphore-db${NC}    - Лог БД"
-    echo -e "   ${CYAN}docker logs semaphore-frontend${NC} - Лог frontend"
-    echo ""
+start_native() {
+    step "Запуск backend..."
+    cd "$SCRIPT_DIR/rust"
+    
+    # Остановка предыдущего backend
+    pkill -f "semaphore server" 2>/dev/null || true
+    sleep 1
+    
+    # Запуск в фоне
+    nohup cargo run --release -- server --host 0.0.0.0 --port 3000 > "$LOG_DIR/backend.log" 2>&1 &
+    BACKEND_PID=$!
+    echo $BACKEND_PID > "$LOG_DIR/backend.pid"
+    
+    # Ожидание запуска
+    sleep 3
+    
+    if ps -p $BACKEND_PID > /dev/null 2>&1; then
+        success "Backend запущен (PID: $BACKEND_PID)"
+    else
+        error "Backend не запустился. Проверьте логи: $LOG_DIR/backend.log"
+    fi
 }
 
-print_status_sqlite() {
+stop_native() {
+    step "Остановка backend..."
+    pkill -f "semaphore server" 2>/dev/null || true
+    rm -f "$LOG_DIR/backend.pid"
+    success "Backend остановлен"
+}
+
+clean_native() {
+    step "Очистка данных SQLite..."
+    if [ -n "$SEMAPHORE_DB_PATH" ] && [ -f "$SEMAPHORE_DB_PATH" ]; then
+        rm -f "$SEMAPHORE_DB_PATH"
+        success "SQLite БД удалена"
+    else
+        info "SQLite БД не найдена"
+    fi
+}
+
+logs_native() {
+    if [ -f "$LOG_DIR/backend.log" ]; then
+        tail -f "$LOG_DIR/backend.log"
+    else
+        info "Лог файл не найден"
+    fi
+}
+
+print_status_native() {
     echo ""
     echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║         Semaphore UI запущен!                          ║${NC}"
+    echo -e "${BLUE}║         Semaphore UI запущен! (Native Mode)            ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo -e "${GREEN}🌐 Frontend + API:${NC} http://localhost:3000"
-    echo -e "${GREEN}💾 SQLite:${NC} /tmp/semaphore.db"
+    echo -e "${GREEN}🌐 Web-интерфейс:${NC} http://localhost:3000"
+    echo -e "${GREEN}💾 База данных:${NC} $SEMAPHORE_DB_PATH"
     echo ""
     echo -e "${YELLOW}Учётные данные:${NC}"
     echo -e "   admin / admin123"
     echo ""
     echo -e "${YELLOW}Полезные команды:${NC}"
-    echo -e "   ${CYAN}./start.sh sqlite --stop${NC}   - Остановить backend"
-    echo -e "   ${CYAN}./start.sh sqlite --init${NC}   - Инициализировать БД"
-    echo -e "   ${CYAN}./start.sh sqlite --build${NC}  - Пересобрать backend"
+    echo -e "   ${CYAN}./start.sh native --stop${NC}   - Остановить backend"
+    echo -e "   ${CYAN}./start.sh native --logs${NC}   - Просмотр логов"
+    echo -e "   ${CYAN}./start.sh native --init${NC}   - Инициализировать БД"
+    echo -e "   ${CYAN}./start.sh native --clean${NC}  - Удалить БД"
     echo ""
 }
 
-print_status_docker_all() {
+# ============================================================================
+# Функции для Hybrid режима
+# ============================================================================
+
+start_postgres_docker() {
+    step "Запуск PostgreSQL в Docker..."
+    
+    # Остановка старого контейнера
+    docker rm -f semaphore-db 2>/dev/null || true
+    
+    # Запуск PostgreSQL
+    docker run -d \
+        --name semaphore-db \
+        -e POSTGRES_DB=semaphore \
+        -e POSTGRES_USER=semaphore \
+        -e POSTGRES_PASSWORD=semaphore_pass \
+        -p 5432:5432 \
+        -v semaphore_postgres_data:/var/lib/postgresql/data \
+        --restart unless-stopped \
+        postgres:15-alpine
+    
+    # Ожидание готовности
+    wait_for_postgres
+    success "PostgreSQL запущен"
+}
+
+wait_for_postgres() {
+    step "Ожидание готовности PostgreSQL..."
+    local max_attempts=30
+    local attempt=1
+    
+    while [ $attempt -le $max_attempts ]; do
+        if docker exec semaphore-db pg_isready -U semaphore -d semaphore &> /dev/null 2>&1; then
+            success "PostgreSQL готов"
+            return 0
+        fi
+        sleep 1
+        ((attempt++))
+    done
+    
+    error "PostgreSQL не запустился за $max_attempts секунд"
+}
+
+init_hybrid() {
+    # Запуск PostgreSQL если не запущен
+    if ! docker ps --format '{{.Names}}' | grep -q semaphore-db; then
+        start_postgres_docker
+    fi
+    
+    step "Инициализация PostgreSQL БД..."
+    cd "$SCRIPT_DIR/rust"
+    
+    # Применение миграций
+    cargo run --release -- migrate --upgrade
+    success "Миграции применены"
+    
+    # Создание админа
+    step "Создание пользователя admin..."
+    cargo run --release -- user add \
+        --username admin \
+        --name "Administrator" \
+        --email admin@localhost \
+        --password admin123 \
+        --admin
+    
+    success "Пользователь admin создан"
+    echo ""
+    info "Теперь запустите сервер: ./start.sh hybrid"
+}
+
+start_hybrid() {
+    step "Запуск backend..."
+    cd "$SCRIPT_DIR/rust"
+    
+    # Остановка предыдущего backend
+    pkill -f "semaphore server" 2>/dev/null || true
+    sleep 1
+    
+    # Запуск в фоне
+    nohup cargo run --release -- server --host 0.0.0.0 --port 3000 > "$LOG_DIR/backend.log" 2>&1 &
+    BACKEND_PID=$!
+    echo $BACKEND_PID > "$LOG_DIR/backend.pid"
+    
+    # Ожидание запуска
+    sleep 3
+    
+    if ps -p $BACKEND_PID > /dev/null 2>&1; then
+        success "Backend запущен (PID: $BACKEND_PID)"
+    else
+        error "Backend не запустился. Проверьте логи: $LOG_DIR/backend.log"
+    fi
+}
+
+stop_hybrid() {
+    step "Остановка backend и PostgreSQL..."
+    pkill -f "semaphore server" 2>/dev/null || true
+    docker stop semaphore-db 2>/dev/null || true
+    rm -f "$LOG_DIR/backend.pid"
+    success "Сервисы остановлены"
+}
+
+restart_hybrid() {
+    step "Перезапуск сервисов..."
+    docker restart semaphore-db 2>/dev/null || true
+    pkill -f "semaphore server" 2>/dev/null || true
+    sleep 2
+    start_hybrid
+    success "Сервисы перезапущены"
+}
+
+clean_hybrid() {
+    step "Очистка volumes PostgreSQL..."
+    docker volume rm semaphore_postgres_data 2>/dev/null || true
+    success "Данные PostgreSQL удалены"
+}
+
+logs_hybrid() {
+    echo "=== Backend Logs ==="
+    if [ -f "$LOG_DIR/backend.log" ]; then
+        tail -f "$LOG_DIR/backend.log"
+    else
+        # Запуск в фоне для просмотра логов Docker
+        docker logs -f semaphore-db 2>&1
+    fi
+}
+
+print_status_hybrid() {
     echo ""
     echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║         Semaphore UI запущен!                          ║${NC}"
+    echo -e "${BLUE}║         Semaphore UI запущен! (Hybrid Mode)            ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo -e "${GREEN}🌐 Frontend + API:${NC} http://localhost"
-    echo -e "${GREEN}💾 PostgreSQL:${NC} внутри Docker"
+    echo -e "${GREEN}🌐 Web-интерфейс:${NC} http://localhost:3000"
+    echo -e "${GREEN}💾 База данных:${NC} PostgreSQL (localhost:5432)"
     echo ""
     echo -e "${YELLOW}Учётные данные (демо):${NC}"
     echo -e "   admin / demo123"
     echo ""
     echo -e "${YELLOW}Полезные команды:${NC}"
-    echo -e "   ${CYAN}./start.sh docker-all --stop${NC}   - Остановить сервисы"
-    echo -e "   ${CYAN}./start.sh docker-all --logs${NC}   - Просмотр логов"
-    echo -e "   ${CYAN}./start.sh docker-all --clean${NC}  - Очистить данные"
+    echo -e "   ${CYAN}./start.sh hybrid --stop${NC}   - Остановить сервисы"
+    echo -e "   ${CYAN}./start.sh hybrid --logs${NC}   - Просмотр логов"
+    echo -e "   ${CYAN}./start.sh hybrid --init${NC}   - Инициализировать БД"
+    echo -e "   ${CYAN}./start.sh hybrid --clean${NC}  - Удалить данные БД"
+    echo -e "   ${CYAN}docker logs semaphore-db${NC}   - Лог PostgreSQL"
+    echo ""
+}
+
+# ============================================================================
+# Функции для Docker режима
+# ============================================================================
+
+start_docker() {
+    step "Запуск всех сервисов в Docker..."
+    
+    # Остановка старых контейнеров
+    $COMPOSE_CMD -f "$COMPOSE_FULL_FILE" down --remove-orphans 2>/dev/null || true
+    
+    # Запуск сервисов
+    $COMPOSE_CMD -f "$COMPOSE_FULL_FILE" up -d --remove-orphans --build
+    
+    # Ожидание готовности
+    wait_for_postgres
+    sleep 5
+    
+    success "Все сервисы запущены"
+}
+
+stop_docker() {
+    step "Остановка Docker сервисов..."
+    $COMPOSE_CMD -f "$COMPOSE_FULL_FILE" down
+    success "Сервисы остановлены"
+}
+
+restart_docker() {
+    step "Перезапуск Docker сервисов..."
+    $COMPOSE_CMD -f "$COMPOSE_FULL_FILE" restart
+    success "Сервисы перезапущены"
+}
+
+clean_docker() {
+    step "Очистка Docker volumes..."
+    $COMPOSE_CMD -f "$COMPOSE_FULL_FILE" down -v
+    success "Volumes очищены"
+}
+
+logs_docker() {
+    $COMPOSE_CMD -f "$COMPOSE_FULL_FILE" logs -f
+}
+
+print_status_docker() {
+    echo ""
+    echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║         Semaphore UI запущен! (Docker Mode)            ║${NC}"
+    echo -e "${BLUE}╚════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${GREEN}🌐 Web-интерфейс:${NC} http://localhost"
+    echo -e "${GREEN}💾 База данных:${NC} PostgreSQL (в Docker)"
+    echo ""
+    echo -e "${YELLOW}Учётные данные (демо):${NC}"
+    echo -e "   admin / demo123"
+    echo ""
+    echo -e "${YELLOW}Полезные команды:${NC}"
+    echo -e "   ${CYAN}./start.sh docker --stop${NC}   - Остановить сервисы"
+    echo -e "   ${CYAN}./start.sh docker --logs${NC}   - Просмотр логов"
+    echo -e "   ${CYAN}./start.sh docker --clean${NC}  - Удалить данные"
     echo ""
 }
 
@@ -550,7 +729,6 @@ print_status_docker_all() {
 # Парсинг аргументов
 # ============================================================================
 
-# Дополнительные опции
 while [[ $# -gt 0 ]]; do
     case $1 in
         --stop)
@@ -573,16 +751,12 @@ while [[ $# -gt 0 ]]; do
             BUILD_MODE=true
             shift
             ;;
-        --backend)
-            BACKEND_ONLY=true
-            shift
-            ;;
         --init)
             INIT_MODE=true
             shift
             ;;
         --help|-h)
-            head -25 "$0" | tail -22
+            head -30 "$0" | tail -27
             exit 0
             ;;
         *)
@@ -596,25 +770,25 @@ done
 # ============================================================================
 
 # Создание директории для логов
-mkdir -p "$SCRIPT_DIR/logs"
+mkdir -p "$LOG_DIR"
 
 case $MODE in
-    docker-full|docker)
-        mode_docker_full
+    native)
+        mode_native
         ;;
-    sqlite)
-        mode_sqlite
+    hybrid)
+        mode_hybrid
         ;;
-    docker-all|all)
-        mode_docker_all
+    docker)
+        mode_docker
         ;;
     --help|-h)
-        head -25 "$0" | tail -22
+        head -30 "$0" | tail -27
         exit 0
         ;;
     *)
         error "Неизвестный режим: $MODE"
-        echo "Доступные режимы: docker-full, sqlite, docker-all"
+        echo "Доступные режимы: native, hybrid, docker"
         exit 1
         ;;
 esac

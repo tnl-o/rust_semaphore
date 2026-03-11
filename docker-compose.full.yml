@@ -16,7 +16,7 @@ services:
       POSTGRES_USER: semaphore
       POSTGRES_PASSWORD: semaphore_pass
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - semaphore_postgres_data:/var/lib/postgresql/data
       - ./db/postgres/init-demo.sql:/docker-entrypoint-initdb.d/init-demo.sql:ro
       - ./db/postgres/init-pghba.sh:/docker-entrypoint-initdb.d/init-pghba.sh:ro
     networks:
@@ -73,7 +73,7 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  semaphore_postgres_data:
     driver: local
   semaphore_tmp:
     driver: local
