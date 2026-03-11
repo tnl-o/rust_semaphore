@@ -178,6 +178,7 @@ const ui = {
             playbooks: '📜 Playbooks',
             environments: '⚙️ Переменные',
             schedules: '⏰ Расписания',
+            events: '📊 События',
             keys: '🔐 Ключи', 
             repositories: '🗂️ Репозитории', 
             users: '👥 Пользователи'
@@ -218,6 +219,7 @@ const ui = {
             playbooks: `<div class="card"><div class="card-header"><h3 class="card-title">📜 Playbooks</h3><button class="btn btn-primary btn-sm" onclick="app.createPlaybook()">+ Новый playbook</button></div><div class="card-body"><div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Название</th><th>Тип</th><th>Действия</th></tr></thead><tbody id="playbooks-table"></tbody></table></div></div></div>`,
             environments: `<div class="card"><div class="card-header"><h3 class="card-title">⚙️ Переменные</h3><button class="btn btn-primary btn-sm" onclick="app.createEnvironment()">+ Новая переменная</button></div><div class="card-body"><div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Название</th><th>Проект</th><th>Действия</th></tr></thead><tbody id="environments-table"></tbody></table></div></div></div>`,
             schedules: `<div class="card"><div class="card-header"><h3 class="card-title">⏰ Расписания</h3><button class="btn btn-primary btn-sm" onclick="app.createSchedule()">+ Новое расписание</button></div><div class="card-body"><div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Название</th><th>Cron</th><th>Активно</th><th>Действия</th></tr></thead><tbody id="schedules-table"></tbody></table></div></div></div>`,
+            events: `<div class="card"><div class="card-header"><h3 class="card-title">📊 События</h3></div><div class="card-body"><div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Время</th><th>Пользователь</th><th>Тип</th><th>Описание</th><th>Проект</th></tr></thead><tbody id="events-table"></tbody></table></div></div></div>`,
             keys: `<div class="card"><div class="card-header"><h3 class="card-title">🔐 Ключи доступа</h3><button class="btn btn-primary btn-sm" onclick="app.createKey()">+ Новый ключ</button></div><div class="card-body"><div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Название</th><th>Тип</th><th>Действия</th></tr></thead><tbody id="keys-table"></tbody></table></div></div></div>`,
             repositories: `<div class="card"><div class="card-header"><h3 class="card-title">🗂️ Репозитории</h3><button class="btn btn-primary btn-sm" onclick="app.createRepository()">+ Новый репозиторий</button></div><div class="card-body"><div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Название</th><th>URL</th><th>Действия</th></tr></thead><tbody id="repositories-table"></tbody></table></div></div></div>`
         };
@@ -233,6 +235,7 @@ const ui = {
             else if (page === 'playbooks') await this.loadPlaybooks();
             else if (page === 'environments') await this.loadEnvironments();
             else if (page === 'schedules') await this.loadSchedules();
+            else if (page === 'events') await this.loadEvents();
             else if (page === 'keys') await this.loadKeys();
             else if (page === 'repositories') await this.loadRepositories();
             else if (page === 'users') await this.loadUsers();
@@ -1033,6 +1036,24 @@ document.addEventListener('DOMContentLoaded', () => app.init());
         if (!tbody) return;
         if (!users || users.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><p>Нет пользователей</p></td></tr>'; return; }
         tbody.innerHTML = users.map(user => `<tr><td>${user.id}</td><td><strong>${user.username}</strong></td><td>${user.name}</td><td>${user.email}</td><td>${user.admin ? '<span class="badge badge-info">Admin</span>' : 'User'}</td></tr>`).join('');
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => app.init());
+
+    // === Events (Audit Log) ===
+    async loadEvents() {
+        try {
+            const events = await api.get('/events?limit=50').catch(() => []);
+            state.events = Array.isArray(events) ? events : [];
+            this.renderEventsTable(state.events);
+        } catch (error) { this.renderEmptyTable('events-table', 6); }
+    },
+    renderEventsTable(events) {
+        const tbody = document.getElementById('events-table');
+        if (!tbody) return;
+        if (!events || events.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Нет событий</p></td></tr>'; return; }
+        tbody.innerHTML = events.map(ev => `<tr><td>${ev.id}</td><td>${this.formatDate(ev.created)}</td><td>${ev.username || 'System'}</td><td>${ev.object_type || '-'}</td><td>${ev.description || '-'}</td><td>${ev.project_id ? `Project #${ev.project_id}` : '-'}</td></tr>`).join('');
     }
 };
 
