@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
 /// Статус запуска playbook
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
+#[sqlx(type_name = "varchar", rename_all = "snake_case")]
 pub enum PlaybookRunStatus {
     Waiting,
     Running,
