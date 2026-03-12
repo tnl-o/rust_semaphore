@@ -17,6 +17,7 @@ pub mod playbook_sync_service;
 pub mod restore;
 pub mod scheduler;
 pub mod ssh_agent;
+pub mod ssh_auth_service;
 pub mod task_logger;
 pub mod task_pool;
 pub mod task_pool_queue;

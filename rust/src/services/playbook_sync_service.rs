@@ -3,10 +3,11 @@
 //! Этот модуль предоставляет функциональность для загрузки и синхронизации
 //! playbook файлов из Git репозиториев.
 
-use crate::db::store::{PlaybookManager, RepositoryManager};
+use crate::db::store::{AccessKeyManager, PlaybookManager, RepositoryManager};
 use crate::error::{Error, Result};
 use crate::models::playbook::{Playbook, PlaybookUpdate};
-use git2::{build::RepoBuilder, FetchOptions, RemoteCallbacks, Repository};
+use crate::services::ssh_auth_service::SshAuthService;
+use git2::{build::RepoBuilder, Cred, FetchOptions, RemoteCallbacks, Repository};
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 use tracing::{info, warn};
@@ -145,10 +146,29 @@ async fn clone_repository(repository: &crate::models::Repository, path: &Path) -
     // Настраиваем callback для аутентификации
     let mut remote_callbacks = RemoteCallbacks::new();
     
-    // Если есть SSH ключ, настраиваем аутентификацию
+    // Если есть SSH ключ, настраиваем SSH аутентификацию
     if repository.key_id != 0 {
-        // TODO: Интеграция с AccessKey для получения SSH ключа
-        warn!("SSH аутентификация пока не реализована");
+        // TODO: Получить AccessKey из БД и настроить SSH аутентификацию
+        // Временно используем заглушку
+        warn!("SSH аутентификация для key_id={} требует реализации", repository.key_id);
+        
+        // Устанавливаем credentials callback для SSH
+        remote_callbacks.credentials(|url, username_from_url, allowed_types| {
+            info!("Git credentials callback: URL={}, allowed_types={:?}", url, allowed_types);
+            
+            if allowed_types.contains(git2::CredentialType::SSH_KEY) {
+                // Пытаемся использовать SSH агент
+                Cred::ssh_key_from_agent(username_from_url.unwrap_or("git"))
+            } else {
+                Cred::default()
+            }
+        });
+    } else {
+        // Без аутентификации или HTTP аутентификация
+        remote_callbacks.credentials(|url, username_from_url, allowed_types| {
+            info!("Git credentials callback (no key): URL={}", url);
+            Cred::default()
+        });
     }
     
     fetch_options.remote_callbacks(remote_callbacks);
