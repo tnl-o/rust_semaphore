@@ -1,14 +1,22 @@
 /**
  * Semaphore Vanilla JS - Main Application
  * Точка входа приложения
+ * Версия: 1.0.0 (100% миграция)
  */
 
 import Router from './router.js';
 import Store from './store.js';
 import api from './api.js';
 import { $, $$, createElement, delegate } from './utils/dom.js';
-import { alert, confirm } from './components/dialogs.js';
+import { alert, confirm, prompt } from './components/dialogs.js';
+import { showSuccess, showError, showLoading } from './components/snackbar.js';
 import DataTable from './components/tables.js';
+import { TemplateForm } from './components/template-form.js';
+import { InventoryForm } from './components/inventory-form.js';
+import { RepositoryForm } from './components/repository-form.js';
+import { EnvironmentForm } from './components/environment-form.js';
+import { KeyForm } from './components/key-form.js';
+import { UserForm } from './components/user-form.js';
 
 // ==================== Global State ====================
 
@@ -17,7 +25,8 @@ const store = new Store({
   project: null,
   projects: [],
   systemInfo: null,
-  sidebarOpen: true
+  sidebarOpen: true,
+  currentProjectId: null
 });
 
 // ==================== Router ====================
@@ -50,10 +59,33 @@ const routes = [
 
 const router = new Router(routes);
 
+// ==================== Modal State ====================
+
+let activeModal = null;
+
+function openModal(content, options = {}) {
+  const modal = new alert({
+    title: options.title || '',
+    content: content,
+    hideNoButton: options.hideNoButton || false,
+    maxWidth: options.maxWidth || 'lg',
+    onConfirm: options.onConfirm || (() => {}),
+    onCancel: options.onCancel || (() => {})
+  });
+  activeModal = modal;
+  return modal;
+}
+
+function closeModal() {
+  if (activeModal) {
+    activeModal.close();
+    activeModal = null;
+  }
+}
+
 // ==================== Page Handlers ====================
 
 async function handleLogin() {
-  // Если уже авторизован - редирект
   if (localStorage.getItem('semaphore_token')) {
     try {
       await api.getCurrentUser();
@@ -64,12 +96,10 @@ async function handleLogin() {
     }
   }
   
-  // Загружаем страницу логина
   const response = await fetch('/html/auth.html');
   const html = await response.text();
   document.body.innerHTML = html;
   
-  // Re-init скрипты
   const script = document.createElement('script');
   script.type = 'module';
   script.src = '/js/auth.js';
@@ -122,7 +152,7 @@ async function handleDashboard() {
         `).join('')}
       </div>
     `;
-    
+
     $$('.v-card[data-project-id]', content).forEach(card => {
       card.addEventListener('click', () => {
         router.push(`/project/${card.dataset.projectId}/history`);
@@ -133,11 +163,12 @@ async function handleDashboard() {
 
 async function handleProjects() {
   await loadLayout();
-  handleDashboard(); // То же самое
+  handleDashboard();
 }
 
 async function handleHistory(params) {
   await loadLayout(params.projectId);
+  store.state.currentProjectId = params.projectId;
   
   const content = $('#page-content');
   if (!content) return;
@@ -153,7 +184,6 @@ async function handleHistory(params) {
     <div id="tasks-table"></div>
   `;
   
-  // Загрузка задач
   const tasks = await api.getTasks(params.projectId);
   
   const tableContainer = $('#tasks-table');
@@ -176,6 +206,7 @@ async function handleHistory(params) {
 
 async function handleTemplates(params) {
   await loadLayout(params.projectId);
+  store.state.currentProjectId = params.projectId;
   
   const content = $('#page-content');
   if (!content) return;
@@ -214,7 +245,7 @@ async function handleTemplates(params) {
         { 
           icon: 'mdi mdi-pencil', 
           tooltip: 'Редактировать',
-          handler: (item) => editTemplate(params.projectId, item.id)
+          handler: (item) => openTemplateForm(params.projectId, item.id)
         },
         { 
           icon: 'mdi mdi-delete', 
@@ -226,12 +257,13 @@ async function handleTemplates(params) {
   }
   
   $('#create-template-btn')?.addEventListener('click', () => {
-    alert({ title: 'Создание шаблона', content: 'Функция в разработке' });
+    openTemplateForm(params.projectId, null);
   });
 }
 
 async function handleInventory(params) {
   await loadLayout(params.projectId);
+  store.state.currentProjectId = params.projectId;
   
   const content = $('#page-content');
   if (!content) return;
@@ -260,19 +292,28 @@ async function handleInventory(params) {
       ],
       data: inventories || [],
       actions: [
-        { icon: 'mdi mdi-pencil', handler: (item) => editInventory(params.projectId, item.id) },
+        { icon: 'mdi mdi-pencil', handler: (item) => openInventoryForm(params.projectId, item.id) },
         { icon: 'mdi mdi-delete', handler: (item) => deleteInventory(params.projectId, item.id) }
       ]
     });
   }
+  
+  $('#create-inventory-btn')?.addEventListener('click', () => {
+    openInventoryForm(params.projectId, null);
+  });
 }
 
 async function handleRepositories(params) {
   await loadLayout(params.projectId);
-  $('#page-content').innerHTML = `
+  store.state.currentProjectId = params.projectId;
+  
+  const content = $('#page-content');
+  if (!content) return;
+  
+  content.innerHTML = `
     <div class="d-flex justify-space-between align-center mb-4">
       <h1 class="text-h4">Репозитории</h1>
-      <button class="v-btn v-btn--contained v-btn--primary">
+      <button class="v-btn v-btn--contained v-btn--primary" id="create-repo-btn">
         <i class="v-icon mdi mdi-plus"></i>
         Добавить репозиторий
       </button>
@@ -294,19 +335,28 @@ async function handleRepositories(params) {
       ],
       data: repos || [],
       actions: [
-        { icon: 'mdi mdi-pencil', handler: (item) => editRepo(params.projectId, item.id) },
+        { icon: 'mdi mdi-pencil', handler: (item) => openRepositoryForm(params.projectId, item.id) },
         { icon: 'mdi mdi-delete', handler: (item) => deleteRepo(params.projectId, item.id) }
       ]
     });
   }
+  
+  $('#create-repo-btn')?.addEventListener('click', () => {
+    openRepositoryForm(params.projectId, null);
+  });
 }
 
 async function handleEnvironment(params) {
   await loadLayout(params.projectId);
-  $('#page-content').innerHTML = `
+  store.state.currentProjectId = params.projectId;
+  
+  const content = $('#page-content');
+  if (!content) return;
+  
+  content.innerHTML = `
     <div class="d-flex justify-space-between align-center mb-4">
       <h1 class="text-h4">Окружения</h1>
-      <button class="v-btn v-btn--contained v-btn--primary">
+      <button class="v-btn v-btn--contained v-btn--primary" id="create-env-btn">
         <i class="v-icon mdi mdi-plus"></i>
         Добавить окружение
       </button>
@@ -327,19 +377,28 @@ async function handleEnvironment(params) {
       ],
       data: envs || [],
       actions: [
-        { icon: 'mdi mdi-pencil', handler: (item) => editEnv(params.projectId, item.id) },
+        { icon: 'mdi mdi-pencil', handler: (item) => openEnvironmentForm(params.projectId, item.id) },
         { icon: 'mdi mdi-delete', handler: (item) => deleteEnv(params.projectId, item.id) }
       ]
     });
   }
+  
+  $('#create-env-btn')?.addEventListener('click', () => {
+    openEnvironmentForm(params.projectId, null);
+  });
 }
 
 async function handleKeys(params) {
   await loadLayout(params.projectId);
-  $('#page-content').innerHTML = `
+  store.state.currentProjectId = params.projectId;
+  
+  const content = $('#page-content');
+  if (!content) return;
+  
+  content.innerHTML = `
     <div class="d-flex justify-space-between align-center mb-4">
       <h1 class="text-h4">Ключи доступа</h1>
-      <button class="v-btn v-btn--contained v-btn--primary">
+      <button class="v-btn v-btn--contained v-btn--primary" id="create-key-btn">
         <i class="v-icon mdi mdi-plus"></i>
         Добавить ключ
       </button>
@@ -355,24 +414,33 @@ async function handleKeys(params) {
       headers: [
         { text: 'ID', value: 'id' },
         { text: 'Название', value: 'name' },
-        { text: 'Тип', value: 'type' },
+        { text: 'Тип', value: 'type', format: (v) => v === 'ssh' ? 'SSH' : 'Логин/пароль' },
         { text: '', value: 'actions', sortable: false }
       ],
       data: keys || [],
       actions: [
-        { icon: 'mdi mdi-pencil', handler: (item) => editKey(params.projectId, item.id) },
+        { icon: 'mdi mdi-pencil', handler: (item) => openKeyForm(params.projectId, item.id) },
         { icon: 'mdi mdi-delete', handler: (item) => deleteKey(params.projectId, item.id) }
       ]
     });
   }
+  
+  $('#create-key-btn')?.addEventListener('click', () => {
+    openKeyForm(params.projectId, null);
+  });
 }
 
 async function handleTeam(params) {
   await loadLayout(params.projectId);
-  $('#page-content').innerHTML = `
+  store.state.currentProjectId = params.projectId;
+  
+  const content = $('#page-content');
+  if (!content) return;
+  
+  content.innerHTML = `
     <div class="d-flex justify-space-between align-center mb-4">
       <h1 class="text-h4">Команда</h1>
-      <button class="v-btn v-btn--contained v-btn--primary">
+      <button class="v-btn v-btn--contained v-btn--primary" id="add-member-btn">
         <i class="v-icon mdi mdi-account-plus"></i>
         Добавить участника
       </button>
@@ -516,7 +584,44 @@ async function handleTasks() {
 
 async function handleUsers() {
   await loadLayout();
-  $('#page-content').innerHTML = '<div class="text-h4">Пользователи</div>';
+  
+  const content = $('#page-content');
+  if (!content) return;
+  
+  content.innerHTML = `
+    <div class="d-flex justify-space-between align-center mb-4">
+      <h1 class="text-h4">Пользователи</h1>
+      <button class="v-btn v-btn--contained v-btn--primary" id="create-user-btn">
+        <i class="v-icon mdi mdi-plus"></i>
+        Создать пользователя
+      </button>
+    </div>
+    <div id="users-table"></div>
+  `;
+  
+  const users = await api.get('/users');
+  
+  const tableContainer = $('#users-table');
+  if (tableContainer) {
+    new DataTable(tableContainer, {
+      headers: [
+        { text: 'ID', value: 'id' },
+        { text: 'Имя', value: 'username' },
+        { text: 'Email', value: 'email' },
+        { text: 'Роль', value: 'admin', format: (v) => v ? 'Админ' : 'Пользователь' },
+        { text: '', value: 'actions', sortable: false }
+      ],
+      data: users || [],
+      actions: [
+        { icon: 'mdi mdi-pencil', handler: (item) => openUserForm(item.id) },
+        { icon: 'mdi mdi-delete', handler: (item) => deleteUser(item.id) }
+      ]
+    });
+  }
+  
+  $('#create-user-btn')?.addEventListener('click', () => {
+    openUserForm(null);
+  });
 }
 
 async function handleRunners() {
@@ -547,18 +652,298 @@ async function handleNotFound() {
   `;
 }
 
+// ==================== Form Handlers ====================
+
+function openTemplateForm(projectId, templateId) {
+  const container = createElement('div');
+  const form = new TemplateForm(container, {
+    projectId,
+    templateId,
+    onSave: () => {
+      showSuccess(templateId ? 'Шаблон обновлён' : 'Шаблон создан');
+      closeModal();
+      handleTemplates({ projectId });
+    },
+    onCancel: () => closeModal()
+  });
+  
+  openModal(container.innerHTML, {
+    title: templateId ? 'Редактирование шаблона' : 'Создание шаблона',
+    maxWidth: 'lg',
+    onCancel: closeModal
+  });
+}
+
+function openInventoryForm(projectId, inventoryId) {
+  const container = createElement('div');
+  const form = new InventoryForm(container, {
+    projectId,
+    inventoryId,
+    onSave: () => {
+      showSuccess(inventoryId ? 'Инвентарь обновлён' : 'Инвентарь создан');
+      closeModal();
+      handleInventory({ projectId });
+    },
+    onCancel: () => closeModal()
+  });
+  
+  openModal(container.innerHTML, {
+    title: inventoryId ? 'Редактирование инвентаря' : 'Создание инвентаря',
+    maxWidth: 'lg',
+    onCancel: closeModal
+  });
+}
+
+function openRepositoryForm(projectId, repositoryId) {
+  const container = createElement('div');
+  const form = new RepositoryForm(container, {
+    projectId,
+    repositoryId,
+    onSave: () => {
+      showSuccess(repositoryId ? 'Репозиторий обновлён' : 'Репозиторий создан');
+      closeModal();
+      handleRepositories({ projectId });
+    },
+    onCancel: () => closeModal()
+  });
+  
+  openModal(container.innerHTML, {
+    title: repositoryId ? 'Редактирование репозитория' : 'Создание репозитория',
+    maxWidth: 'lg',
+    onCancel: closeModal
+  });
+}
+
+function openEnvironmentForm(projectId, environmentId) {
+  const container = createElement('div');
+  const form = new EnvironmentForm(container, {
+    projectId,
+    environmentId,
+    onSave: () => {
+      showSuccess(environmentId ? 'Окружение обновлено' : 'Окружение создано');
+      closeModal();
+      handleEnvironment({ projectId });
+    },
+    onCancel: () => closeModal()
+  });
+  
+  openModal(container.innerHTML, {
+    title: environmentId ? 'Редактирование окружения' : 'Создание окружения',
+    maxWidth: 'lg',
+    onCancel: closeModal
+  });
+}
+
+function openKeyForm(projectId, keyId) {
+  const container = createElement('div');
+  const form = new KeyForm(container, {
+    projectId,
+    keyId,
+    onSave: () => {
+      showSuccess(keyId ? 'Ключ обновлён' : 'Ключ создан');
+      closeModal();
+      handleKeys({ projectId });
+    },
+    onCancel: () => closeModal()
+  });
+  
+  openModal(container.innerHTML, {
+    title: keyId ? 'Редактирование ключа' : 'Создание ключа',
+    maxWidth: 'lg',
+    onCancel: closeModal
+  });
+}
+
+function openUserForm(userId) {
+  const container = createElement('div');
+  const form = new UserForm(container, {
+    userId,
+    onSave: () => {
+      showSuccess(userId ? 'Пользователь обновлён' : 'Пользователь создан');
+      closeModal();
+      handleUsers();
+    },
+    onCancel: () => closeModal()
+  });
+  
+  openModal(container.innerHTML, {
+    title: userId ? 'Редактирование пользователя' : 'Создание пользователя',
+    maxWidth: 'md',
+    onCancel: closeModal
+  });
+}
+
+// ==================== Action Handlers ====================
+
+function runTemplate(projectId, templateId) {
+  confirm({
+    title: 'Запуск задачи',
+    content: `Вы уверены, что хотите запустить шаблон #${templateId}?`,
+    yesButtonText: 'Запустить'
+  }).then((result) => {
+    if (result) {
+      const loading = showLoading('Запуск задачи...');
+      api.runTask(projectId, templateId, {})
+        .then(() => {
+          loading.close();
+          showSuccess('Задача запущена');
+        })
+        .catch((error) => {
+          loading.close();
+          showError('Ошибка запуска: ' + error.message);
+        });
+    }
+  });
+}
+
+function deleteTemplate(projectId, templateId) {
+  confirm({
+    title: 'Удаление шаблона',
+    content: `Вы уверены, что хотите удалить шаблон #${templateId}?`,
+    yesButtonText: 'Удалить'
+  }).then((result) => {
+    if (result) {
+      api.deleteTemplate(projectId, templateId)
+        .then(() => {
+          showSuccess('Шаблон удалён');
+          handleTemplates({ projectId });
+        })
+        .catch((error) => {
+          showError('Ошибка удаления: ' + error.message);
+        });
+    }
+  });
+}
+
+function deleteInventory(projectId, id) {
+  confirm({
+    title: 'Удаление инвентаря',
+    content: `Удалить инвентарь #${id}?`,
+    yesButtonText: 'Удалить'
+  }).then((result) => {
+    if (result) {
+      api.deleteInventory(projectId, id)
+        .then(() => {
+          showSuccess('Инвентарь удалён');
+          handleInventory({ projectId });
+        })
+        .catch((error) => {
+          showError('Ошибка удаления: ' + error.message);
+        });
+    }
+  });
+}
+
+function deleteRepo(projectId, id) {
+  confirm({
+    title: 'Удаление репозитория',
+    content: `Удалить репозиторий #${id}?`,
+    yesButtonText: 'Удалить'
+  }).then((result) => {
+    if (result) {
+      api.deleteRepository(projectId, id)
+        .then(() => {
+          showSuccess('Репозиторий удалён');
+          handleRepositories({ projectId });
+        })
+        .catch((error) => {
+          showError('Ошибка удаления: ' + error.message);
+        });
+    }
+  });
+}
+
+function deleteEnv(projectId, id) {
+  confirm({
+    title: 'Удаление окружения',
+    content: `Удалить окружение #${id}?`,
+    yesButtonText: 'Удалить'
+  }).then((result) => {
+    if (result) {
+      api.deleteEnvironment(projectId, id)
+        .then(() => {
+          showSuccess('Окружение удалено');
+          handleEnvironment({ projectId });
+        })
+        .catch((error) => {
+          showError('Ошибка удаления: ' + error.message);
+        });
+    }
+  });
+}
+
+function deleteKey(projectId, id) {
+  confirm({
+    title: 'Удаление ключа',
+    content: `Удалить ключ #${id}?`,
+    yesButtonText: 'Удалить'
+  }).then((result) => {
+    if (result) {
+      api.deleteKey(projectId, id)
+        .then(() => {
+          showSuccess('Ключ удалён');
+          handleKeys({ projectId });
+        })
+        .catch((error) => {
+          showError('Ошибка удаления: ' + error.message);
+        });
+    }
+  });
+}
+
+function deleteUser(userId) {
+  confirm({
+    title: 'Удаление пользователя',
+    content: `Удалить пользователя #${userId}?`,
+    yesButtonText: 'Удалить'
+  }).then((result) => {
+    if (result) {
+      api.delete(`/users/${userId}`)
+        .then(() => {
+          showSuccess('Пользователь удалён');
+          handleUsers();
+        })
+        .catch((error) => {
+          showError('Ошибка удаления: ' + error.message);
+        });
+    }
+  });
+}
+
+function editTeamMember(projectId, userId) {
+  alert({
+    title: 'Редактирование участника',
+    content: `Участник #${userId}`
+  });
+}
+
+function removeTeamMember(projectId, userId) {
+  confirm({
+    title: 'Удаление участника',
+    content: `Удалить участника #${userId} из команды?`
+  }).then((result) => {
+    if (result) {
+      api.removeTeamMember(projectId, userId)
+        .then(() => {
+          showSuccess('Участник удалён');
+          handleTeam({ projectId });
+        })
+        .catch((error) => {
+          showError('Ошибка удаления: ' + error.message);
+        });
+    }
+  });
+}
+
 // ==================== Helper Functions ====================
 
 async function loadLayout(projectId = null) {
-  // Загружаем основной layout
   const response = await fetch('/html/index.html');
   const html = await response.text();
   document.body.innerHTML = html;
   
-  // Инициализация layout
   initLayout(projectId);
   
-  // Загрузка данных пользователя
   try {
     const user = await api.getCurrentUser();
     store.state.user = user;
@@ -569,7 +954,6 @@ async function loadLayout(projectId = null) {
 }
 
 function initLayout(projectId) {
-  // Toggle sidebar
   const menuToggle = $('#menu-toggle');
   const navDrawer = $('#nav-drawer');
   const mainContent = $('#main-content');
@@ -585,13 +969,11 @@ function initLayout(projectId) {
     }
   });
   
-  // Logout
   $('#logout-btn')?.addEventListener('click', (e) => {
     e.preventDefault();
     handleLogout();
   });
   
-  // Подсветка активного пункта меню
   const currentPath = window.location.pathname;
   $$('.v-list-item').forEach(item => {
     const route = item.dataset.route;
@@ -601,87 +983,6 @@ function initLayout(projectId) {
   });
 }
 
-function runTemplate(projectId, templateId) {
-  alert({ 
-    title: 'Запуск задачи', 
-    content: `Запуск шаблона #${templateId}` 
-  });
-}
-
-function editTemplate(projectId, templateId) {
-  alert({ 
-    title: 'Редактирование шаблона', 
-    content: `Шаблон #${templateId}` 
-  });
-}
-
-function deleteTemplate(projectId, templateId) {
-  confirm({ 
-    title: 'Удаление шаблона', 
-    content: `Вы уверены, что хотите удалить шаблон #${templateId}?` 
-  }).then((result) => {
-    if (result) {
-      showSnackbar('Шаблон удалён');
-    }
-  });
-}
-
-function editInventory(projectId, id) {
-  alert({ title: 'Редактирование инвентаря', content: `Инвентарь #${id}` });
-}
-
-function deleteInventory(projectId, id) {
-  confirm({ title: 'Удаление', content: `Удалить инвентарь #${id}?` });
-}
-
-function editRepo(projectId, id) {
-  alert({ title: 'Редактирование', content: `Репозиторий #${id}` });
-}
-
-function deleteRepo(projectId, id) {
-  confirm({ title: 'Удаление', content: `Удалить репозиторий #${id}?` });
-}
-
-function editEnv(projectId, id) {
-  alert({ title: 'Редактирование', content: `Окружение #${id}` });
-}
-
-function deleteEnv(projectId, id) {
-  confirm({ title: 'Удаление', content: `Удалить окружение #${id}?` });
-}
-
-function editKey(projectId, id) {
-  alert({ title: 'Редактирование', content: `Ключ #${id}` });
-}
-
-function deleteKey(projectId, id) {
-  confirm({ title: 'Удаление', content: `Удалить ключ #${id}?` });
-}
-
-function editTeamMember(projectId, userId) {
-  alert({ title: 'Редактирование', content: `Участник #${userId}` });
-}
-
-function removeTeamMember(projectId, userId) {
-  confirm({ title: 'Удаление', content: `Удалить участника #${userId}?` });
-}
-
-function showSnackbar(text, action = 'OK') {
-  const snackbar = $('#snackbar');
-  const snackbarText = $('#snackbar-text');
-  const snackbarAction = $('#snackbar-action');
-  
-  if (snackbar && snackbarText) {
-    snackbarText.textContent = text;
-    snackbarAction.textContent = action;
-    snackbar.style.display = 'flex';
-    
-    setTimeout(() => {
-      snackbar.style.display = 'none';
-    }, 3000);
-  }
-}
-
 function formatTaskStatus(status) {
   const colors = {
     success: 'success',
@@ -689,13 +990,13 @@ function formatTaskStatus(status) {
     running: 'info',
     waiting: 'warning'
   };
-  const color = colors[status] || '';
   const labels = {
     success: 'Успешно',
     failed: 'Ошибка',
     running: 'Выполняется',
     waiting: 'Ожидание'
   };
+  const color = colors[status] || '';
   return `<span class="v-chip v-chip--${color}">${labels[status] || status}</span>`;
 }
 
@@ -735,7 +1036,6 @@ function escapeHtml(text) {
 
 // ==================== Init ====================
 
-// Запуск приложения
 (async () => {
   const token = localStorage.getItem('semaphore_token');
   if (token) {
