@@ -462,6 +462,89 @@ class SemaphoreAPI {
   async getSlowTasks(projectId, params = {}) {
     return this.get(`/analytics/project/${projectId}/slow-tasks`, params);
   }
+
+  // ==================== Playbook API ====================
+
+  /**
+   * Получить список playbook
+   * @param {number} projectId - ID проекта
+   * @returns {Promise}
+   */
+  async getPlaybooks(projectId) {
+    return this.get(`/project/${projectId}/playbooks`);
+  }
+
+  /**
+   * Получить playbook по ID
+   * @param {number} projectId - ID проекта
+   * @param {number} playbookId - ID playbook
+   * @returns {Promise}
+   */
+  async getPlaybook(projectId, playbookId) {
+    return this.get(`/project/${projectId}/playbooks/${playbookId}`);
+  }
+
+  /**
+   * Создать playbook
+   * @param {number} projectId - ID проекта
+   * @param {Object} data - Данные playbook
+   * @returns {Promise}
+   */
+  async createPlaybook(projectId, data) {
+    return this.post(`/project/${projectId}/playbooks`, data);
+  }
+
+  /**
+   * Обновить playbook
+   * @param {number} projectId - ID проекта
+   * @param {number} playbookId - ID playbook
+   * @param {Object} data - Данные playbook
+   * @returns {Promise}
+   */
+  async updatePlaybook(projectId, playbookId, data) {
+    return this.put(`/project/${projectId}/playbooks/${playbookId}`, data);
+  }
+
+  /**
+   * Удалить playbook
+   * @param {number} projectId - ID проекта
+   * @param {number} playbookId - ID playbook
+   * @returns {Promise}
+   */
+  async deletePlaybook(projectId, playbookId) {
+    return this.delete(`/project/${projectId}/playbooks/${playbookId}`);
+  }
+
+  /**
+   * Синхронизировать playbook из Git
+   * @param {number} projectId - ID проекта
+   * @param {number} playbookId - ID playbook
+   * @returns {Promise}
+   */
+  async syncPlaybook(projectId, playbookId) {
+    return this.post(`/project/${projectId}/playbooks/${playbookId}/sync`);
+  }
+
+  /**
+   * Предпросмотр playbook из Git
+   * @param {number} projectId - ID проекта
+   * @param {number} playbookId - ID playbook
+   * @returns {Promise}
+   */
+  async previewPlaybook(projectId, playbookId) {
+    return this.get(`/project/${projectId}/playbooks/${playbookId}/preview`);
+  }
+
+  /**
+   * Запустить playbook
+   * @param {number} projectId - ID проекта
+   * @param {number} playbookId - ID playbook
+   * @param {Object} data - Параметры запуска
+   * @returns {Promise}
+   */
+  async runPlaybook(projectId, playbookId, data = {}) {
+    return this.post(`/project/${projectId}/playbooks/${playbookId}/run`, data);
+  }
 }
 
 // Экспортируем singleton

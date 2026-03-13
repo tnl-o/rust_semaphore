@@ -6,6 +6,7 @@ use crate::db::store::*;
 use crate::error::{Error, Result};
 use crate::models::playbook_run_history::*;
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use sqlx::Row;
 
 #[async_trait]
@@ -612,8 +613,8 @@ impl PlaybookRunManager for SqlStore {
                 let failed_runs: i64 = row.get("failed_runs");
                 let avg_duration_seconds: Option<f64> = row.get("avg_duration_seconds");
                 let last_run: Option<String> = row.get("last_run");
-                
-                let last_run_dt = last_run.and_then(|s| DateTime::parse_from_rfc3339(&s).ok().map(|d| d.with_timezone(&Utc)));
+
+                let last_run_dt = last_run.and_then(|s| DateTime::parse_from_rfc3339(&s).ok().map(|d: chrono::DateTime<chrono::FixedOffset>| d.with_timezone(&Utc)));
 
                 Ok(PlaybookRunStats {
                     total_runs,
@@ -676,8 +677,8 @@ impl PlaybookRunManager for SqlStore {
                 let failed_runs: i64 = row.get("failed_runs");
                 let avg_duration_seconds: Option<f64> = row.get("avg_duration_seconds");
                 let last_run: Option<String> = row.get("last_run");
-                
-                let last_run_dt = last_run.and_then(|s| DateTime::parse_from_rfc3339(&s).ok().map(|d| d.with_timezone(&Utc)));
+
+                let last_run_dt = last_run.and_then(|s| DateTime::parse_from_rfc3339(&s).ok().map(|d: chrono::DateTime<chrono::FixedOffset>| d.with_timezone(&Utc)));
 
                 Ok(PlaybookRunStats {
                     total_runs,

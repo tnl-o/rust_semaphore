@@ -17,6 +17,7 @@ import { RepositoryForm } from './components/repository-form.js';
 import { EnvironmentForm } from './components/environment-form.js';
 import { KeyForm } from './components/key-form.js';
 import { UserForm } from './components/user-form.js';
+import { PlaybookList } from './components/playbook-list.js';
 
 // ==================== Global State ====================
 
@@ -39,6 +40,7 @@ const routes = [
   { path: '/project/:projectId', redirect: '/project/:projectId/history' },
   { path: '/project/:projectId/history', handler: handleHistory },
   { path: '/project/:projectId/templates', handler: handleTemplates },
+  { path: '/project/:projectId/playbooks', handler: handlePlaybooks },
   { path: '/project/:projectId/inventory', handler: handleInventory },
   { path: '/project/:projectId/repositories', handler: handleRepositories },
   { path: '/project/:projectId/environment', handler: handleEnvironment },
@@ -259,6 +261,32 @@ async function handleTemplates(params) {
   $('#create-template-btn')?.addEventListener('click', () => {
     openTemplateForm(params.projectId, null);
   });
+}
+
+async function handlePlaybooks(params) {
+  await loadLayout(params.projectId);
+  store.state.currentProjectId = params.projectId;
+
+  const content = $('#page-content');
+  if (!content) return;
+
+  // Получаем информацию о пользователе для проверки прав
+  const user = store.state.user || {};
+  const isAdmin = user.role === 'admin';
+  const canManage = isAdmin || user.permissions?.manageProjectResources;
+  const canRun = isAdmin || user.permissions?.runTemplate;
+
+  const playbookList = new PlaybookList({
+    projectId: params.projectId,
+    container: '#page-content',
+    canManage: canManage,
+    canRun: canRun
+  });
+
+  await playbookList.init();
+
+  // Сохраняем ссылку для очистки
+  window.__playbookList = playbookList;
 }
 
 async function handleInventory(params) {

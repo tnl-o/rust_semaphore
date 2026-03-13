@@ -71,6 +71,7 @@
 - [x] Dashboard (список проектов)
 - [x] History (история задач)
 - [x] Templates (список шаблонов) ✅ С формами
+- [x] Playbooks (список playbook'ов) ✅ С формами
 - [x] Inventory (инвентари) ✅ С формами
 - [x] Repositories (репозитории) ✅ С формами
 - [x] Environment (окружения) ✅ С формами
@@ -97,6 +98,7 @@
 ### Этап 5: Формы (100%)
 
 - [x] TemplateForm - форма шаблона
+- [x] PlaybookForm - форма playbook
 - [x] InventoryForm - форма инвентаря
 - [x] RepositoryForm - форма репозитория
 - [x] EnvironmentForm - форма окружения
@@ -105,6 +107,7 @@
 
 **Файлы:**
 - `vanilla/js/components/template-form.js`
+- `vanilla/js/components/playbook-form.js`
 - `vanilla/js/components/inventory-form.js`
 - `vanilla/js/components/repository-form.js`
 - `vanilla/js/components/environment-form.js`
@@ -151,6 +154,7 @@
 | Dashboard | ✅ | ✅ | Готово |
 | History | ✅ | ✅ | Готово |
 | Templates | ✅ | ✅ | Готово с формами |
+| Playbooks | ✅ | ✅ | Готово с формами |
 | Inventory | ✅ | ✅ | Готово с формами |
 | Repositories | ✅ | ✅ | Готово с формами |
 | Environment | ✅ | ✅ | Готово с формами |
