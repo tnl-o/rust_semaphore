@@ -1,7 +1,7 @@
 # 🗺️ Semaphore UI Roadmap 2026-2027
 
 > **Полная декомпозиция проекта и план развития**
-> **Последнее обновление:** 10 марта 2026 г. (Q4 2026, P2 завершено)
+> **Последнее обновление:** 13 марта 2026 г. (Q4 2026, P2 завершено, Vanilla JS Frontend)
 
 ---
 
@@ -44,7 +44,9 @@ rust_semaphore/
 │       ├── config/                # Конфигурация
 │       ├── cli/                   # CLI интерфейс
 │       └── utils/                 # Утилиты
-├── web/                           # Frontend (Vue.js)
+├── web/                           # Frontend
+│   ├── src/                       # Vue.js версия (legacy)
+│   └── vanilla/                   # Vanilla JS версия ⭐ NEW
 ├── db/                            # SQL скрипты
 ├── deployment/                    # Docker конфигурации
 │   ├── single/                    # Единый контейнер
@@ -284,9 +286,9 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
    - `models/analytics.rs`
    - `ANALYTICS.md`
 
-### Q3 2026 — Плагин система
+### Q3 2026 — Плагин система и Vanilla JS Frontend
 
-✅ **2 задачи завершено**
+✅ **3 задачи завершено**
 
 1. **Плагин система**
    - 6 типов плагинов
@@ -304,6 +306,17 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
    - `plugins/wasm_loader.rs`
    - `plugins/wasm_runtime.rs`
    - `PLUGINS_WASM.md`
+
+3. **Vanilla JS Frontend** ⭐ NEW
+   - Чистый JS+CSS+HTML без Vue.js
+   - Gulp сборка для минификации
+   - Кастомный роутер на History API
+   - Store с реактивностью через Proxy
+   - UI компоненты в стиле Vuetify
+   - Размер bundle ~50KB (vs ~500KB Vue)
+   - web/vanilla/
+   - web/MIGRATION_TO_VANILLA.md
+   - web/VANILLA_JS_STATUS.md
 
 ---
 
@@ -484,8 +497,10 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
 | `SINGLE_CONTAINER.md` | ✅ Готово | Единый контейнер |
 | `GRAPHQL_API.md` | ✅ Готово | GraphQL API ⭐ NEW |
 | `TELEGRAM_BOT.md` | ✅ Готово | Telegram Bot ⭐ NEW |
-| `PROMETHEUS_METRICS.md` | ✅ Готово | Prometheus метрики |
+| `PROMETHEUS_METRICS.md` | ✅ Готово | Prometheus метрики ⭐ NEW |
 | `Q4_2026_REPORT.md` | ✅ Готово | Отчёт Q4 2026 ⭐ NEW |
+| `MIGRATION_TO_VANILLA.md` | ✅ Готово | Миграция на Vanilla JS ⭐ NEW |
+| `VANILLA_JS_STATUS.md` | ✅ Готово | Статус Vanilla JS ⭐ NEW |
 
 ---
 
@@ -500,7 +515,7 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
 | 0.1.0 | Q1 2026 | Базовая функциональность |
 | 0.2.0 | Q2 2026 | Audit Log, Webhooks, Analytics |
 | 0.3.0 | Q3 2026 | Plugin System, WASM загрузчик |
-| 0.4.0 | Q4 2026 | GraphQL, Telegram, Prometheus, Redis, gRPC, Тесты, Perf |
+| 0.4.0 | Q4 2026 | GraphQL, Telegram, Prometheus, Redis, gRPC, Тесты, Perf, **Vanilla JS Frontend** |
 | 1.0.0 | Q1 2027 | Production ready |
 
 ---
@@ -519,7 +534,9 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
   - [TELEGRAM_BOT.md](TELEGRAM_BOT.md) — Telegram Bot
   - [PROMETHEUS_METRICS.md](PROMETHEUS_METRICS.md) — Prometheus метрики
   - [Q4_2026_REPORT.md](Q4_2026_REPORT.md) — Отчёт Q4 2026
+  - [MIGRATION_TO_VANILLA.md](web/MIGRATION_TO_VANILLA.md) — Миграция на Vanilla JS ⭐ NEW
+  - [VANILLA_JS_STATUS.md](web/VANILLA_JS_STATUS.md) — Статус Vanilla JS ⭐ NEW
 
 ---
 
-*Последнее обновление: 10 марта 2026 г.*
+*Последнее обновление: 13 марта 2026 г.*
