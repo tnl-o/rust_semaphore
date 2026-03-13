@@ -98,10 +98,10 @@
                                             <td>${pb.repository_id ? '📁 ID: ' + pb.repository_id : '—'}</td>
                                             <td>${formatDate(pb.updated)}</td>
                                             <td>
-                                                <button class="btn btn-success btn-sm" onclick="alert('Запуск будет реализован')">▶</button>
-                                                <button class="btn btn-sm" onclick="editPlaybook(${pb.id})">✏️</button>
+                                                <a href="run.html?id=${projectId}&playbook=${pb.id}" class="btn btn-success btn-sm" title="Запустить">▶</a>
+                                                <button class="btn btn-sm" onclick="editPlaybook(${pb.id})" title="Редактировать">✏️</button>
                                                 <button class="btn btn-sm" onclick="syncPlaybook(${pb.id})" title="Синхронизировать из Git">🔄</button>
-                                                <button class="btn btn-danger btn-sm" onclick="deletePlaybook(${pb.id})">🗑️</button>
+                                                <button class="btn btn-danger btn-sm" onclick="deletePlaybook(${pb.id})" title="Удалить">🗑️</button>
                                             </td>
                                         </tr>
                                     `).join('')}
