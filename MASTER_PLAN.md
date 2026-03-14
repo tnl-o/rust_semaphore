@@ -5,7 +5,7 @@
 >
 > **Репозиторий:** https://github.com/tnl-o/rust_semaphore
 > **Upstream (Go оригинал):** https://github.com/semaphoreui/semaphore
-> **Последнее обновление:** 2026-03-14 (обновление 5 — 16 integration tests all green, ROADMAP.md rewrite)
+> **Последнее обновление:** 2026-03-14 (обновление 6 — cargo clippy -D warnings 0 errors)
 
 ---
 
@@ -238,7 +238,7 @@ rust_semaphore/
 - [ ] **1.3** Проверить все существующие API-эндпоинты через Postman-коллекцию (`.postman/`)
 - [x] **1.4** Таблица Go → Rust обновлена в секции 13 *(2026-03-14)*
 - [x] **1.5** `tracing` + `tracing-subscriber` настроены — `src/logging.rs` существует
-- [ ] **1.6** `clippy` в CI — CI использует Go Taskfile, отдельного Rust clippy шага нет
+- [x] **1.6** `clippy` в CI — `cargo clippy -- -D warnings` green (0 errors, 2026-03-14)
 - [ ] **1.7** Убедиться, что миграции SQLite и PostgreSQL идентичны по схеме
 - [x] **1.8** `CONTRIBUTING.md` написан
 
@@ -561,7 +561,7 @@ web/src/
 
 ## Фаза 8 — Prod-готовность
 
-**Статус фазы: ⚠️ В основном готово, нужны clippy в CI и E2E тесты**
+**Статус фазы: ⚠️ В основном готово, E2E тесты**
 
 ### Задачи
 
@@ -600,7 +600,7 @@ web/src/
 ### Критерии готовности
 - ✅ `docker compose up` — работает
 - ✅ GitHub Actions: dev/release workflows запускаются
-- ❌ Нет clippy в Rust CI
+- ✅ `cargo clippy -- -D warnings` — 0 ошибок (2026-03-14)
 - ❌ Нет E2E тестов
 
 ---
