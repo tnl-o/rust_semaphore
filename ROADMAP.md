@@ -75,7 +75,7 @@
 | **Bundle** | ~50 KB (vs ~500 KB Vue 2) | В 10 раз меньше Vue 2 |
 | **Поддержка** | Вечная | Нет EOL зависимостей |
 
-> ⚠️ Vue 2 достиг End-of-Life в декабре 2023. Vanilla JS миграция завершена (базовые страницы). В работе: WebSocket task log viewer (✅ готов), Charts.
+> ⚠️ Vue 2 достиг End-of-Life в декабре 2023. Vanilla JS миграция завершена (базовые страницы). В работе: Charts ✅ готов (Chart.js Analytics page).
 
 ### DevOps
 
@@ -202,9 +202,9 @@ SEMAPHORE_ACCESS_KEY_ENCRYPTION=...    # AES ключ для секретов
 
 ### 🔄 В работе
 
-- [ ] E2E тесты (расширение integration tests — inventories, templates, tasks)
-- [ ] Charts/графики на странице Analytics (Vanilla JS + Chart.js)
-- [ ] Docker multi-stage оптимизация (цель: < 50 MB образ)
+- [x] **Integration tests** — 20 тестов (auth, projects, keys, inventories, repositories, environments, templates, tasks, 2026-03-14)
+- [x] **Charts/Analytics** — Chart.js line + doughnut charts на странице Analytics (2026-03-14)
+- [x] **Docker multi-stage** — distroless/cc-debian12:nonroot, цель < 50 MB (2026-03-14)
 
 ### 📅 Запланировано (ближайшие)
 
@@ -278,7 +278,7 @@ SEMAPHORE_ACCESS_KEY_ENCRYPTION=...    # AES ключ для секретов
 | Schedules | ✅ |
 | Integrations | ✅ |
 | Audit Log | ✅ |
-| Analytics | ✅ (без charts) |
+| Analytics | ✅ (с Chart.js charts) |
 | Settings | ✅ |
 
 ### Инфраструктура
@@ -288,8 +288,8 @@ SEMAPHORE_ACCESS_KEY_ENCRYPTION=...    # AES ключ для секретов
 | Docker Compose | ✅ Готово |
 | GitHub Actions CI (Rust) | ✅ Готово |
 | Unit-тесты (524) | ✅ Готово |
-| Integration tests (10) | ✅ Готово |
-| Docker multi-stage < 50MB | 🔄 В работе |
+| Integration tests (20) | ✅ Готово |
+| Docker multi-stage (distroless) | ✅ Готово |
 
 ---
 
@@ -315,4 +315,4 @@ docker compose up -d
 
 ---
 
-*Последнее обновление: 14 марта 2026 г.*
+*Последнее обновление: 14 марта 2026 г. (обновление 2 — 20 tests, Charts, Docker distroless)*
