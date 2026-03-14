@@ -5,7 +5,7 @@
 >
 > **Репозиторий:** https://github.com/tnl-o/rust_semaphore
 > **Upstream (Go оригинал):** https://github.com/semaphoreui/semaphore
-> **Последнее обновление:** 2026-03-14 (обновление 3 — TaskLogViewer WebSocket + ANSI colors, закрыт B-10)
+> **Последнее обновление:** 2026-03-14 (обновление 4 — integration tests, plan discrepancy fixes)
 
 ---
 
@@ -253,12 +253,12 @@ rust_semaphore/
 
 **Цель:** Полная функциональность аутентификации, паритет с Go-оригиналом.
 
-**Статус фазы: ⚠️ Почти завершена** *(не хватает refresh token)*
+**Статус фазы: ✅ Завершена**
 
 ### Задачи
 
 - [x] **2.1** `POST /api/auth/login` — работает, возвращает JWT token
-- [ ] **2.2** `POST /api/auth/refresh` — **НЕ реализован** (нет endpoint, JWT single-use)
+- [x] **2.2** `POST /api/auth/refresh` — реализован (`handlers/auth.rs`, закрыт 2026-03-14)
 - [x] **2.3** `POST /api/auth/logout` — реализован (cookie clear)
 - [x] **2.4** Project Users — CRUD ролей (`GET/POST/PUT/DELETE /api/project/{id}/users`) — `handlers/projects/users.rs`
 - [x] **2.5** Проверка прав — middleware в `api/middleware/` (rate limiting + security headers, commit 67bfce0)
@@ -271,7 +271,7 @@ rust_semaphore/
 
 ### Критерии готовности
 - ✅ Login / logout работают
-- ❌ Нет refresh token endpoint
+- ✅ Refresh token endpoint реализован
 - ✅ Нельзя обратиться к project без токена (401)
 
 ---
@@ -541,18 +541,18 @@ web/src/
 
 ## Фаза 7 — Интеграции и дополнительные возможности
 
-**Статус фазы: ⚠️ Большинство готово, Slack/Telegram/LDAP — нет**
+**Статус фазы: ✅ Завершена** *(LDAP конфиг + handler подключён, Slack/Telegram реализованы)*
 
 ### Задачи
 
 - [x] **7.1 Webhooks входящие** — `handlers/projects/integration*.rs` — полный CRUD + матчеры
 - [x] **7.2 Webhooks исходящие** — `services/webhook.rs` — HTTP POST на смену статуса
 - [x] **7.3 Уведомления Email** — `utils/mailer.rs` + `services/alert.rs` (lettre, TLS/SSL)
-- [ ] **7.4 Уведомления Slack** — не реализовано *(нужно добавить)*
-- [ ] **7.5 Уведомления Telegram** — не реализовано *(нужно добавить)*
+- [x] **7.4 Уведомления Slack** — `services/alert.rs::send_slack_alert` webhook POST *(фактически реализовано)*
+- [x] **7.5 Уведомления Telegram** — `services/alert.rs::send_telegram_alert` Bot API *(фактически реализовано)*
 - [x] **7.6 MySQL поддержка** — `db/sql/mysql/` — полный CRUD
 - [x] **7.7 Terraform State API** — `models/terraform_inventory.rs`, `db/sql/terraform_inventory.rs`
-- [ ] **7.8 LDAP Auth** — конфигурация готова (`config/config_ldap.rs`), **хандлер не подключён**
+- [x] **7.8 LDAP Auth** — конфиг + handler подключён (`handlers/auth.rs`, 2026-03-14)
 - [x] **7.9 Secret Storages** — `handlers/projects/secret_storages.rs` *(новое)*
 - [x] **7.10 Backup / Restore** — `services/backup.rs`, `services/restore.rs` *(новое)*
 - [x] **7.11 Prometheus Metrics** — `services/metrics.rs` *(новое)*
@@ -586,8 +586,9 @@ web/src/
 
 #### 8.4 Тесты
 - [x] 524 unit-теста — `cargo test` green
-- [ ] Integration тесты с реальной БД (SQLite in-memory через `sqlx::test`)
-- [ ] E2E тесты через `reqwest`
+- [x] 10 integration-тестов — `cargo test --test api_integration` green (2026-03-14)
+- [x] Integration тесты с реальной SQLite БД — `rust/tests/api_integration.rs` (10 тестов, 2026-03-14)
+- [ ] E2E тесты через `reqwest` (расширение api_integration)
 - [ ] Покрытие ≥ 60% критических путей
 
 #### 8.5 Безопасность
@@ -620,7 +621,7 @@ web/src/
 | `api/templates.go` | `src/api/handlers/projects/templates.rs` | ✅ | |
 | `api/schedules.go` | `src/api/handlers/projects/schedules.rs` | ✅ | |
 | `api/environments.go` | `src/api/handlers/projects/environment.rs` | ✅ | |
-| `api/auth.go` | `src/api/handlers/auth.rs` | ⚠️ | Нет `/api/auth/refresh` endpoint |
+| `api/auth.go` | `src/api/handlers/auth.rs` | ✅ | Refresh token + LDAP реализованы |
 | `runner/task_runner.go` | `src/services/task_runner/` | ✅ | Полностью реализован |
 | `runner/job.go` | `src/services/local_job/` | ✅ | |
 | `runner/ansible.go` | `src/db_lib/ansible_app.rs` | ✅ | |
