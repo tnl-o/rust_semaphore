@@ -447,7 +447,7 @@ function renderSidebar() {
 
     sidebar.innerHTML = `
         <div class="sidebar-logo">
-            <span class="sidebar-logo-dot"></span>
+            <div class="sidebar-logo-dot"><img src="/logo.svg" alt=""></div>
             <h2>Semaphore</h2>
         </div>
         <div class="sidebar-section">Навигация</div>

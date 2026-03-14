@@ -1,88 +1,99 @@
 /* ============================================================
-   Semaphore UI — Material Design System
-   Matching upstream Vue/Vuetify design language
-   Teal sidebar · Blue primary · Roboto font
+   Semaphore UI — Vanilla JS port of upstream Vue/Vuetify design
+   Matches semaphoreui/semaphore visual identity:
+     · Roboto font
+     · Teal sidebar #005057 / #003236
+     · Vuetify default primary #1976D2
+     · White app-bar with elevation
+     · Teal login page + background.svg gradient
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
-/* ── Reset & Base ─────────────────────────────────────────── */
+/* ── Reset ────────────────────────────────────────────────── */
 
-*, *::before, *::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-    /* Brand — Material Blue */
-    --primary:        #2196f3;
-    --primary-dark:   #1976d2;
-    --primary-light:  #bbdefb;
-    --primary-subtle: rgba(33,150,243,0.1);
+    /* Primary — Vuetify 2 default blue */
+    --primary:       #1976D2;
+    --primary-dark:  #1565C0;
+    --primary-light: #BBDEFB;
+    --primary-sub:   rgba(25,118,210,0.1);
 
     /* Semantic */
-    --success:        #4caf50;
-    --success-light:  #e8f5e9;
-    --danger:         #f44336;
-    --danger-light:   #ffebee;
-    --warning:        #ff9800;
-    --warning-light:  #fff3e0;
-    --info:           #2196f3;
-    --info-light:     #e3f2fd;
+    --success:       #4CAF50;
+    --success-light: #E8F5E9;
+    --danger:        #F44336;
+    --danger-light:  #FFEBEE;
+    --warning:       #FB8C00;
+    --warning-light: #FFF3E0;
+    --info:          #2196F3;
+    --info-light:    #E3F2FD;
 
-    /* Neutral / Gray */
-    --gray-50:  #fafafa;
-    --gray-100: #f5f5f5;
-    --gray-200: #eeeeee;
-    --gray-300: #e0e0e0;
-    --gray-400: #bdbdbd;
-    --gray-500: #9e9e9e;
+    /* Neutrals — Material Design */
+    --grey-50:  #FAFAFA;
+    --grey-100: #F5F5F5;
+    --grey-200: #EEEEEE;
+    --grey-300: #E0E0E0;
+    --grey-400: #BDBDBD;
+    --grey-500: #9E9E9E;
+    --grey-600: #757575;
+    --grey-700: #616161;
+    --grey-800: #424242;
+    --grey-900: #212121;
+
+    /* Aliases for compatibility */
+    --gray-50:  #FAFAFA;
+    --gray-100: #F5F5F5;
+    --gray-200: #EEEEEE;
+    --gray-300: #E0E0E0;
+    --gray-400: #BDBDBD;
+    --gray-500: #9E9E9E;
     --gray-600: #757575;
     --gray-700: #616161;
     --gray-800: #424242;
     --gray-900: #212121;
 
-    /* Layout */
-    --bg:           #f5f5f5;
-    --card-bg:      #ffffff;
-    --border:       #e0e0e0;
-    --text:         rgba(0,0,0,0.87);
-    --text-secondary: rgba(0,0,0,0.6);
-    --text-muted:   rgba(0,0,0,0.54);
+    /* Surface */
+    --bg:            #F5F5F5;
+    --card-bg:       #FFFFFF;
+    --border:        rgba(0,0,0,0.12);
+    --text:          rgba(0,0,0,0.87);
+    --text-secondary:rgba(0,0,0,0.6);
+    --text-muted:    rgba(0,0,0,0.54);
     --text-disabled: rgba(0,0,0,0.38);
 
-    /* Sidebar — teal (matching upstream #003236 / #005057) */
-    --sidebar-bg:        #005057;
-    --sidebar-bg-dark:   #003236;
-    --sidebar-border:    rgba(0,0,0,0.12);
-    --sidebar-text:      rgba(255,255,255,0.7);
-    --sidebar-text-hover:rgba(255,255,255,0.95);
+    /* Sidebar — teal (matches upstream nav-drawer) */
+    --sidebar-bg:       #005057;
+    --sidebar-bg-dark:  #003236;
+    --sidebar-text:     rgba(255,255,255,0.7);
+    --sidebar-text-hover: rgba(255,255,255,0.95);
     --sidebar-active-bg: rgba(255,255,255,0.12);
-    --sidebar-active:    #ffffff;
-    --sidebar-width:     260px;
+    --sidebar-active:   #FFFFFF;
+    --sidebar-width:    260px;
 
-    /* Material Elevation Shadows */
-    --shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-    --shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
-    --shadow-3: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
-    --shadow-4: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    /* Material elevation shadows */
+    --shadow-1: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
+    --shadow-2: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12);
+    --shadow-4: 0 2px 4px -1px rgba(0,0,0,.2), 0 4px 5px 0 rgba(0,0,0,.14), 0 1px 10px 0 rgba(0,0,0,.12);
+    --shadow-6: 0 3px 5px -1px rgba(0,0,0,.2), 0 6px 10px 0 rgba(0,0,0,.14), 0 1px 18px 0 rgba(0,0,0,.12);
+    --shadow-8: 0 5px 5px -3px rgba(0,0,0,.2), 0 8px 10px 1px rgba(0,0,0,.14), 0 3px 14px 2px rgba(0,0,0,.12);
+
     /* Legacy aliases */
-    --shadow-xs: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-    --shadow-sm: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
-    --shadow-md: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
-    --shadow-lg: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
-    --shadow-xl: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+    --shadow-xs: var(--shadow-1);
+    --shadow-sm: var(--shadow-2);
+    --shadow-md: var(--shadow-4);
+    --shadow-lg: var(--shadow-6);
+    --shadow-xl: var(--shadow-8);
 
-    /* Radius — Material Design uses subtle rounding */
+    /* Vuetify border-radius defaults */
     --radius-sm:   4px;
     --radius-md:   4px;
     --radius-lg:   4px;
     --radius-xl:   8px;
     --radius-full: 9999px;
 
-    /* Transitions */
     --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -98,12 +109,9 @@ body {
 
 /* ── Layout ───────────────────────────────────────────────── */
 
-.layout {
-    display: flex;
-    min-height: 100vh;
-}
+.layout { display: flex; min-height: 100vh; }
 
-/* ── Sidebar ──────────────────────────────────────────────── */
+/* ── Sidebar (Navigation Drawer) ─────────────────────────── */
 
 .sidebar {
     width: var(--sidebar-width);
@@ -111,70 +119,70 @@ body {
     display: flex;
     flex-direction: column;
     position: fixed;
-    top: 0;
-    left: 0;
+    top: 0; left: 0;
     height: 100vh;
     overflow-y: auto;
     z-index: 100;
     scrollbar-width: none;
-    box-shadow: var(--shadow-2);
+    box-shadow: var(--shadow-8);
 }
 .sidebar::-webkit-scrollbar { display: none; }
 
+/* Logo area — darker teal strip at top */
 .sidebar-logo {
-    padding: 0 16px;
     height: 64px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
     background: var(--sidebar-bg-dark);
-}
-
-.sidebar-logo h2 {
-    font-size: 18px;
-    font-weight: 500;
-    color: #ffffff;
-    letter-spacing: 0.5px;
-}
-
-.sidebar-logo-dot {
-    width: 32px;
-    height: 32px;
-    background: rgba(255,255,255,0.15);
-    border-radius: 4px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 18px;
+    padding: 0 16px;
+    gap: 12px;
     flex-shrink: 0;
 }
 
-.sidebar-logo-dot::before {
-    content: '⬡';
-    color: white;
-    font-size: 16px;
+.sidebar-logo-dot {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sidebar-logo-dot img {
+    width: 32px;
+    height: 32px;
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
+}
+
+.sidebar-logo h2 {
+    font-size: 20px;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 0.15px;
 }
 
 .sidebar-section {
-    padding: 16px 16px 8px;
+    padding: 16px 16px 4px;
     font-size: 11px;
     font-weight: 500;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.45);
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
 .sidebar-nav {
     list-style: none;
-    padding: 8px 0;
+    padding: 4px 0;
     flex: 1;
 }
 
 .sidebar-nav li a {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 12px 16px;
+    gap: 16px;
+    padding: 0 16px;
+    height: 48px;
     color: var(--sidebar-text);
     text-decoration: none;
     font-size: 14px;
@@ -184,12 +192,12 @@ body {
 }
 
 .sidebar-nav li a:hover {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.06);
     color: var(--sidebar-text-hover);
 }
 
 .sidebar-nav li a.active {
-    background: var(--sidebar-active-bg);
+    background: rgba(255,255,255,0.14);
     color: var(--sidebar-active);
     font-weight: 500;
 }
@@ -197,23 +205,18 @@ body {
 .sidebar-nav li a.active::before {
     content: '';
     position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
+    left: 0; top: 0; bottom: 0;
     width: 3px;
-    background: white;
+    background: rgba(255,255,255,0.8);
     border-radius: 0 2px 2px 0;
 }
 
 .sidebar-nav li a .nav-icon {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
     font-size: 16px;
-    opacity: 0.9;
     flex-shrink: 0;
+    opacity: 0.85;
 }
 
 .sidebar-footer {
@@ -229,11 +232,13 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    background: var(--bg);
 }
 
+/* Vuetify v-app-bar style — white with elevation */
 .main-header {
-    background: var(--card-bg);
-    box-shadow: var(--shadow-1);
+    background: #FFFFFF;
+    box-shadow: var(--shadow-4);
     padding: 0 24px;
     height: 64px;
     display: flex;
@@ -245,7 +250,7 @@ body {
 }
 
 .main-header h2 {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 400;
     color: var(--text);
     letter-spacing: 0.15px;
@@ -257,41 +262,37 @@ body {
     gap: 8px;
 }
 
-.main-body {
-    padding: 24px;
-    flex: 1;
-}
+.main-body { padding: 24px; flex: 1; }
 
-/* ── Top header (dashboard / login pages) ─────────────────── */
+/* ── Dashboard top bar (index.html uses .header) ─────────── */
 
 .header {
     background: var(--sidebar-bg);
-    color: white;
+    color: #fff;
     padding: 0 24px;
     height: 64px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: var(--shadow-1);
+    box-shadow: var(--shadow-4);
     position: sticky;
-    top: 0;
-    z-index: 50;
+    top: 0; z-index: 50;
 }
 
 .header h1 {
     font-size: 20px;
     font-weight: 500;
-    color: #ffffff;
+    color: #fff;
     letter-spacing: 0.15px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
-.header h1::before {
-    content: '⬡';
-    font-size: 20px;
-    opacity: 0.85;
+.header h1 img {
+    width: 28px; height: 28px;
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
 }
 
 .user-menu {
@@ -308,8 +309,6 @@ body {
     padding: 24px;
 }
 
-/* ── Page header ──────────────────────────────────────────── */
-
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -320,8 +319,7 @@ body {
 .page-header h1 {
     font-size: 24px;
     font-weight: 400;
-    color: var(--text);
-    letter-spacing: -0.2px;
+    letter-spacing: 0;
 }
 
 /* ── Cards ────────────────────────────────────────────────── */
@@ -330,13 +328,11 @@ body {
     background: var(--card-bg);
     border-radius: var(--radius-lg);
     padding: 20px;
-    box-shadow: var(--shadow-1);
+    box-shadow: var(--shadow-2);
     transition: box-shadow var(--transition);
 }
 
-.card:hover {
-    box-shadow: var(--shadow-2);
-}
+.card:hover { box-shadow: var(--shadow-4); }
 
 .card-interactive {
     cursor: pointer;
@@ -344,7 +340,7 @@ body {
 }
 
 .card-interactive:hover {
-    box-shadow: var(--shadow-2);
+    box-shadow: var(--shadow-4);
     transform: translateY(-2px);
 }
 
@@ -356,90 +352,82 @@ body {
     gap: 16px;
 }
 
-/* ── Buttons ──────────────────────────────────────────────── */
+/* ── Buttons — Vuetify v-btn style ───────────────────────── */
 
 .btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     padding: 0 16px;
     height: 36px;
+    min-width: 64px;
     border: none;
     border-radius: var(--radius-md);
-    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.875rem;
     font-weight: 500;
-    font-family: inherit;
-    cursor: pointer;
-    transition: background var(--transition), box-shadow var(--transition);
-    white-space: nowrap;
-    text-decoration: none;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.0892857143em;
     text-transform: uppercase;
-    font-size: 13px;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: box-shadow var(--transition), background var(--transition), opacity var(--transition);
     position: relative;
     overflow: hidden;
+    user-select: none;
 }
 
+/* Ripple-like hover */
 .btn::after {
     content: '';
     position: absolute;
     inset: 0;
     background: currentColor;
     opacity: 0;
-    transition: opacity var(--transition);
-    border-radius: inherit;
+    transition: opacity 0.2s;
 }
-
 .btn:hover::after  { opacity: 0.08; }
 .btn:active::after { opacity: 0.16; }
 
 .btn:disabled {
     opacity: 0.38;
-    cursor: not-allowed;
+    cursor: default;
     pointer-events: none;
     box-shadow: none;
 }
 
+/* Contained (elevated) variants */
 .btn-primary {
     background: var(--primary);
-    color: white;
-    box-shadow: 0 2px 4px rgba(33,150,243,0.4);
+    color: #fff;
+    box-shadow: var(--shadow-2);
 }
-.btn-primary:hover {
-    box-shadow: 0 4px 8px rgba(33,150,243,0.4);
-    background: var(--primary-dark);
-}
+.btn-primary:hover { background: var(--primary-dark); box-shadow: var(--shadow-4); }
 
 .btn-success {
-    background: var(--success);
-    color: white;
-    box-shadow: 0 2px 4px rgba(76,175,80,0.3);
+    background: #43A047;
+    color: #fff;
+    box-shadow: var(--shadow-2);
 }
-.btn-success:hover {
-    background: #388e3c;
-    box-shadow: 0 4px 8px rgba(76,175,80,0.4);
-}
+.btn-success:hover { background: #388E3C; box-shadow: var(--shadow-4); }
 
 .btn-danger {
-    background: var(--danger);
-    color: white;
-    box-shadow: 0 2px 4px rgba(244,67,54,0.3);
+    background: #E53935;
+    color: #fff;
+    box-shadow: var(--shadow-2);
 }
-.btn-danger:hover {
-    background: #d32f2f;
-    box-shadow: 0 4px 8px rgba(244,67,54,0.4);
-}
+.btn-danger:hover { background: #C62828; box-shadow: var(--shadow-4); }
 
+/* Text / ghost button */
 .btn-ghost {
     background: transparent;
     color: var(--primary);
     box-shadow: none;
-    text-transform: uppercase;
 }
-.btn-ghost:hover {
-    background: var(--primary-subtle);
-}
+.btn-ghost:hover { background: var(--primary-sub); box-shadow: none; }
 
+/* Sidebar logout button */
 .btn-logout {
     background: transparent;
     border: 1px solid rgba(255,255,255,0.3);
@@ -447,37 +435,26 @@ body {
     padding: 0 14px;
     height: 32px;
     border-radius: var(--radius-md);
-    font-size: 13px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.8125rem;
     font-weight: 500;
-    font-family: inherit;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     cursor: pointer;
     transition: all var(--transition);
-    letter-spacing: 0.4px;
 }
 .btn-logout:hover {
     background: rgba(255,255,255,0.1);
     border-color: rgba(255,255,255,0.5);
-    color: white;
+    color: #fff;
 }
 
-.btn-sm {
-    height: 30px;
-    padding: 0 12px;
-    font-size: 12px;
-}
-
-.btn-icon {
-    padding: 0;
-    width: 36px;
-    min-width: 36px;
-    justify-content: center;
-}
+.btn-sm { height: 28px; padding: 0 12px; font-size: 0.75rem; }
+.btn-icon { padding: 0; width: 36px; min-width: 36px; border-radius: 50%; }
 
 /* ── Forms ────────────────────────────────────────────────── */
 
-.form-group {
-    margin-bottom: 20px;
-}
+.form-group { margin-bottom: 20px; }
 
 .form-group label {
     display: block;
@@ -492,13 +469,13 @@ body {
 .form-control {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid var(--gray-400);
+    border: 1px solid rgba(0,0,0,0.38);
     border-radius: var(--radius-md);
-    font-size: 14px;
-    font-family: inherit;
+    font-size: 1rem;
+    font-family: 'Roboto', sans-serif;
     color: var(--text);
-    background: var(--card-bg);
-    transition: border-color var(--transition), box-shadow var(--transition);
+    background: #fff;
+    transition: border-color var(--transition);
     line-height: 1.5;
 }
 
@@ -506,26 +483,16 @@ body {
     outline: none;
     border-color: var(--primary);
     border-width: 2px;
-    box-shadow: none;
-    padding: 9px 11px; /* compensate 1px→2px border */
+    padding: 9px 11px;
 }
 
-.form-control::placeholder {
-    color: var(--gray-400);
-}
+.form-control::placeholder { color: var(--grey-400); }
 
-textarea.form-control {
-    resize: vertical;
-    min-height: 80px;
-}
+textarea.form-control { resize: vertical; min-height: 80px; }
 
-.form-hint {
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--text-muted);
-}
+.form-hint { margin-top: 4px; font-size: 12px; color: var(--text-muted); }
 
-/* ── Badges ───────────────────────────────────────────────── */
+/* ── Badges / Chips ───────────────────────────────────────── */
 
 .badge {
     display: inline-flex;
@@ -538,13 +505,12 @@ textarea.form-control {
     letter-spacing: 0.3px;
     text-transform: uppercase;
 }
-
-.badge            { background: var(--gray-200); color: var(--gray-700); }
-.badge-success    { background: var(--success-light); color: #2e7d32; }
-.badge-danger     { background: var(--danger-light);  color: #c62828; }
-.badge-warning    { background: var(--warning-light); color: #e65100; }
-.badge-info       { background: var(--info-light);    color: #1565c0; }
-.badge-primary    { background: var(--primary-light); color: #1565c0; }
+.badge            { background: var(--grey-200); color: var(--grey-700); }
+.badge-success    { background: var(--success-light); color: #2E7D32; }
+.badge-danger     { background: var(--danger-light);  color: #C62828; }
+.badge-warning    { background: var(--warning-light); color: #E65100; }
+.badge-info       { background: var(--info-light);    color: #1565C0; }
+.badge-primary    { background: var(--primary-light); color: #1565C0; }
 
 /* ── Tables ───────────────────────────────────────────────── */
 
@@ -552,7 +518,7 @@ textarea.form-control {
     background: var(--card-bg);
     border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: var(--shadow-1);
+    box-shadow: var(--shadow-2);
 }
 
 .table {
@@ -562,34 +528,31 @@ textarea.form-control {
 }
 
 .table th {
-    padding: 12px 16px;
+    padding: 0 16px;
+    height: 48px;
     text-align: left;
-    background: var(--gray-50);
     font-weight: 500;
     font-size: 12px;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.08em;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
 }
 
 .table td {
-    padding: 14px 16px;
+    padding: 0 16px;
+    height: 52px;
     font-size: 14px;
-    border-bottom: 1px solid var(--gray-100);
+    border-bottom: 1px solid var(--grey-100);
     vertical-align: middle;
     white-space: nowrap;
 }
 
 .table tr:last-child td { border-bottom: none; }
 
-.table tbody tr {
-    transition: background var(--transition);
-}
-.table tbody tr:hover {
-    background: rgba(0,0,0,0.02);
-}
+.table tbody tr { transition: background var(--transition); }
+.table tbody tr:hover { background: rgba(143,143,143,0.04); }
 
 /* ── Loading ──────────────────────────────────────────────── */
 
@@ -604,9 +567,8 @@ textarea.form-control {
 }
 
 .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--gray-200);
+    width: 40px; height: 40px;
+    border: 3px solid var(--grey-200);
     border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -625,11 +587,7 @@ textarea.form-control {
     text-align: center;
 }
 
-.empty-state-icon {
-    font-size: 56px;
-    margin-bottom: 16px;
-    opacity: 0.3;
-}
+.empty-state-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.3; }
 
 .empty-state h3 {
     font-size: 18px;
@@ -654,130 +612,124 @@ textarea.form-control {
     border-radius: var(--radius-md);
     margin-bottom: 16px;
     font-size: 14px;
-    border-left: 4px solid transparent;
 }
 
-.alert-success { background: var(--success-light); color: #2e7d32; border-color: var(--success); }
-.alert-danger  { background: var(--danger-light);  color: #c62828; border-color: var(--danger); }
-.alert-warning { background: var(--warning-light); color: #e65100; border-color: var(--warning); }
-.alert-info    { background: var(--info-light);    color: #1565c0; border-color: var(--info); }
+.alert-success { background: var(--success-light); color: #1B5E20; border-left: 4px solid var(--success); }
+.alert-danger  { background: var(--danger-light);  color: #B71C1C; border-left: 4px solid var(--danger); }
+.alert-warning { background: var(--warning-light); color: #E65100; border-left: 4px solid var(--warning); }
+.alert-info    { background: var(--info-light);    color: #0D47A1; border-left: 4px solid var(--info); }
 
-/* Toast notifications */
+/* Toast — Vuetify v-snackbar style */
 .toast {
     position: fixed;
-    top: 24px;
-    right: 24px;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 9999;
-    padding: 14px 20px;
-    border-radius: var(--radius-lg);
+    padding: 14px 24px;
+    border-radius: var(--radius-xl);
     font-size: 14px;
     font-weight: 400;
-    max-width: 400px;
-    box-shadow: var(--shadow-3);
-    animation: toastIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    border-left: 4px solid transparent;
+    max-width: 480px;
+    min-width: 280px;
+    text-align: center;
+    box-shadow: var(--shadow-6);
+    animation: snackbarIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes toastIn {
-    from { opacity: 0; transform: translateX(20px); }
-    to   { opacity: 1; transform: translateX(0); }
+@keyframes snackbarIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-.toast.alert-success { background: #fff; color: #2e7d32; border-color: var(--success); }
-.toast.alert-danger  { background: #fff; color: #c62828; border-color: var(--danger); }
-.toast.alert-warning { background: #fff; color: #e65100; border-color: var(--warning); }
-.toast.alert-info    { background: #fff; color: #1565c0; border-color: var(--info); }
+.toast.alert-success { background: #323232; color: #69F0AE; border-left: none; }
+.toast.alert-danger  { background: #323232; color: #FF8A80; border-left: none; }
+.toast.alert-warning { background: #323232; color: #FFD740; border-left: none; }
+.toast.alert-info    { background: #323232; color: #82B1FF; border-left: none; }
 
-/* ── Modal ────────────────────────────────────────────────── */
+/* ── Modal — Vuetify v-dialog style ──────────────────────── */
 
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(33,33,33,0.46);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     padding: 16px;
-    animation: overlayIn 0.2s ease;
+    animation: overlayIn 0.15s ease;
 }
 
-@keyframes overlayIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
 
 .modal {
     background: var(--card-bg);
     border-radius: var(--radius-xl);
-    padding: 0;
     width: 100%;
     max-width: 560px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: var(--shadow-4);
-    animation: modalIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-8);
+    animation: dialogIn 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-@keyframes modalIn {
-    from { opacity: 0; transform: scale(0.96) translateY(12px); }
-    to   { opacity: 1; transform: scale(1)    translateY(0); }
+@keyframes dialogIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to   { opacity: 1; transform: scale(1); }
 }
 
 .modal-header {
+    padding: 20px 24px 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid var(--border);
 }
 
 .modal-header h2 {
-    font-size: 18px;
-    font-weight: 400;
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: 0.0125em;
     color: var(--text);
-    letter-spacing: 0.15px;
 }
 
-.modal form {
-    padding: 20px 24px;
-}
+.modal form { padding: 20px 24px; }
 
 .modal-footer {
     display: flex;
     gap: 8px;
     justify-content: flex-end;
-    padding: 12px 24px 20px;
-    border-top: 1px solid var(--border);
+    padding: 8px 24px 20px;
 }
 
-/* ── Login page ───────────────────────────────────────────── */
+/* ── Login page — matches Auth.vue ───────────────────────── */
 
 .login-wrapper {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--sidebar-bg);
+    background-color: #005057;
+    background-image: url('background.svg');
+    background-size: cover;
+    background-position: center;
     position: relative;
-    overflow: hidden;
 }
 
+/* Semi-transparent overlay matching upstream #80808024 */
 .login-wrapper::before {
     content: '';
     position: absolute;
     inset: 0;
-    background:
-        radial-gradient(ellipse 70% 60% at 15% 30%, rgba(0,80,87,0.8) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 50% at 85% 70%, rgba(0,50,54,0.6) 0%, transparent 60%);
+    background: rgba(128,128,128,0.14);
     pointer-events: none;
 }
 
 .login-card {
-    background: #ffffff;
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-4);
-    padding: 40px;
+    background: #FFFFFF;
+    border-radius: 15px;
+    box-shadow: var(--shadow-8);
+    padding: 32px 40px 40px;
     width: 100%;
     max-width: 400px;
     position: relative;
@@ -786,73 +738,76 @@ textarea.form-control {
 
 .login-logo {
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .login-logo-icon {
-    width: 64px;
-    height: 64px;
-    background: var(--sidebar-bg);
-    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 30px;
-    margin: 0 auto 16px;
-    box-shadow: 0 4px 16px rgba(0,80,87,0.4);
+}
+
+.login-logo-icon img {
+    width: 64px;
+    height: auto;
 }
 
 .login-logo h1 {
     color: var(--text);
-    font-size: 24px;
+    font-size: 1.5rem;
     font-weight: 400;
-    letter-spacing: 0.15px;
+    letter-spacing: 0;
     margin-bottom: 4px;
 }
 
 .login-logo .subtitle {
     color: var(--text-muted);
     font-size: 13px;
-    letter-spacing: 0.4px;
 }
 
 .login-card .form-group label {
     color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .login-card .form-control {
     background: #fff;
-    border-color: var(--gray-400);
+    border-color: rgba(0,0,0,0.38);
     color: var(--text);
-    font-size: 14px;
 }
 
 .login-card .form-control:focus {
-    border-color: var(--sidebar-bg);
+    border-color: var(--primary);
 }
 
 .login-card .btn-primary {
-    background: var(--sidebar-bg);
-    font-size: 14px;
+    background: #005057;
     height: 42px;
-    letter-spacing: 0.8px;
-    box-shadow: 0 2px 8px rgba(0,80,87,0.4);
+    font-size: 0.9375rem;
+    letter-spacing: 0.08em;
+    box-shadow: var(--shadow-2);
 }
 .login-card .btn-primary:hover {
-    background: var(--sidebar-bg-dark);
-    box-shadow: 0 4px 12px rgba(0,80,87,0.5);
+    background: #003236;
+    box-shadow: var(--shadow-4);
 }
 
 .login-card .alert-warning {
-    background: #fff8e1;
-    border-color: #f57c00;
-    color: #e65100;
+    background: #FFF3E0;
+    color: #E65100;
+    border-left-color: #FB8C00;
 }
 
 .login-card .alert-danger {
-    background: #ffebee;
-    border-color: #f44336;
-    color: #c62828;
+    background: #FFEBEE;
+    color: #C62828;
+    border-left-color: #F44336;
 }
 
 /* ── Utilities ────────────────────────────────────────────── */
@@ -862,26 +817,22 @@ textarea.form-control {
 .text-muted    { color: var(--text-muted); }
 .text-light    { color: var(--text-muted); }
 
-.mt-1 { margin-top:    4px; }
-.mt-2 { margin-top:    8px; }
-.mt-4 { margin-top:   24px; }
-.mb-2 { margin-bottom: 8px; }
+.mt-1 { margin-top:  4px; }
+.mt-2 { margin-top:  8px; }
+.mt-4 { margin-top: 24px; }
+.mb-2 { margin-bottom:  8px; }
 .mb-4 { margin-bottom: 24px; }
 
-.flex         { display: flex; }
+.flex { display: flex; }
 .items-center { align-items: center; }
-.gap-2        { gap: 8px; }
-.gap-3        { gap: 12px; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
 
-hr {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 20px 0;
-}
+hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
 code {
-    background: var(--gray-100);
-    color: var(--gray-800);
+    background: var(--grey-100);
+    color: var(--grey-800);
     padding: 2px 6px;
     border-radius: 3px;
     font-size: 12.5px;
@@ -891,11 +842,11 @@ code {
 /* ── Scrollbar ────────────────────────────────────────────── */
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--gray-100); }
-::-webkit-scrollbar-thumb { background: var(--gray-400); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--gray-500); }
+::-webkit-scrollbar-track { background: var(--grey-100); }
+::-webkit-scrollbar-thumb { background: var(--grey-400); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--grey-500); }
 
-/* ── Status badges (task status) ─────────────────────────── */
+/* ── Status badges ────────────────────────────────────────── */
 
 .status-badge {
     display: inline-flex;
@@ -903,31 +854,29 @@ code {
     gap: 5px;
     padding: 3px 10px;
     border-radius: var(--radius-full);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-
 .status-badge::before {
     content: '';
-    width: 7px;
-    height: 7px;
+    width: 7px; height: 7px;
     border-radius: 50%;
     background: currentColor;
     flex-shrink: 0;
 }
 
-.status-waiting   { background: var(--gray-200);       color: var(--gray-700); }
-.status-running   { background: #e3f2fd; color: #1565c0; animation: pulse-status 1.8s ease infinite; }
-.status-starting  { background: #e3f2fd; color: #1976d2; }
-.status-success   { background: var(--success-light);  color: #2e7d32; }
-.status-failed    { background: var(--danger-light);   color: #c62828; }
-.status-cancelled { background: var(--gray-200);       color: var(--gray-600); }
+.status-waiting   { background: var(--grey-200); color: var(--grey-700); }
+.status-running   { background: #E3F2FD; color: #1565C0; animation: pulse-status 1.8s ease infinite; }
+.status-starting  { background: #E3F2FD; color: #1976D2; }
+.status-success   { background: var(--success-light); color: #2E7D32; }
+.status-failed    { background: var(--danger-light);  color: #C62828; }
+.status-cancelled { background: var(--grey-200); color: var(--grey-600); }
 
 @keyframes pulse-status {
     0%, 100% { opacity: 1; }
-    50%       { opacity: 0.6; }
+    50%       { opacity: 0.55; }
 }
 
 /* ── Tabs ─────────────────────────────────────────────────── */
@@ -939,49 +888,24 @@ code {
 }
 
 .tab {
-    padding: 12px 20px;
+    padding: 0 20px;
+    height: 48px;
     border: none;
     background: none;
     cursor: pointer;
-    font-size: 14px;
-    font-family: inherit;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.875rem;
     font-weight: 500;
+    letter-spacing: 0.0892857143em;
+    text-transform: uppercase;
     color: var(--text-muted);
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
     transition: color var(--transition), border-color var(--transition);
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-    font-size: 13px;
 }
 
 .tab:hover  { color: var(--text); }
 .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-/* ── Chip / Tag ───────────────────────────────────────────── */
-
-.chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    background: var(--gray-200);
-    color: var(--gray-700);
-    border-radius: var(--radius-full);
-    font-size: 12px;
-    font-weight: 500;
-}
-
-/* ── Data list (key-value pairs) ──────────────────────────── */
-
-.data-list {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 8px 24px;
-    font-size: 14px;
-}
-.data-list dt { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; }
-.data-list dd { color: var(--text); font-weight: 400; }
 
 /* ── Responsive ───────────────────────────────────────────── */
 
