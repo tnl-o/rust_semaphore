@@ -78,21 +78,10 @@ impl SqlStore {
         }
         let pool = self.get_sqlite_pool().ok_or_else(|| Error::Other("SQLite pool not found".to_string()))?;
 
-        // Проверяем, есть ли таблица project (основная для CRUD)
-        let project_exists: Option<String> = sqlx::query_scalar(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='project'",
-        )
-        .fetch_optional(pool)
-        .await
-        .map_err(Error::Database)?;
+        // Всегда применяем миграции (CREATE TABLE IF NOT EXISTS идемпотентны)
+        Self::migrate_project_user_created(pool).await?;
 
-        if project_exists.is_some() {
-            // Миграция: добавить колонку created в project__user, если её нет
-            Self::migrate_project_user_created(pool).await?;
-            return Ok(());
-        }
-
-        // Проверяем, есть ли таблица user (для обратной совместимости со старыми БД)
+        // Проверяем, есть ли таблица user (для обратной совместимости)
         let user_exists: Option<String> = sqlx::query_scalar(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='user'",
         )
@@ -100,7 +89,7 @@ impl SqlStore {
         .await
         .map_err(Error::Database)?;
 
-        tracing::info!("Инициализация схемы БД (создание недостающих таблиц)...");
+        tracing::info!("Применение схемы БД (CREATE TABLE IF NOT EXISTS)...");
 
         // Таблица миграций
         sqlx::query(
