@@ -463,6 +463,8 @@ const SIDEBAR_ITEMS = [
     { href: 'webhooks.html',     icon: '⇌',  label: 'Webhooks' },
     { href: 'playbooks.html',    icon: '📜', label: 'Playbooks' },
     { href: 'team.html',         icon: '👥', label: 'Команда' },
+    { href: 'runners.html',      icon: '⚡', label: 'Runners',    noId: true },
+    { href: 'apps.html',         icon: '◆',  label: 'Apps',       noId: true },
 ];
 
 function renderSidebar() {

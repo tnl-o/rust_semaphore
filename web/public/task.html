@@ -263,6 +263,15 @@
             badge.className = 'status-badge status-' + task.status;
             badge.textContent = statusLabel(task.status);
 
+            const durStr = task.start_time ? calcDuration(task) : '—';
+            const extra = [];
+            if (task.git_branch) extra.push(`<div class="task-meta-item"><div class="task-meta-label">Ветка</div><div class="task-meta-value"><code>${escapeHtml(task.git_branch)}</code></div></div>`);
+            if (task.inventory_id) extra.push(`<div class="task-meta-item"><div class="task-meta-label">Инвентарь</div><div class="task-meta-value">#${task.inventory_id}</div></div>`);
+            if (task.environment_id) extra.push(`<div class="task-meta-item"><div class="task-meta-label">Окружение</div><div class="task-meta-value">#${task.environment_id}</div></div>`);
+            if (task.arguments) extra.push(`<div class="task-meta-item" style="grid-column:1/-1"><div class="task-meta-label">Аргументы</div><div class="task-meta-value"><code style="font-size:12px; word-break:break-all;">${escapeHtml(task.arguments)}</code></div></div>`);
+            if (task.commit_hash) extra.push(`<div class="task-meta-item"><div class="task-meta-label">Коммит</div><div class="task-meta-value"><code style="font-size:12px;">${escapeHtml(task.commit_hash.substring(0,8))}</code></div></div>`);
+            if (task.version) extra.push(`<div class="task-meta-item"><div class="task-meta-label">Версия</div><div class="task-meta-value">${escapeHtml(task.version)}</div></div>`);
+
             $('#modal-meta').innerHTML = `
                 <div class="task-meta-item">
                     <div class="task-meta-label">Шаблон</div>
@@ -280,6 +289,11 @@
                     <div class="task-meta-label">Завершение</div>
                     <div class="task-meta-value">${formatDate(task.end_time)}</div>
                 </div>` : ''}
+                <div class="task-meta-item">
+                    <div class="task-meta-label">Длительность</div>
+                    <div class="task-meta-value">${durStr}</div>
+                </div>
+                ${extra.join('')}
             `;
         }
 
