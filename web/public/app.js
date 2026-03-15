@@ -301,6 +301,27 @@ const api = {
 
     deleteTemplate(projectId, id) {
         return this.delete('/project/' + projectId + '/templates/' + id);
+    },
+
+    // Tasks
+    getTasks(projectId) {
+        return this.get('/project/' + projectId + '/tasks');
+    },
+
+    getTask(projectId, id) {
+        return this.get('/project/' + projectId + '/tasks/' + id);
+    },
+
+    getTaskOutput(projectId, id) {
+        return this.get('/project/' + projectId + '/tasks/' + id + '/output');
+    },
+
+    runTask(projectId, templateId) {
+        return this.post('/project/' + projectId + '/tasks', { template_id: templateId });
+    },
+
+    stopTask(projectId, id) {
+        return this.delete('/project/' + projectId + '/tasks/' + id);
     }
 };
 
@@ -419,6 +440,7 @@ const SIDEBAR_ITEMS = [
     { href: 'index.html',        icon: '◈',  label: 'Dashboard',    noId: true },
     { href: 'project.html',      icon: '⬡',  label: 'Обзор' },
     { href: 'templates.html',    icon: '▦',  label: 'Шаблоны' },
+    { href: 'task.html',         icon: '▶',  label: 'Задачи' },
     { href: 'inventory.html',    icon: '≡',  label: 'Инвентарь' },
     { href: 'environments.html', icon: '⊕',  label: 'Окружения' },
     { href: 'repositories.html', icon: '⌥',  label: 'Репозитории' },

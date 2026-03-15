@@ -125,23 +125,155 @@
                 });
         }
 
-        function runTemplate(id) {
-            if (!confirm('Запустить шаблон?')) return;
-
-            const btn = document.querySelector(`button[onclick="runTemplate(${id})"]`);
+        function runTemplate(templateId) {
+            const btn = document.querySelector(`button[onclick="runTemplate(${templateId})"]`);
             if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
 
-            api.post('/project/' + projectId + '/tasks', { template_id: id })
+            api.runTask(projectId, templateId)
                 .then(task => {
-                    ui.showAlert('Задача #' + task.id + ' запущена', 'success');
-                    setTimeout(() => {
-                        window.location.href = 'task.html?id=' + projectId + '&task=' + task.id;
-                    }, 800);
+                    if (btn) { btn.disabled = false; btn.textContent = '▶'; }
+                    openRunModal(task.id, templateId);
                 })
                 .catch(error => {
                     ui.showAlert('Ошибка запуска: ' + error.message, 'danger');
                     if (btn) { btn.disabled = false; btn.textContent = '▶'; }
                 });
+        }
+
+        // ---- Run modal ----
+        let runModalTaskId = null;
+        let runWs = null;
+        let runPollTimer = null;
+
+        function openRunModal(taskId, templateId) {
+            runModalTaskId = taskId;
+            const tplName = document.querySelector(`button[onclick="runTemplate(${templateId})"]`)
+                ?.closest('tr')?.querySelector('strong')?.textContent || 'Шаблон #' + templateId;
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = 'run-modal';
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal" style="max-width:900px; width:95vw;">
+                    <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h2>▶ ${escapeHtml(tplName)}</h2>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <span id="run-status-badge" class="run-status-badge">Запуск...</span>
+                            <a href="task.html?id=${projectId}" class="btn btn-sm">История задач</a>
+                            <button class="btn btn-sm" onclick="closeRunModal()">✕</button>
+                        </div>
+                    </div>
+                    <div id="run-progress" style="margin-bottom:8px;">
+                        <div class="run-progress-bar"><div class="run-progress-fill"></div></div>
+                    </div>
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <small style="color:var(--text-light);">Задача #${taskId}</small>
+                            <label style="font-size:12px; color:var(--text-light); cursor:pointer;">
+                                <input type="checkbox" id="run-autoscroll" checked> Автопрокрутка
+                            </label>
+                        </div>
+                        <div id="run-log" class="run-log-container"></div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', e => { if (e.target === modal) closeRunModal(); });
+
+            connectRunWs(taskId);
+            startRunPoll(taskId);
+        }
+
+        function closeRunModal() {
+            if (runWs) { runWs.close(); runWs = null; }
+            if (runPollTimer) { clearInterval(runPollTimer); runPollTimer = null; }
+            const modal = document.getElementById('run-modal');
+            if (modal) modal.remove();
+            runModalTaskId = null;
+        }
+
+        function connectRunWs(taskId) {
+            if (runWs) return;
+            const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+            runWs = new WebSocket(`${proto}://${location.host}/api/project/${projectId}/tasks/${taskId}/ws`);
+
+            runWs.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'output') appendRunLine(msg.line || '');
+                    else if (msg.type === 'done') { runWs.close(); runWs = null; finishRunModal(taskId); }
+                } catch (e) { appendRunLine(event.data); }
+            };
+            runWs.onerror = () => { runWs = null; };
+            runWs.onclose  = () => { runWs = null; };
+        }
+
+        function startRunPoll(taskId) {
+            if (runPollTimer) return;
+            runPollTimer = setInterval(() => {
+                api.getTask(projectId, taskId).then(task => {
+                    const badge = document.getElementById('run-status-badge');
+                    if (badge) {
+                        badge.textContent = statusRunLabel(task.status);
+                        badge.className = 'run-status-badge run-status-' + task.status;
+                    }
+                    const running = task.status === 'running' || task.status === 'waiting' || task.status === 'starting';
+                    if (!running) {
+                        clearInterval(runPollTimer); runPollTimer = null;
+                        finishRunModal(taskId);
+                    }
+                });
+            }, 4000);
+        }
+
+        function finishRunModal(taskId) {
+            if (runPollTimer) { clearInterval(runPollTimer); runPollTimer = null; }
+            const progress = document.getElementById('run-progress');
+            if (progress) progress.style.display = 'none';
+
+            // Load full log from API (WebSocket may have missed lines)
+            api.getTaskOutput(projectId, taskId).then(output => {
+                const container = document.getElementById('run-log');
+                if (!container) return;
+                container.innerHTML = (output || []).map(item => {
+                    const line = typeof item === 'string' ? item : (item.output || '');
+                    return `<div class="run-log-line ${getRunLogClass(line)}">${escapeHtml(line)}</div>`;
+                }).join('');
+                container.scrollTop = container.scrollHeight;
+            }).catch(() => {});
+
+            api.getTask(projectId, taskId).then(task => {
+                const badge = document.getElementById('run-status-badge');
+                if (badge) {
+                    badge.textContent = statusRunLabel(task.status);
+                    badge.className = 'run-status-badge run-status-' + task.status;
+                }
+            }).catch(() => {});
+        }
+
+        function appendRunLine(text) {
+            const container = document.getElementById('run-log');
+            if (!container) return;
+            const div = document.createElement('div');
+            div.className = 'run-log-line ' + getRunLogClass(text);
+            div.textContent = text;
+            container.appendChild(div);
+            const autoScroll = document.getElementById('run-autoscroll');
+            if (autoScroll && autoScroll.checked) container.scrollTop = container.scrollHeight;
+        }
+
+        function getRunLogClass(line) {
+            const lower = (line || '').toLowerCase();
+            if (lower.includes('ok=') || lower.includes('changed=') || lower.includes('successfully')) return 'run-log-success';
+            if (lower.includes('failed=') || lower.includes('fatal') || lower.includes('error')) return 'run-log-error';
+            if (lower.includes('warning') || lower.includes('warn')) return 'run-log-warning';
+            return 'run-log-info';
+        }
+
+        function statusRunLabel(s) {
+            return { waiting: 'Ожидание', running: 'Выполняется', success: 'Успешно',
+                     error: 'Ошибка', failed: 'Ошибка', cancelled: 'Отменено' }[s] || s;
         }
 
         function openTemplateModal(template = null, refs = {}) {
