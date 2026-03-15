@@ -414,7 +414,145 @@
             const btn = $('#modal-rerun-btn');
             const templateId = btn && btn.dataset.templateId;
             if (!templateId) return;
-            window.location.href = 'run.html?id=' + projectId + '&tpl=' + templateId;
+            
+            // Открываем форму запуска с survey_vars
+            openRunDialogWithSurveyVars(templateId);
+        }
+
+        // =====================================================================
+        // Run Dialog with Survey Variables
+        // =====================================================================
+
+        function openRunDialogWithSurveyVars(templateId) {
+            // Загружаем шаблон для получения survey_vars и allow_* флагов
+            api.getTemplate(projectId, templateId)
+                .then(tpl => {
+                    const surveyVars = tpl?.survey_vars || [];
+                    const taskParams = tpl?.task_params || {};
+                    
+                    const modal = document.createElement('div');
+                    modal.className = 'modal-overlay';
+                    modal.innerHTML = `
+                        <div class="modal" style="max-width:550px;">
+                            <div class="modal-header">
+                                <h3>▶ Запуск задачи: ${escapeHtml(tpl.name)}</h3>
+                                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="run-task-form">
+                                    ${surveyVars.length > 0 ? `
+                                        <div style="margin-bottom:16px;">
+                                            <strong style="font-size:13px; color:var(--text-light); text-transform:uppercase; letter-spacing:.5px;">Параметры запуска</strong>
+                                        </div>
+                                        ${surveyVars.map(sv => `
+                                            <div class="form-group">
+                                                <label for="survey-${escapeHtml(sv.name)}">${escapeHtml(sv.title || sv.name)}${sv.required ? ' *' : ''}</label>
+                                                ${sv.type === 'enum' && sv.enum_values ? `
+                                                    <select id="survey-${escapeHtml(sv.name)}" class="form-control" ${sv.required ? 'required' : ''}>
+                                                        <option value="">— выберите —</option>
+                                                        ${sv.enum_values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('')}
+                                                    </select>
+                                                ` : sv.type === 'secret' ? `
+                                                    <input type="password" id="survey-${escapeHtml(sv.name)}" class="form-control" ${sv.required ? 'required' : ''} placeholder="••••••••">
+                                                ` : `
+                                                    <input type="${sv.type === 'int' ? 'number' : 'text'}" id="survey-${escapeHtml(sv.name)}" class="form-control" ${sv.required ? 'required' : ''} placeholder="${sv.description || ''}">
+                                                `}
+                                                ${sv.description ? `<small style="color:var(--text-light);">${escapeHtml(sv.description)}</small>` : ''}
+                                            </div>
+                                        `).join('')}
+                                    ` : '<p style="color:var(--text-light);">Для этого шаблона не заданы переменные опроса.</p>'}
+                                    
+                                    ${taskParams.allow_override_branch_in_task ? `
+                                        <div class="form-group">
+                                            <label for="git-branch">Git Branch</label>
+                                            <input type="text" id="git-branch" class="form-control" value="${escapeHtml(tpl.git_branch || 'main')}" placeholder="main">
+                                            <small style="color:var(--text-light);">Ветка Git для запуска (по умолчанию: ${escapeHtml(tpl.git_branch || 'main')})</small>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${taskParams.allow_override_args_in_task ? `
+                                        <div class="form-group">
+                                            <label for="cli-args">CLI Arguments</label>
+                                            <input type="text" id="cli-args" class="form-control" placeholder="--extra-vars='...'">
+                                            <small style="color:var(--text-light);">Дополнительные аргументы командной строки</small>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${taskParams.allow_debug ? `
+                                        <div class="form-group">
+                                            <label for="debug-level">Debug Level (Ansible)</label>
+                                            <select id="debug-level" class="form-control">
+                                                <option value="0">Off</option>
+                                                <option value="1">1 - Minimal</option>
+                                                <option value="2">2 - Basic</option>
+                                                <option value="3" selected>3 - Default</option>
+                                                <option value="4">4 - Verbose</option>
+                                                <option value="5">5 - Debug</option>
+                                            </select>
+                                        </div>
+                                    ` : ''}
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                                <button type="submit" form="run-task-form" class="btn btn-primary">▶ Запустить</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+
+                    $('#run-task-form').addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        
+                        // Собираем survey_vars значения
+                        const extraVars = {};
+                        surveyVars.forEach(sv => {
+                            const el = $('#survey-' + sv.name.replace(/[^a-zA-Z0-9_-]/g, '-'));
+                            if (el && el.value) {
+                                extraVars[sv.name] = sv.type === 'int' ? parseInt(el.value) : el.value;
+                            } else if (sv.required) {
+                                ui.showAlert('Заполните обязательное поле: ' + (sv.title || sv.name), 'warning');
+                                return;
+                            }
+                        });
+                        
+                        const taskData = {
+                            template_id: templateId,
+                            debug: taskParams.allow_debug ? $('#debug-level') && parseInt($('#debug-level').value) > 0 : false,
+                            dry_run: false,
+                            diff: false
+                        };
+                        
+                        if (Object.keys(extraVars).length > 0) {
+                            taskData.extra_vars = extraVars;
+                        }
+                        
+                        if (taskParams.allow_override_branch_in_task && $('#git-branch')) {
+                            taskData.git_branch = $('#git-branch').value.trim() || tpl.git_branch;
+                        }
+                        
+                        if (taskParams.allow_override_args_in_task && $('#cli-args')) {
+                            taskData.arguments = $('#cli-args').value.trim() || null;
+                        }
+                        
+                        // Создаём задачу
+                        api.createTask(projectId, taskData)
+                            .then(newTask => {
+                                ui.showAlert('Задача создана', 'success');
+                                modal.remove();
+                                // Открываем детальную информацию о задаче
+                                openTaskDetail(newTask.id);
+                            })
+                            .catch(err => ui.showAlert('Ошибка: ' + err.message, 'danger'));
+                    });
+
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) modal.remove();
+                    });
+                })
+                .catch(err => {
+                    ui.showAlert('Ошибка загрузки шаблона: ' + err.message, 'danger');
+                });
         }
 
         function downloadCurrentLog() {
