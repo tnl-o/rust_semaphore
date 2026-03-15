@@ -397,6 +397,35 @@ impl SqlStore {
         .await
         .map_err(Error::Database)?;
 
+        // integration — входящие webhook-триггеры
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS integration (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+                name TEXT NOT NULL DEFAULT '',
+                template_id INTEGER,
+                auth_method TEXT NOT NULL DEFAULT 'none',
+                auth_header TEXT,
+                auth_secret_id INTEGER
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        // integration_alias — псевдонимы интеграций
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS integration_alias (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                integration_id INTEGER NOT NULL REFERENCES integration(id) ON DELETE CASCADE,
+                project_id INTEGER NOT NULL,
+                alias TEXT NOT NULL UNIQUE
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
         // event — журнал событий
         sqlx::query(
             "CREATE TABLE IF NOT EXISTS event (
@@ -445,6 +474,51 @@ impl SqlStore {
             .await
             .map_err(Error::Database)?;
             tracing::info!("Миграция: добавлена колонка created в project__user");
+        }
+
+        // Миграции для таблицы schedule — добавление run_at полей
+        for (col, definition) in [
+            ("run_at", "TEXT"),
+            ("delete_after_run", "INTEGER NOT NULL DEFAULT 0"),
+        ] {
+            let exists: i32 = sqlx::query_scalar(
+                &format!("SELECT COUNT(*) FROM pragma_table_info('schedule') WHERE name='{col}'"),
+            )
+            .fetch_optional(pool)
+            .await
+            .map_err(Error::Database)?
+            .unwrap_or(0);
+
+            if exists == 0 {
+                sqlx::query(&format!("ALTER TABLE schedule ADD COLUMN {col} {definition}"))
+                    .execute(pool)
+                    .await
+                    .map_err(Error::Database)?;
+                tracing::info!("Миграция: добавлена колонка {col} в schedule");
+            }
+        }
+
+        // Миграции для таблицы integration — добавление auth полей
+        for (col, definition) in [
+            ("auth_method", "TEXT NOT NULL DEFAULT 'none'"),
+            ("auth_header", "TEXT"),
+            ("auth_secret_id", "INTEGER"),
+        ] {
+            let exists: i32 = sqlx::query_scalar(
+                &format!("SELECT COUNT(*) FROM pragma_table_info('integration') WHERE name='{col}'"),
+            )
+            .fetch_optional(pool)
+            .await
+            .map_err(Error::Database)?
+            .unwrap_or(0);
+
+            if exists == 0 {
+                sqlx::query(&format!("ALTER TABLE integration ADD COLUMN {col} {definition}"))
+                    .execute(pool)
+                    .await
+                    .map_err(Error::Database)?;
+                tracing::info!("Миграция: добавлена колонка {col} в integration");
+            }
         }
 
         // Миграции для таблицы template

@@ -195,6 +195,8 @@ impl RestoreEntryAsync for BackupSchedule {
             last_commit_hash: None,
             repository_id: None,
             created: None,
+            run_at: None,
+            delete_after_run: false,
         };
 
         let new_schedule = store.create_schedule(schedule).await?;
