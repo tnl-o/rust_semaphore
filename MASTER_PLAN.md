@@ -5,7 +5,7 @@
 >
 > **Репозиторий:** https://github.com/tnl-o/rust_semaphore
 > **Upstream (Go оригинал):** https://github.com/semaphoreui/semaphore
-> **Последнее обновление:** 2026-03-15 (обновление 25 — закрыты B-FE-41, B-FE-50, B-FE-51, B-FE-52, B-FE-54, B-FE-55, B-FE-56, B-FE-58, B-FE-63, B-FE-64, B-FE-65, B-FE-66, B-FE-72)
+> **Последнее обновление:** 2026-03-15 (обновление 26 — закрыты все B-BE-01..B-BE-24: runners/apps/roles/integrations/tasks/environment/access_key API + исправлены pre-existing test failures)
 
 ---
 
@@ -724,30 +724,30 @@ JavaScript берёт последнее объявление — поведен
 
 | ID | Задача | Приоритет | Статус |
 |---|---|---|---|
-| B-BE-01 | Runners: POST /runners/:id/active (toggle), DELETE /runners/:id/cache (clear cache) | 🟠 Высокий | ⬜ |
-| B-BE-02 | Runners: GET /project/:id/runner_tags | 🟠 Высокий | ⬜ |
-| B-BE-03 | Runners: POST /api/internal/runners (runner self-registration + heartbeat API) | 🟠 Высокий | ⬜ |
-| B-BE-04 | Apps: PUT /api/apps/:id (update app config), POST /api/apps/:id/active (toggle) | 🟠 Высокий | ⬜ |
-| B-BE-05 | Apps: сделать DB-backed вместо hardcoded (миграция + модель) | 🟠 Высокий | ⬜ |
+| B-BE-01 | Runners: POST /runners/:id/active (toggle), DELETE /runners/:id/cache (clear cache) | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
+| B-BE-02 | Runners: GET /project/:id/runner_tags | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
+| B-BE-03 | Runners: POST /api/internal/runners (runner self-registration + heartbeat API) | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
+| B-BE-04 | Apps: PUT /api/apps/:id (update app config), POST /api/apps/:id/active (toggle) | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
+| B-BE-05 | Apps: сделать DB-backed вместо hardcoded (миграция + модель) | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
 | B-BE-06 | Secret Storages: POST /api/project/:id/secret_storages/:id/sync | 🟡 Средний | ⬜ |
 | B-BE-07 | Secret Storages: GET /api/project/:id/secret_storages/:id/refs | 🟡 Средний | ⬜ |
 | B-BE-08 | Secret Storages: добавить поля source_storage_type + secret в модель | 🟡 Средний | ⬜ |
-| B-BE-09 | Custom Roles: добавить поле permissions (bitmask i32) в модель Role | 🟠 Высокий | ⬜ |
-| B-BE-10 | Custom Roles: зарегистрировать все роуты /api/project/:id/roles и /api/roles | 🟠 Высокий | ⬜ |
-| B-BE-11 | Custom Roles: GET /api/project/:id/roles/all (built-in + custom) | 🟠 Высокий | ⬜ |
-| B-BE-12 | Invites: PUT /api/project/:id/invites/:id (смена роли у приглашения) | 🟡 Средний | ⬜ |
-| B-BE-13 | Invites: POST /api/invites/accept/:token (принятие приглашения, без auth) | 🟠 Высокий | ⬜ |
+| B-BE-09 | Custom Roles: добавить поле permissions (bitmask i32) в модель Role | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
+| B-BE-10 | Custom Roles: зарегистрировать все роуты /api/project/:id/roles и /api/roles | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
+| B-BE-11 | Custom Roles: GET /api/project/:id/roles/all (built-in + custom) | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
+| B-BE-12 | Invites: PUT /api/project/:id/invites/:id (смена роли у приглашения) | 🟡 Средний | ✅ Закрыт 2026-03-15 |
+| B-BE-13 | Invites: POST /api/invites/accept/:token (принятие приглашения, без auth) | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
 | B-BE-14 | Tasks: GET /api/project/:id/tasks/last (последние 20 задач для History) | 🔴 Критично | ✅ Реализован 2026-03-15 (`handlers/projects/tasks.rs::get_last_tasks`) |
-| B-BE-15 | Tasks: GET /api/tasks (все активные задачи всех проектов — глобальный список) | 🟠 Высокий | ⬜ |
-| B-BE-16 | Templates: GET /api/project/:id/templates/:id/refs (где используется шаблон) | 🟡 Средний | ⬜ |
-| B-BE-17 | Templates: POST /api/project/:id/templates/:id/stop_all_tasks | 🟡 Средний | ⬜ |
-| B-BE-18 | Templates: PUT /api/project/:id/templates/:id/description (обновить описание) | 🟡 Средний | ⬜ |
-| B-BE-19 | Templates: GET /api/project/:id/templates — добавить query param ?app=&view_id= | 🟡 Средний | ⬜ |
-| B-BE-20 | Integrations: GET/POST/PUT/DELETE /api/project/:id/integrations/:id/matchers | 🟠 Высокий | ⬜ |
-| B-BE-21 | Integrations: GET/POST/PUT/DELETE /api/project/:id/integrations/:id/values | 🟠 Высокий | ⬜ |
-| B-BE-22 | Environment: добавить поля secret_storage_id + secret_storage_key_prefix в модель | 🟡 Средний | ⬜ |
-| B-BE-23 | AccessKey: добавить source_storage_type + source_storage_id + source_key в модель | 🟡 Средний | ⬜ |
-| B-BE-24 | Project: DELETE /api/project/:id/cache (clear project cache) | 🟡 Средний | ⬜ |
+| B-BE-15 | Tasks: GET /api/tasks (все активные задачи всех проектов — глобальный список) | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
+| B-BE-16 | Templates: GET /api/project/:id/templates/:id/refs (где используется шаблон) | 🟡 Средний | ✅ Закрыт 2026-03-15 |
+| B-BE-17 | Templates: POST /api/project/:id/templates/:id/stop_all_tasks | 🟡 Средний | ✅ Закрыт 2026-03-15 |
+| B-BE-18 | Templates: PUT /api/project/:id/templates/:id/description (обновить описание) | 🟡 Средний | ✅ Закрыт 2026-03-15 |
+| B-BE-19 | Templates: GET /api/project/:id/templates — добавить query param ?app=&view_id= | 🟡 Средний | ✅ Закрыт 2026-03-15 |
+| B-BE-20 | Integrations: GET/POST/PUT/DELETE /api/project/:id/integrations/:id/matchers | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
+| B-BE-21 | Integrations: GET/POST/PUT/DELETE /api/project/:id/integrations/:id/values | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
+| B-BE-22 | Environment: добавить поля secret_storage_id + secret_storage_key_prefix в модель | 🟡 Средний | ✅ Закрыт 2026-03-15 |
+| B-BE-23 | AccessKey: добавить source_storage_type + source_storage_id + source_key в модель | 🟡 Средний | ✅ Закрыт 2026-03-15 |
+| B-BE-24 | Project: DELETE /api/project/:id/cache (clear project cache) | 🟡 Средний | ✅ Закрыт 2026-03-15 |
 | B-BE-25 | Project: POST /api/project/:id/notifications/test (тест алертов) | 🟡 Средний | ✅ Реализован (`/api/projects/{id}/notifications/test`) |
 
 ---
