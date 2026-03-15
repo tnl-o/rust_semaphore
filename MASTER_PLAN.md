@@ -5,7 +5,7 @@
 >
 > **Репозиторий:** https://github.com/tnl-o/rust_semaphore
 > **Upstream (Go оригинал):** https://github.com/semaphoreui/semaphore
-> **Последнее обновление:** 2026-03-15 (обновление 17 — B-FE-25..35 реализованы: template view, activity, tokens, analytics charts, cron visual editor, inventory types, project settings, sidebar user menu)
+> **Последнее обновление:** 2026-03-15 (обновление 18 — баги: stopTask DELETE→POST, events URL fix; улучшения: confirm/reject задач, run.html переписан, confirmTask/rejectTask в API)
 
 ---
 

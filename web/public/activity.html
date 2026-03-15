@@ -43,7 +43,7 @@
             const container = $('#activity-content');
             ui.showLoading(container);
 
-            api.request('/project/' + projectId + '/events/last')
+            api.request('/project/' + projectId + '/events')
                 .then(events => {
                     if (!events || events.length === 0) {
                         ui.showEmpty(container, '📋', 'Нет событий', 'События появятся по мере работы с проектом');

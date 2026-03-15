@@ -324,7 +324,15 @@ const api = {
     },
 
     stopTask(projectId, id) {
-        return this.delete('/project/' + projectId + '/tasks/' + id);
+        return this.post('/project/' + projectId + '/tasks/' + id + '/stop', {});
+    },
+
+    confirmTask(projectId, id) {
+        return this.post('/project/' + projectId + '/tasks/' + id + '/confirm', {});
+    },
+
+    rejectTask(projectId, id) {
+        return this.post('/project/' + projectId + '/tasks/' + id + '/reject', {});
     }
 };
 

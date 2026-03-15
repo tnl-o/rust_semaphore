@@ -96,6 +96,8 @@
                 <h2 id="modal-title">Задача #—</h2>
                 <div style="display:flex; gap:8px; align-items:center;">
                     <span id="modal-status-badge" class="status-badge"></span>
+                    <button class="btn btn-sm" id="modal-confirm-btn" style="display:none; background:#276749; color:#fff;" onclick="confirmCurrentTask()">✓ Подтвердить</button>
+                    <button class="btn btn-sm" id="modal-reject-btn" style="display:none; background:#c53030; color:#fff;" onclick="rejectCurrentTask()">✗ Отклонить</button>
                     <button class="btn btn-sm" id="modal-stop-btn" style="display:none; color:#c53030;" onclick="stopCurrentTask()">■ Остановить</button>
                     <button class="btn btn-sm" onclick="downloadCurrentLog()">📥 Лог</button>
                     <button class="btn btn-sm" onclick="closeTaskDetailModal()">✕</button>
@@ -192,7 +194,8 @@
 
         function statusLabel(s) {
             return { waiting: 'Ожидание', running: 'Выполняется', success: 'Успешно',
-                     error: 'Ошибка', failed: 'Ошибка', cancelled: 'Отменено' }[s] || s;
+                     error: 'Ошибка', failed: 'Ошибка', cancelled: 'Отменено',
+                     waiting_confirmation: 'Ожидает подтверждения' }[s] || s;
         }
 
         function calcDuration(task) {
@@ -231,10 +234,13 @@
             api.getTask(projectId, currentTaskId).then(task => {
                 renderTaskMeta(task);
                 const running = task.status === 'running' || task.status === 'waiting' || task.status === 'starting';
-                $('#modal-progress').style.display = running ? 'block' : 'none';
+                const confirming = task.status === 'waiting_confirmation';
+                $('#modal-progress').style.display = (running || confirming) ? 'block' : 'none';
                 $('#modal-stop-btn').style.display = running ? 'inline-block' : 'none';
+                $('#modal-confirm-btn').style.display = confirming ? 'inline-block' : 'none';
+                $('#modal-reject-btn').style.display = confirming ? 'inline-block' : 'none';
 
-                if (running) {
+                if (running || confirming) {
                     connectDetailWs(currentTaskId);
                     startDetailPolling();
                 } else {
@@ -352,6 +358,20 @@
             if (!currentTaskId) return;
             api.stopTask(projectId, currentTaskId)
                 .then(() => { ui.showAlert('Задача остановлена', 'info'); loadTaskDetail(); })
+                .catch(err => ui.showAlert('Ошибка: ' + err.message, 'danger'));
+        }
+
+        function confirmCurrentTask() {
+            if (!currentTaskId) return;
+            api.confirmTask(projectId, currentTaskId)
+                .then(() => { ui.showAlert('Задача подтверждена', 'success'); loadTaskDetail(); })
+                .catch(err => ui.showAlert('Ошибка: ' + err.message, 'danger'));
+        }
+
+        function rejectCurrentTask() {
+            if (!currentTaskId) return;
+            api.rejectTask(projectId, currentTaskId)
+                .then(() => { ui.showAlert('Задача отклонена', 'info'); loadTaskDetail(); })
                 .catch(err => ui.showAlert('Ошибка: ' + err.message, 'danger'));
         }
 
