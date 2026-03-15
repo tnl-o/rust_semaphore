@@ -5,7 +5,7 @@
 >
 > **Репозиторий:** https://github.com/tnl-o/rust_semaphore
 > **Upstream (Go оригинал):** https://github.com/semaphoreui/semaphore
-> **Последнее обновление:** 2026-03-15 (обновление 28 — все задачи B-BE-01..25 + B-FE-01..75 закрыты; clippy чист; 686 unit + 35 integration тестов; Vanilla JS миграция завершена; secret_storage CREATE TABLE добавлена в схему)
+> **Последнее обновление:** 2026-03-15 (обновление 29 — дополнительные Go-совместимые API: schedules toggle_active, template schedules/tasks/stats, repo branches, task raw_output/stages, integration /values alias, POST /api/users; frontend: branch autocomplete в templates/run формах)
 
 ---
 
