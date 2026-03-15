@@ -237,6 +237,9 @@ impl RestoreEntryAsync for BackupAccessKey {
             secret_storage_id: None,
             environment_id: None,
             created: None,
+            source_storage_type: None,
+            source_storage_id: None,
+            source_key: None,
         };
 
         let new_key = store.create_access_key(key).await?;

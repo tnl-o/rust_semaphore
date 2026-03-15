@@ -38,6 +38,9 @@ impl AccessKeyManager for SqlStore {
                     owner: row.get("owner"),
                     environment_id: row.get("environment_id"),
                     created: row.get("created"),
+                    source_storage_type: row.try_get("source_storage_type").ok().flatten(),
+                    source_storage_id: row.try_get("source_storage_id").ok().flatten(),
+                    source_key: row.try_get("source_key").ok().flatten(),
                 }).collect())
             }
             SqlDialect::PostgreSQL => {
@@ -64,6 +67,9 @@ impl AccessKeyManager for SqlStore {
                     owner: row.get("owner"),
                     environment_id: row.get("environment_id"),
                     created: row.get("created"),
+                    source_storage_type: row.try_get("source_storage_type").ok().flatten(),
+                    source_storage_id: row.try_get("source_storage_id").ok().flatten(),
+                    source_key: row.try_get("source_key").ok().flatten(),
                 }).collect())
             }
             SqlDialect::MySQL => {
@@ -90,6 +96,9 @@ impl AccessKeyManager for SqlStore {
                     owner: row.get("owner"),
                     environment_id: row.get("environment_id"),
                     created: row.get("created"),
+                    source_storage_type: row.try_get("source_storage_type").ok().flatten(),
+                    source_storage_id: row.try_get("source_storage_id").ok().flatten(),
+                    source_key: row.try_get("source_key").ok().flatten(),
                 }).collect())
             }
         }
@@ -125,6 +134,9 @@ impl AccessKeyManager for SqlStore {
                     owner: row.get("owner"),
                     environment_id: row.get("environment_id"),
                     created: row.get("created"),
+                    source_storage_type: row.try_get("source_storage_type").ok().flatten(),
+                    source_storage_id: row.try_get("source_storage_id").ok().flatten(),
+                    source_key: row.try_get("source_key").ok().flatten(),
                 })
             }
             SqlDialect::PostgreSQL => {
@@ -155,6 +167,9 @@ impl AccessKeyManager for SqlStore {
                     owner: row.get("owner"),
                     environment_id: row.get("environment_id"),
                     created: row.get("created"),
+                    source_storage_type: row.try_get("source_storage_type").ok().flatten(),
+                    source_storage_id: row.try_get("source_storage_id").ok().flatten(),
+                    source_key: row.try_get("source_key").ok().flatten(),
                 })
             }
             SqlDialect::MySQL => {
@@ -185,6 +200,9 @@ impl AccessKeyManager for SqlStore {
                     owner: row.get("owner"),
                     environment_id: row.get("environment_id"),
                     created: row.get("created"),
+                    source_storage_type: row.try_get("source_storage_type").ok().flatten(),
+                    source_storage_id: row.try_get("source_storage_id").ok().flatten(),
+                    source_key: row.try_get("source_key").ok().flatten(),
                 })
             }
         }
