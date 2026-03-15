@@ -18,8 +18,9 @@
             <div class="main-body">
                 <div class="page-header">
                     <h1>👥 Команда проекта</h1>
-                    <div id="page-action-btn">
+                    <div id="page-action-btn" style="display:flex; gap:8px;">
                         <button class="btn btn-primary" onclick="openMemberModal()">+ Добавить участника</button>
+                        <button class="btn" style="border-color:var(--danger); color:var(--danger);" onclick="leaveProject()" title="Покинуть проект">← Покинуть</button>
                     </div>
                 </div>
 
@@ -114,6 +115,19 @@
             };
             const [cls, label] = map[role] || ['badge-secondary', role];
             return `<span class="badge ${cls}">${label}</span>`;
+        }
+
+        function leaveProject() {
+            if (!confirm('Вы уверены что хотите покинуть этот проект? Вы потеряете доступ.')) return;
+
+            api.delete('/project/' + projectId + '/me')
+                .then(() => {
+                    ui.showAlert('Вы покинули проект', 'success');
+                    setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+                })
+                .catch(error => {
+                    ui.showAlert('Ошибка: ' + error.message, 'danger');
+                });
         }
 
         function editMember(userId, username, currentRole) {

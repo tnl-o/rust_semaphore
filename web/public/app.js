@@ -146,6 +146,14 @@ const api = {
         return this.get('/projects/' + id);
     },
 
+    leaveProject(projectId) {
+        return this.delete('/project/' + projectId + '/me');
+    },
+
+    getProjectStats(projectId) {
+        return this.get('/project/' + projectId + '/stats');
+    },
+
     // Playbooks
     getPlaybooks(projectId) {
         return this.get('/project/' + projectId + '/playbooks');
