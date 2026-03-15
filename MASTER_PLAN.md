@@ -5,7 +5,7 @@
 >
 > **Репозиторий:** https://github.com/tnl-o/rust_semaphore
 > **Upstream (Go оригинал):** https://github.com/semaphoreui/semaphore
-> **Последнее обновление:** 2026-03-15 (обновление 27 — закрыты B-BE-06/07/08: secret_storage sync/refs endpoints + model fields source_storage_type/secret + добавлена CREATE TABLE secret_storage в schema; закрыт B-FE-55: Terraform Workspaces tab)
+> **Последнее обновление:** 2026-03-15 (обновление 28 — все задачи B-BE-01..25 + B-FE-01..75 закрыты; clippy чист; 686 unit + 35 integration тестов; Vanilla JS миграция завершена; secret_storage CREATE TABLE добавлена в схему)
 
 ---
 
@@ -374,18 +374,18 @@ JavaScript берёт последнее объявление — поведен
 
 | Пункт | Маршрут | Статус в нас |
 |---|---|---|
-| Dashboard (History) | `/project/:id/history` | ⬜ — у нас нет отдельной history страницы |
+| Dashboard (History) | `/project/:id/history` | ✅ `history.html` (B-FE-36) |
 | Templates | `/project/:id/templates` | ✅ `templates.html` |
-| Schedule | `/project/:id/schedule` | ⚠️ `schedules.html` (без визуал. cron) |
+| Schedule | `/project/:id/schedule` | ✅ `schedules.html` (визуал. cron + run_at — B-FE-60/61) |
 | Inventory | `/project/:id/inventory` | ✅ `inventory.html` |
 | Environment | `/project/:id/environment` | ✅ `environments.html` |
 | Keys | `/project/:id/keys` | ✅ `keys.html` |
 | Repositories | `/project/:id/repositories` | ✅ `repositories.html` |
-| Integrations | `/project/:id/integrations` | ⚠️ `webhooks.html` (неполная) |
-| Team | `/project/:id/team` | ⚠️ `team.html` (нет invites/roles tabs) |
-| Stats | `/project/:id/stats` | ⬜ нет |
-| Activity | `/project/:id/activity` | ⬜ нет |
-| Settings | `/project/:id/settings` | ⚠️ только в `project.html` |
+| Integrations | `/project/:id/integrations` | ✅ `webhooks.html` (aliases + auth — B-FE-69/70) |
+| Team | `/project/:id/team` | ✅ `team.html` (invites + roles tabs — B-FE-71/72) |
+| Stats | `/project/:id/stats` | ✅ `analytics.html` (B-FE-27) |
+| Activity | `/project/:id/activity` | ✅ `activity.html` (B-FE-28) |
+| Settings | `/project/:id/settings` | ✅ `project.html` (settings tab — B-FE-34) |
 
 **Горизонтальные вкладки под заголовком (DashboardMenu):**
 - History | Stats | Activity | Settings
@@ -627,7 +627,7 @@ JavaScript берёт последнее объявление — поведен
 
 ### B-FE-35: Sidebar улучшения
 
-**Статус: ⬜ Не начато**
+**Статус: ✅ Закрыт 2026-03-15**
 
 | Фича | Описание |
 |---|---|
@@ -1146,7 +1146,7 @@ URL: `/accept_invite.html?token=UUID`
 | Компонент | Статус | Примечания |
 |---|---|---|
 | Vue 2 фронтенд (из upstream) | ✅ Работает | Базис, EOL декабрь 2023 |
-| Миграция на Vanilla JS | 🔄 В работе | Активная разработка — см. VANILLA_JS_STATUS.md |
+| Миграция на Vanilla JS | ✅ Завершена | 28 HTML-страниц, все CRUD формы, Material Design — 2026-03-15 |
 | Vue 3 миграция | ❌ Отменена | Заменена стратегией Vanilla JS |
 | Task Run UI + WebSocket лог | ✅ Готово | TaskLogViewer с ANSI-цветами + live streaming |
 | Mobile-адаптивность | ✅ Готово | Hamburger-меню, slide-in sidebar, responsive table (2026-03-15) |
@@ -1737,13 +1737,13 @@ events        ← audit log
 |---|---|---|---|
 | B-01 | Task Runner не реализован | 🔴 Критично | ✅ Закрыт |
 | B-02 | WebSocket не реализован | 🔴 Критично | ✅ Закрыт |
-| B-03 | Vue 2 EOL | 🟠 Высокий | 🔄 В работе — Vanilla JS миграция |
+| B-03 | Vue 2 EOL | 🟠 Высокий | ✅ Закрыт — Vanilla JS миграция завершена 2026-03-15 |
 | B-04 | MySQL миграции отсутствуют | 🟡 Средний | ✅ Закрыт |
 | B-05 | Шифрование ключей | 🟡 Средний | ✅ Закрыт — AES-256 |
 | B-06 | Auth logout не реализован | 🟠 Высокий | ✅ Закрыт |
 | B-06b | Auth refresh token endpoint | 🟡 Средний | ✅ Закрыт — реализован 2026-03-14 |
 | B-07 | Cron-runner | 🟠 Высокий | ✅ Закрыт |
-| B-08 | Нет тестов | 🟡 Средний | ✅ Закрыт — 682 unit + 35 integration E2E (2026-03-15) |
+| B-08 | Нет тестов | 🟡 Средний | ✅ Закрыт — 686 unit + 35 integration E2E (2026-03-15) |
 | B-09 | LDAP auth не подключён к auth flow | 🟡 Средний | ✅ Закрыт — подключён 2026-03-14 |
 | B-10 | Фронтенд не использует WS для логов | 🟠 Высокий | ✅ Закрыт — TaskLogViewer + WebSocket 2026-03-14 |
 | B-11 | Slack/Telegram уведомления | 🟡 Средний | ✅ Закрыт — встроено в `services/alert.rs` |
