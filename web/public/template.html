@@ -546,58 +546,195 @@
             if (!container) return;
             container.innerHTML = `
                 <div class="card">
-                    <div class="loading">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <div>
+                            <h3 style="margin:0;">🔐 Права доступа к шаблону</h3>
+                            <p style="margin:4px 0 0; color:var(--text-light); font-size:13px;">
+                                Детальные права для отдельных ролей (независимо от прав проекта)
+                            </p>
+                        </div>
+                        <button class="btn btn-primary" onclick="openPermissionModal()">+ Добавить право</button>
+                    </div>
+
+                    <div id="perms-loading" class="loading">
                         <div class="loading-spinner"></div>
                         <p>Загрузка прав доступа...</p>
                     </div>
+
+                    <div id="perms-content"></div>
                 </div>
             `;
 
+            loadPermissions();
+        }
+
+        function loadPermissions() {
+            const loading = $('#perms-loading');
+            const content = $('#perms-content');
+
             api.get('/project/' + projectId + '/templates/' + tplId + '/permissions')
                 .then(perms => {
-                    if (!Array.isArray(perms) || !perms.length) {
-                        container.innerHTML = `
-                            <div class="card">
-                                <p class="text-muted">Для этого шаблона ещё не настроены права доступа. Базовые роли проекта продолжают работать.</p>
-                                <p class="text-muted" style="margin-top:8px;">Функция детальных прав на шаблон зависит от backend-задач B-BE-09..11 и может быть недоступна в текущей сборке.</p>
+                    if (loading) loading.style.display = 'none';
+
+                    if (!perms || !Array.isArray(perms) || perms.length === 0) {
+                        content.innerHTML = `
+                            <div class="text-center" style="padding:40px;">
+                                <div style="font-size:40px; margin-bottom:12px;">🔐</div>
+                                <h3>Нет прав доступа</h3>
+                                <p style="color:var(--text-light); margin-bottom:16px;">
+                                    Для этого шаблона ещё не настроены детальные права.
+                                    Базовые роли проекта (owner/manager/runner) продолжают работать.
+                                </p>
+                                <button class="btn btn-primary" onclick="openPermissionModal()">+ Добавить право</button>
                             </div>
                         `;
                         return;
                     }
 
-                    container.innerHTML = `
-                        <div class="card">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                                <h3 style="font-size:16px; font-weight:500;">Права доступа к шаблону</h3>
-                            </div>
-                            <div class="table-wrap">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Роль</th>
-                                            <th>Тип доступа</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${perms.map(p => `
-                                            <tr>
-                                                <td>${escapeHtml(p.role_name || p.role || '—')}</td>
-                                                <td>${escapeHtml(p.permission || p.type || '—')}</td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <p class="text-muted" style="margin-top:12px;">Редактирование прав будет доступно после реализации соответствующих backend-эндпоинтов (B-BE-16..18).</p>
-                        </div>
+                    content.innerHTML = `
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Роль</th>
+                                    <th>Разрешение</th>
+                                    <th style="width:120px;">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${perms.map(p => `
+                                    <tr>
+                                        <td><strong>${escapeHtml(p.role_name || p.role || '—')}</strong></td>
+                                        <td>${formatPermission(p.permission || p.type || '—')}</td>
+                                        <td>
+                                            <button class="btn btn-sm" onclick="editPermission(${p.id}, '${escapeHtml(p.role || '')}', '${escapeHtml(p.permission || '')}')" title="Редактировать">✏️</button>
+                                            <button class="btn btn-danger btn-sm" onclick="deletePermission(${p.id}, '${escapeHtml(p.role || '')}')" title="Удалить">🗑️</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
                     `;
                 })
-                .catch(() => {
-                    container.innerHTML = `
-                        <div class="card">
-                            <p class="text-muted">Права доступа к шаблону пока недоступны. Скорее всего, backend-часть для управления правами (задачи B-BE-09..11, B-BE-16..18) ещё не реализована.</p>
+                .catch(err => {
+                    if (loading) loading.style.display = 'none';
+                    // API ещё не реализовано — показываем заглушку
+                    content.innerHTML = `
+                        <div class="card" style="border-left:4px solid #f0ad4e;">
+                            <h4 style="margin-top:0;">⚠️ API прав шаблона в разработке</h4>
+                            <p style="color:var(--text-light); margin-bottom:0;">
+                                Backend endpoints для управления правами шаблонов будут реализованы в ближайшее время.
+                                После этого вкладка начнёт работать автоматически.
+                            </p>
                         </div>
                     `;
+                });
+        }
+
+        function formatPermission(perm) {
+            const labels = {
+                'run': '▶ Запуск задач',
+                'view': '👁 Просмотр',
+                'edit': '✏️ Редактирование',
+                'delete': '🗑️ Удаление',
+                'manage': '⚙️ Управление'
+            };
+            return labels[perm] || perm;
+        }
+
+        function openPermissionModal(roleId = null, role = '', permission = '') {
+            const isEdit = !!roleId;
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal" style="max-width:450px;">
+                    <div class="modal-header">
+                        <h3>${isEdit ? '✏️ Редактировать' : '🔐 Добавить'} право</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="permission-form">
+                            <div class="form-group">
+                                <label for="perm-role">Роль *</label>
+                                <select id="perm-role" class="form-control" required ${isEdit ? 'disabled' : ''}>
+                                    <option value="">— выберите роль —</option>
+                                    <option value="owner" ${role === 'owner' ? 'selected' : ''}>Owner (Владелец)</option>
+                                    <option value="manager" ${role === 'manager' ? 'selected' : ''}>Manager (Менеджер)</option>
+                                    <option value="runner" ${role === 'runner' ? 'selected' : ''}>Runner (Исполнитель)</option>
+                                    <option value="guest" ${role === 'guest' ? 'selected' : ''}>Guest (Гость)</option>
+                                </select>
+                                <small style="color:var(--text-light);">Роль проекта, для которой устанавливается право</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="perm-permission">Разрешение *</label>
+                                <select id="perm-permission" class="form-control" required>
+                                    <option value="">— выберите разрешение —</option>
+                                    <option value="run" ${permission === 'run' ? 'selected' : ''}>▶ Запуск задач</option>
+                                    <option value="view" ${permission === 'view' ? 'selected' : ''}>👁 Просмотр шаблона</option>
+                                    <option value="edit" ${permission === 'edit' ? 'selected' : ''}>✏️ Редактирование</option>
+                                    <option value="delete" ${permission === 'delete' ? 'selected' : ''}>🗑️ Удаление</option>
+                                    <option value="manage" ${permission === 'manage' ? 'selected' : ''}>⚙️ Полное управление</option>
+                                </select>
+                                <small style="color:var(--text-light);">
+                                    <strong>run</strong> — запуск задач из шаблона<br>
+                                    <strong>view</strong> — просмотр настроек<br>
+                                    <strong>edit</strong> — редактирование шаблона<br>
+                                    <strong>delete</strong> — удаление шаблона<br>
+                                    <strong>manage</strong> — все права включая управление правами
+                                </small>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                        <button type="submit" form="permission-form" class="btn btn-primary">${isEdit ? 'Сохранить' : 'Добавить'}</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            $('#permission-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const roleVal = $('#perm-role').value;
+                const permVal = $('#perm-permission').value;
+
+                if (!roleVal || !permVal) {
+                    ui.showAlert('Заполните все обязательные поля', 'warning');
+                    return;
+                }
+
+                const payload = { role: roleVal, permission: permVal };
+
+                (isEdit
+                    ? api.put('/project/' + projectId + '/templates/' + tplId + '/permissions/' + roleId, payload)
+                    : api.post('/project/' + projectId + '/templates/' + tplId + '/permissions', payload)
+                )
+                .then(() => {
+                    ui.showAlert('Право ' + (isEdit ? 'обновлено' : 'добавлено'), 'success');
+                    modal.remove();
+                    loadPermissions();
+                })
+                .catch(err => ui.showAlert('Ошибка: ' + err.message, 'danger'));
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+        }
+
+        function editPermission(id, role, permission) {
+            openPermissionModal(id, role, permission);
+        }
+
+        function deletePermission(id, role) {
+            ui.confirm('Удалить право?', 'Вы уверены что хотите удалить право для роли "' + role + '"? Это действие нельзя отменить.')
+                .then(confirmed => {
+                    if (!confirmed) return;
+                    api.delete('/project/' + projectId + '/templates/' + tplId + '/permissions/' + id)
+                        .then(() => {
+                            ui.showAlert('Право удалено', 'success');
+                            loadPermissions();
+                        })
+                        .catch(err => ui.showAlert('Ошибка: ' + err.message, 'danger'));
                 });
         }
 
