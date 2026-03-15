@@ -5,7 +5,7 @@
 >
 > **Репозиторий:** https://github.com/tnl-o/rust_semaphore
 > **Upstream (Go оригинал):** https://github.com/semaphoreui/semaphore
-> **Последнее обновление:** 2026-03-15 (обновление 18 — баги: stopTask DELETE→POST, events URL fix; улучшения: confirm/reject задач, run.html переписан, confirmTask/rejectTask в API)
+> **Последнее обновление:** 2026-03-15 (обновление 19 — раздел 2.6: полный аудит оригинала semaphoreui/semaphore, 40 новых фронтенд задач B-FE-36..75, 25 бэкенд задач B-BE-01..25, детализация по каждой странице)
 
 ---
 
@@ -655,6 +655,425 @@ JavaScript берёт последнее объявление — поведен
 | B-FE-29 | Визуальный редактор Cron | 🟡 Средний | Высокая |
 | B-FE-30 | API Tokens страница | 🟡 Средний | Низкая |
 | B-FE-35 | Sidebar: project selector, dark mode, user menu | 🟡 Средний | Средняя |
+
+---
+
+## 2.6 Полный аудит оригинала — задачи для 100% паритета (2026-03-15)
+
+> Глубокий аудит **каждого** аспекта `semaphoreui/semaphore` по исходникам Vue.js.
+> Все PRO/Enterprise фичи реализуем как обычные (без ограничений).
+> Источник: https://github.com/semaphoreui/semaphore/tree/develop/web/src
+
+---
+
+### Таблица задач — Фронтенд (B-FE-36..B-FE-75)
+
+#### Новые страницы
+
+| ID | Страница / Задача | Приоритет | Статус |
+|---|---|---|---|
+| B-FE-36 | `history.html` — история задач проекта (GET /tasks/last, WS-обновление) | 🔴 Критично | ⬜ |
+| B-FE-37 | `runners.html` — управление Runners (глобальные + per-project) | 🟠 Высокий | ⬜ |
+| B-FE-38 | `apps.html` — управление Apps (типы исполнителей: ansible/terraform/bash/tofu) | 🟠 Высокий | ⬜ |
+| B-FE-39 | `global_tasks.html` — глобальный список активных задач (GET /api/tasks) | 🟠 Высокий | ⬜ |
+| B-FE-40 | `invites.html` — управление приглашениями в проект (CRUD) | 🟠 Высокий | ⬜ |
+| B-FE-41 | `roles.html` — управление кастомными ролями (permissions bitmask) | 🟡 Средний | ⬜ |
+| B-FE-42 | `secret_storages.html` — Vault/DVLS интеграция (CRUD + sync) | 🟡 Средний | ⬜ |
+| B-FE-43 | `integration_detail.html` — детали интеграции: матчеры + extract values | 🟠 Высокий | ⬜ |
+| B-FE-44 | `accept_invite.html` — страница принятия приглашения (?token=...) | 🟡 Средний | ⬜ |
+| B-FE-45 | `restore.html` — импорт/восстановление проекта из JSON-бэкапа | 🟡 Средний | ⬜ |
+
+#### Улучшения существующих страниц
+
+| ID | Страница / Задача | Приоритет | Статус |
+|---|---|---|---|
+| B-FE-46 | `templates.html` — Views/Tabs: группировка шаблонов по View, EditViewsDialog | 🔴 Критично | ⬜ |
+| B-FE-47 | `templates.html` — тип шаблона: build / deploy / task (вкладки в форме) | 🟠 Высокий | ⬜ |
+| B-FE-48 | `templates.html` — поля формы: survey_vars, vaults, runner_tag, allow_parallel_tasks, suppress_success_alerts | 🟠 Высокий | ⬜ |
+| B-FE-49 | `templates.html` — Ansible task_params: limit, tags, skip_tags + allow_override_* | 🟠 Высокий | ⬜ |
+| B-FE-50 | `templates.html` — Terraform task_params: auto_approve, override_backend, backend_filename | 🟡 Средний | ⬜ |
+| B-FE-51 | `templates.html` — inline cron: cronRepositoryId + cronFormat + schedule validate/create | 🟡 Средний | ⬜ |
+| B-FE-52 | `templates.html` — deploy: build_template_id, autorun (ссылка на build-шаблон) | 🟡 Средний | ⬜ |
+| B-FE-53 | `templates.html` — дублировать/скопировать шаблон | 🟡 Средний | ⬜ |
+| B-FE-54 | `template.html` — таб Permissions (CRUD прав на шаблон) | 🟡 Средний | ⬜ |
+| B-FE-55 | `template.html` — таб Terraform Workspaces (state history, aliases, attach/detach) | 🟡 Средний | ⬜ |
+| B-FE-56 | `template.html` — кнопка Stop All Tasks + refs перед удалением | 🟡 Средний | ⬜ |
+| B-FE-57 | `task.html` — повторный запуск задачи (re-run button) | 🟠 Высокий | ⬜ |
+| B-FE-58 | `task.html` — полный TaskForm: survey_vars, build_task_id (deploy), git_branch override | 🟠 Высокий | ⬜ |
+| B-FE-59 | `task.html` — детали задачи: branch, debug, dry_run, diff, limit, environment vars | 🟡 Средний | ⬜ |
+| B-FE-60 | `schedules.html` — полный визуальный cron builder: месяцы/дни/часы/минуты (checkboxes) | 🟠 Высокий | ⬜ |
+| B-FE-61 | `schedules.html` — run_at режим (one-time), datetime picker, delete_after_run | 🟠 Высокий | ⬜ |
+| B-FE-62 | `schedules.html` — task_params форма внутри расписания | 🟡 Средний | ⬜ |
+| B-FE-63 | `inventory.html` — типы tofu-workspace и terraform-workspace | 🟡 Средний | ⬜ |
+| B-FE-64 | `inventory.html` — runner_tag поле (PRO→free) | 🟡 Средний | ⬜ |
+| B-FE-65 | `keys.html` — source_storage_type tabs: Local/Storage/Env/File | 🟡 Средний | ⬜ |
+| B-FE-66 | `environments.html` — поля secret_storage_id + secret_storage_key_prefix | 🟡 Средний | ⬜ |
+| B-FE-67 | `environments.html` — secrets tab (masked vars + env secrets) | 🟠 Высокий | ⬜ |
+| B-FE-68 | `environments.html` — JSON editor + key/value table режимы для extra variables | 🟡 Средний | ⬜ |
+| B-FE-69 | `webhooks.html` — aliases (list, add, delete, copy URL) | 🟠 Высокий | ⬜ |
+| B-FE-70 | `webhooks.html` — auth_method (token/hmac), auth_header, auth_secret_id | 🟠 Высокий | ⬜ |
+| B-FE-71 | `team.html` — Invites tab (приглашения: list, add, delete) | 🟠 Высокий | ⬜ |
+| B-FE-72 | `team.html` — Roles tab (кастомные роли, permissions bitmask) | 🟡 Средний | ⬜ |
+| B-FE-73 | `project.html` — Test Alerts button, Clear Cache button, Test Notifications | 🟡 Средний | ⬜ |
+| B-FE-74 | `analytics.html` — filter by user, настоящий период (week/month/year) | 🟡 Средний | ⬜ |
+| B-FE-75 | `users.html` — pro checkbox, TOTP enable/disable (QR code + recovery code) | 🟡 Средний | ⬜ |
+
+---
+
+### Таблица задач — Бэкенд (B-BE-01..B-BE-25)
+
+| ID | Задача | Приоритет | Статус |
+|---|---|---|---|
+| B-BE-01 | Runners: POST /runners/:id/active (toggle), DELETE /runners/:id/cache (clear cache) | 🟠 Высокий | ⬜ |
+| B-BE-02 | Runners: GET /project/:id/runner_tags | 🟠 Высокий | ⬜ |
+| B-BE-03 | Runners: POST /api/internal/runners (runner self-registration + heartbeat API) | 🟠 Высокий | ⬜ |
+| B-BE-04 | Apps: PUT /api/apps/:id (update app config), POST /api/apps/:id/active (toggle) | 🟠 Высокий | ⬜ |
+| B-BE-05 | Apps: сделать DB-backed вместо hardcoded (миграция + модель) | 🟠 Высокий | ⬜ |
+| B-BE-06 | Secret Storages: POST /api/project/:id/secret_storages/:id/sync | 🟡 Средний | ⬜ |
+| B-BE-07 | Secret Storages: GET /api/project/:id/secret_storages/:id/refs | 🟡 Средний | ⬜ |
+| B-BE-08 | Secret Storages: добавить поля source_storage_type + secret в модель | 🟡 Средний | ⬜ |
+| B-BE-09 | Custom Roles: добавить поле permissions (bitmask i32) в модель Role | 🟠 Высокий | ⬜ |
+| B-BE-10 | Custom Roles: зарегистрировать все роуты /api/project/:id/roles и /api/roles | 🟠 Высокий | ⬜ |
+| B-BE-11 | Custom Roles: GET /api/project/:id/roles/all (built-in + custom) | 🟠 Высокий | ⬜ |
+| B-BE-12 | Invites: PUT /api/project/:id/invites/:id (смена роли у приглашения) | 🟡 Средний | ⬜ |
+| B-BE-13 | Invites: POST /api/invites/accept/:token (принятие приглашения, без auth) | 🟠 Высокий | ⬜ |
+| B-BE-14 | Tasks: GET /api/project/:id/tasks/last (последние 20 задач для History) | 🔴 Критично | ⬜ |
+| B-BE-15 | Tasks: GET /api/tasks (все активные задачи всех проектов — глобальный список) | 🟠 Высокий | ⬜ |
+| B-BE-16 | Templates: GET /api/project/:id/templates/:id/refs (где используется шаблон) | 🟡 Средний | ⬜ |
+| B-BE-17 | Templates: POST /api/project/:id/templates/:id/stop_all_tasks | 🟡 Средний | ⬜ |
+| B-BE-18 | Templates: PUT /api/project/:id/templates/:id/description (обновить описание) | 🟡 Средний | ⬜ |
+| B-BE-19 | Templates: GET /api/project/:id/templates — добавить query param ?app=&view_id= | 🟡 Средний | ⬜ |
+| B-BE-20 | Integrations: GET/POST/PUT/DELETE /api/project/:id/integrations/:id/matchers | 🟠 Высокий | ⬜ |
+| B-BE-21 | Integrations: GET/POST/PUT/DELETE /api/project/:id/integrations/:id/values | 🟠 Высокий | ⬜ |
+| B-BE-22 | Environment: добавить поля secret_storage_id + secret_storage_key_prefix в модель | 🟡 Средний | ⬜ |
+| B-BE-23 | AccessKey: добавить source_storage_type + source_storage_id + source_key в модель | 🟡 Средний | ⬜ |
+| B-BE-24 | Project: DELETE /api/project/:id/cache (clear project cache) | 🟡 Средний | ⬜ |
+| B-BE-25 | Project: POST /api/project/:id/notifications/test (тест алертов) | 🟡 Средний | ⬜ |
+
+---
+
+### Детализация по страницам — что именно нужно реализовать
+
+#### history.html — новая страница
+
+**Отличие от activity.html:** History = список запусков задач (task runs). Activity = audit log событий.
+
+Колонки таблицы:
+- Task (ссылка на задачу: `#ID + alias + message`)
+- Version (строка версии из последнего успешного build)
+- Status (`TaskStatus` компонент: цветной чип)
+- User (кто запустил)
+- Start (форматированное время начала)
+- Duration (вычисляется из `start_time - end_time`)
+
+Поведение:
+- Загружает `GET /api/project/:id/tasks/last` — последние 20 задач
+- Авто-обновление по WebSocket при появлении новой задачи
+- Клик на строку → открывает детали задачи (как в task.html)
+
+API: `GET /api/project/:id/tasks/last`
+
+---
+
+#### runners.html — новая страница (PRO → free)
+
+**Что такое Runner:** Внешний агент выполнения. Отдельный процесс, который подключается к Semaphore и забирает задачи для выполнения. Идентифицируется token + public_key.
+
+Колонки таблицы:
+- Active (toggle switch)
+- Name
+- Project (только на глобальной странице)
+- Webhook URL
+- Tag
+- Last touched (время последнего heartbeat)
+- Max Parallel Tasks
+- Actions: edit, delete, clear cache
+
+Форма (RunnerForm):
+| Поле | Тип | Обязательно |
+|---|---|---|
+| name | text | да |
+| tag | text | да (для per-project) |
+| webhook | text | да |
+| max_parallel_tasks | number | да |
+| active | checkbox | нет |
+
+Два режима: глобальные (`/api/runners`) и per-project (`/api/project/:id/runners`).
+
+---
+
+#### apps.html — новая страница
+
+**Что такое App:** Тип исполнителя задачи (ansible, terraform, bash, tofu, pulumi, etc.). Определяет что запускается и с какими дефолтными аргументами.
+
+Колонки таблицы:
+- Active (toggle, только admin)
+- Title (с иконкой)
+- ID (code-стиль)
+- Actions
+
+Форма (AppForm):
+| Поле | Тип |
+|---|---|
+| title | text |
+| id | text (identifier) |
+| active | checkbox |
+| path | text (binary path) |
+| args | textarea (default CLI args) |
+| priority | number |
+
+API: `GET /api/apps`, `POST/PUT /api/apps/:id`, `POST /api/apps/:id/active`
+
+---
+
+#### secret_storages.html — новая страница (PRO → free)
+
+**Типы:** `vault` (HashiCorp Vault), `dvls` (Devolutions Server)
+
+Колонки таблицы:
+- Name (с бейджем read-only если применимо)
+- Type (code-стиль)
+- Actions: sync (DVLS only), edit, delete
+
+Форма (SecretStorageForm):
+| Поле | Тип | Условие |
+|---|---|---|
+| name | text | всегда |
+| type | select | vault / dvls |
+| read_only | checkbox | всегда |
+| Vault URL | text | type=vault |
+| Vault mount | text | type=vault, default "secret" |
+| DVLS URL | text | type=dvls |
+| DVLS skip_tls | checkbox | type=dvls |
+| DVLS vault_id | text | type=dvls |
+| DVLS app_key | text | type=dvls |
+| DVLS sync_paths | textarea (JSON array) | type=dvls |
+
+API: `GET/POST /api/project/:id/secret_storages`, `PUT/DELETE /api/project/:id/secret_storages/:id`, `POST /api/project/:id/secret_storages/:id/sync`
+
+---
+
+#### integration_detail.html — новая страница
+
+**Разделы:**
+1. Global Alias toggle (`integration.searchable` switch)
+2. Aliases — list с copy/delete + кнопка "Add Alias"
+3. Matchers (только если searchable=true) — фильтры для срабатывания
+4. Extract Values — извлечение переменных из payload
+
+**Матчеры (IntegrationMatcherForm):**
+| Поле | Тип | Опции |
+|---|---|---|
+| name | text | — |
+| match_type | select | `body`, `header` |
+| body_data_type | select | `json`, `string` (только body) |
+| key | text | — |
+| method | select | `==`, `!=`, `contains` |
+| value | text | — |
+
+**Extract Values (IntegrationExtractValueForm):**
+| Поле | Тип | Опции |
+|---|---|---|
+| name | text | — |
+| value_source | select | `body`, `header` |
+| body_data_type | select | `json`, `string` |
+| key | text | — |
+| variable_type | select | `environment`, `task` |
+| variable | text | — |
+
+API матчеры: `GET/POST/PUT/DELETE /api/project/:id/integrations/:id/matchers/:matcher_id`
+API values: `GET/POST/PUT/DELETE /api/project/:id/integrations/:id/values/:value_id`
+
+---
+
+#### Улучшения templates.html / template.html
+
+**Views система:**
+- Загрузить `GET /api/project/:id/views` → вкладки (tabs) над списком шаблонов
+- Активная вкладка сохраняется в `localStorage` (`project{id}__lastVisitedViewId`)
+- Кнопка "Управление views" → модал с CRUD для views (name, position)
+- API: `GET/POST/PUT/DELETE /api/project/:id/views`
+
+**Типы шаблонов (task / build / deploy):**
+- `task` — обычный запуск (как сейчас)
+- `build` — требует `start_version` (строка начальной версии)
+- `deploy` — требует `build_template_id` (ссылка на build-шаблон) + `autorun` checkbox
+
+**Survey Variables (survey_vars):**
+Массив переменных, которые запрашиваются при запуске задачи:
+- `name` (string key)
+- `title` (label для UI)
+- `description` (подсказка)
+- `type` (string / int / enum / secret)
+- `enum_values` (только для type=enum — список значений)
+- `required` (bool)
+В TaskForm они рендерятся как поля ввода перед запуском.
+
+**Vault Keys (vaults):**
+- Массив объектов `{vault_key_id, type}` — ключи шифрования Ansible vault
+- CRUD inline в форме шаблона
+
+**task_params (Ansible):**
+| Поле | Тип | API key |
+|---|---|---|
+| limit | text | `task_params.limit` |
+| tags | text | `task_params.tags` |
+| skip_tags | text | `task_params.skip_tags` |
+| allow_override_limit | checkbox | `task_params.allow_override_limit` |
+| allow_override_tags | checkbox | `task_params.allow_override_tags` |
+| allow_override_skip_tags | checkbox | `task_params.allow_override_skip_tags` |
+| allow_debug | checkbox | `task_params.allow_debug` |
+
+**task_params (Terraform/OpenTofu):**
+| Поле | Тип | API key |
+|---|---|---|
+| auto_approve | checkbox | `task_params.auto_approve` |
+| allow_auto_approve | checkbox | `task_params.allow_auto_approve` |
+| override_backend | checkbox | `task_params.override_backend` |
+| backend_filename | text | `task_params.backend_filename` |
+
+---
+
+#### Улучшения schedules.html
+
+**Полный визуальный cron builder (как в оригинале):**
+- Timing selector: Yearly / Monthly / Weekly / Daily / Hourly
+- **Months checkboxes** (12 штук: Jan..Dec) — для Yearly
+- **Weekdays checkboxes** (7 штук: Sun..Sat) — для Weekly
+- **Days checkboxes** (31 штука: 1..31) — для Monthly/Yearly
+- **Hours checkboxes** (24 штуки: 0..23) — для Daily
+- **Minutes checkboxes** (12 штук: :00, :05, :10...:55)
+- Preview: "Следующий запуск: ..."
+- Переключатель "Raw cron / Visual"
+- Хранить в localStorage: `schedule__raw_cron`
+
+**Run-at режим (one-time):**
+- datetime-local input (`YYYY-MM-DDTHH:mm`)
+- Checkbox `delete_after_run` — удалить расписание после выполнения
+
+**task_params внутри расписания** — те же поля что и при ручном запуске
+
+---
+
+#### Улучшения keys.html
+
+**Source Storage типы (tabs):**
+- **Local** — хранить в БД Semaphore (по умолчанию)
+- **Storage** — внешнее хранилище (`source_storage_id` + путь)
+- **Env** — из переменной окружения (`source_storage_key`)
+- **File** — из файла на диске (`source_storage_key`)
+
+Новые поля в форме ключа:
+- `source_storage_type` — enum: `db`, `env`, `file`, `storage`
+- `source_storage_id` — ID SecretStorage (только тип storage)
+- `source_key` — путь/имя переменной/имя файла
+
+---
+
+#### Улучшения environments.html
+
+Новые поля в форме:
+- `secret_storage_id` — привязка к SecretStorage
+- `secret_storage_key_prefix` — prefix для ключей в external storage
+- **Secrets tab** — массив `{name, secret, type, operation}` где type=`var`|`env`
+- **Key-value table** — для `env` поля (переменные окружения) вместо raw JSON
+
+---
+
+#### Улучшения webhooks.html
+
+**Aliases блок (над таблицей интеграций):**
+- Список alias URL в `<code>` стиле
+- Кнопка copy-to-clipboard
+- Кнопка удаления alias
+- Кнопка "Add Alias"
+
+**Auth поля в форме интеграции:**
+- `auth_method` — select: none / token / hmac
+- `auth_header` — text (при token/hmac)
+- `auth_secret_id` — select из Keys (vault password)
+
+**Ссылка "Детали интеграции"** → `integration_detail.html?id=PROJECT&integration=ID`
+
+---
+
+#### Улучшения team.html
+
+**Tabs:** Members | Invites | Roles
+
+**Invites tab:**
+- Список приглашений (Name/Email, Username, Role)
+- Форма добавления: user_id (autocomplete) + role
+- Удаление приглашений
+- API: `GET/POST/PUT/DELETE /api/project/:id/invites`
+
+**Roles tab:**
+- Список кастомных ролей (Name, Permissions)
+- Форма создания: name, slug, permissions (набор checkbox: runTasks / updateProject / manageResources / manageUsers)
+- API: `GET/POST/PUT/DELETE /api/project/:id/roles`
+
+---
+
+#### accept_invite.html — новая страница
+
+URL: `/accept_invite.html?token=UUID`
+
+Поведение:
+1. Авто-вызов `POST /api/invites/accept` с `{ token }` (без авторизации)
+2. Успех → показать "Приглашение принято. Вы получили доступ к проекту." + кнопка "Перейти к проекту"
+3. Ошибка → показать текст ошибки + кнопки "Попробовать ещё" / "На главную"
+
+---
+
+#### restore.html — новая страница
+
+Форма импорта проекта:
+- Поле загрузки JSON файла (file input)
+- Кнопка "Импортировать"
+- Показать превью (project name из JSON)
+- API: `POST /api/projects/restore` с JSON телом
+
+---
+
+### Приоритизированный план реализации (порядок выполнения)
+
+**Спринт 1 — Критические фронтенд задачи:**
+1. B-BE-14: GET /tasks/last (backend)
+2. B-FE-36: history.html
+3. B-BE-10+11: Custom Roles routes + roles/all
+4. B-FE-71+72: team.html Invites + Roles tabs
+5. B-BE-13: POST /invites/accept/:token
+6. B-FE-44: accept_invite.html
+
+**Спринт 2 — Webhooks/Integrations:**
+7. B-BE-20+21: Integration matchers + extract values (backend)
+8. B-FE-43: integration_detail.html
+9. B-FE-69+70: webhooks.html aliases + auth fields
+
+**Спринт 3 — Templates полный паритет:**
+10. B-FE-46: Views/Tabs система
+11. B-FE-47+48+49: Template form fields (type/survey_vars/task_params)
+12. B-FE-60+61: Schedule full cron builder + run_at
+
+**Спринт 4 — Runners, Apps, Secret Storages:**
+13. B-BE-01..03: Runner endpoints
+14. B-FE-37: runners.html
+15. B-BE-04+05: Apps endpoints + DB-backed
+16. B-FE-38: apps.html
+17. B-BE-06..08: Secret Storage endpoints + model
+18. B-FE-42: secret_storages.html
+
+**Спринт 5 — Улучшения моделей и форм:**
+19. B-BE-22+23: Environment + Key models (secret_storage fields)
+20. B-FE-65+66+67: Keys + Environments форм улучшения
+21. B-FE-63+64: Inventory tofu/terraform-workspace types
+22. B-FE-57+58+59: Task re-run + full TaskForm + details
+
+**Спринт 6 — Остальное:**
+23. B-FE-45: restore.html
+24. B-BE-15..25: Оставшиеся backend endpoints
+25. B-FE-53..56: Template copy, Stop All, refs
+26. B-FE-73..75: Project cache/test alerts, Users TOTP, Analytics filters
 
 ---
 
