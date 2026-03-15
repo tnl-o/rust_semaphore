@@ -422,6 +422,10 @@
             });
         }
 
+        // =====================================================================
+        // Enhanced Run Dialog (B-FE-58): survey_vars, build_task_id, git_branch override
+        // =====================================================================
+
         function openEnhancedRunDialog(tpl, templateId) {
             // Load build tasks if deploy type (B-FE-58)
             const loadBuildTasks = (tpl.type === 'deploy')
@@ -437,10 +441,11 @@
                 let surveyVars = [];
                 try { surveyVars = JSON.parse(tpl.survey_vars || tpl.survey_variables || '[]'); } catch(e) {}
                 const hasSurvey = Array.isArray(surveyVars) && surveyVars.length > 0;
+                const taskParams = tpl?.task_params || {};
 
                 modal.innerHTML = `
                     <div class="modal" style="max-width:560px;">
-                        <div class="modal-header"><h2>▶ ${escapeHtml(tpl.name || 'Запуск задачи')}</h2></div>
+                        <div class="modal-header"><h2>&#9654; ${escapeHtml(tpl.name || 'Запуск задачи')}</h2></div>
                         <form id="enhanced-run-form">
                             <div class="form-group">
                                 <label>Сообщение <span style="color:var(--text-light); font-size:12px;">(необязательно)</span></label>
@@ -452,13 +457,11 @@
                                 <input type="text" id="er-branch" class="form-control" placeholder="${escapeHtml(tpl.git_branch || 'main')}">
                             </div>
 
-                            ${tpl.allow_override_args_in_task ? `
+                            ${taskParams.allow_override_args_in_task || tpl.allow_override_args_in_task ? `
                             <div class="form-group">
                                 <label>CLI аргументы</label>
                                 <input type="text" id="er-args" class="form-control" placeholder="--limit=host1 --tags=deploy">
-                            </div>` : ''}
-
-                            ${tpl.allow_override_args_in_task ? `
+                            </div>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                                 <div class="form-group">
                                     <label>--limit</label>
@@ -474,12 +477,25 @@
                                 </div>
                             </div>` : ''}
 
+                            ${taskParams.allow_debug ? `
+                            <div class="form-group">
+                                <label for="er-debug-level">Debug Level (Ansible)</label>
+                                <select id="er-debug-level" class="form-control">
+                                    <option value="0">Off</option>
+                                    <option value="1">1 - Minimal</option>
+                                    <option value="2">2 - Basic</option>
+                                    <option value="3" selected>3 - Default</option>
+                                    <option value="4">4 - Verbose</option>
+                                    <option value="5">5 - Debug</option>
+                                </select>
+                            </div>` : ''}
+
                             ${tpl.type === 'deploy' && buildTasks.length > 0 ? `
                             <div class="form-group">
                                 <label>Задача сборки (build_task_id)</label>
                                 <select id="er-build-task" class="form-control">
                                     <option value="">— последняя успешная —</option>
-                                    ${buildTasks.slice(0, 20).map(t => `<option value="${t.id}">#${t.id} ${t.status === 'success' ? '✓' : ''} ${formatDate(t.created)}</option>`).join('')}
+                                    ${buildTasks.slice(0, 20).map(t => `<option value="${t.id}">#${t.id} ${t.status === 'success' ? '&#10003;' : ''} ${formatDate(t.created)}</option>`).join('')}
                                 </select>
                             </div>` : ''}
 
@@ -490,18 +506,25 @@
                             <div id="survey-vars-container">
                                 ${surveyVars.map((v, idx) => `
                                     <div class="form-group">
-                                        <label>${escapeHtml(v.title || v.name || ('Переменная ' + (idx+1)))}</label>
+                                        <label>${escapeHtml(v.title || v.name || ('Переменная ' + (idx+1)))}${v.required ? ' *' : ''}</label>
                                         ${v.description ? `<small style="color:var(--text-light);">${escapeHtml(v.description)}</small>` : ''}
-                                        <input type="${v.type === 'secret' ? 'password' : 'text'}" id="sv-${idx}"
-                                            class="form-control" placeholder="${escapeHtml(v.default_value || '')}"
-                                            value="${escapeHtml(v.default_value || '')}">
+                                        ${v.type === 'enum' && v.enum_values ? `
+                                            <select id="sv-${idx}" class="form-control" ${v.required ? 'required' : ''}>
+                                                <option value="">— выберите —</option>
+                                                ${(v.enum_values || []).map(ev => `<option value="${escapeHtml(ev)}">${escapeHtml(ev)}</option>`).join('')}
+                                            </select>
+                                        ` : `
+                                            <input type="${v.type === 'secret' ? 'password' : v.type === 'int' ? 'number' : 'text'}" id="sv-${idx}"
+                                                class="form-control" placeholder="${escapeHtml(v.default_value || v.description || '')}"
+                                                value="${escapeHtml(v.default_value || '')}" ${v.required ? 'required' : ''}>
+                                        `}
                                     </div>
                                 `).join('')}
                             </div>` : ''}
 
                             <div class="modal-footer">
                                 <button type="button" class="btn" onclick="document.getElementById('enhanced-run-modal').remove()">Отмена</button>
-                                <button type="submit" class="btn btn-primary">▶ Запустить</button>
+                                <button type="submit" class="btn btn-primary">&#9654; Запустить</button>
                             </div>
                         </form>
                     </div>
@@ -519,6 +542,7 @@
                     const tags = document.getElementById('er-tags')?.value.trim();
                     const skipTags = document.getElementById('er-skip-tags')?.value.trim();
                     const buildTask = document.getElementById('er-build-task')?.value;
+                    const debugLevel = document.getElementById('er-debug-level')?.value;
 
                     if (msg)      body.message      = msg;
                     if (br)       body.git_branch   = br;
@@ -527,15 +551,16 @@
                     if (tags)     body.tags         = tags;
                     if (skipTags) body.skip_tags    = skipTags;
                     if (buildTask) body.build_task_id = parseInt(buildTask);
+                    if (debugLevel && parseInt(debugLevel) > 0) body.debug = parseInt(debugLevel);
 
                     // Collect survey vars
                     if (hasSurvey) {
                         const vars = {};
                         surveyVars.forEach((v, idx) => {
                             const el = document.getElementById('sv-' + idx);
-                            if (el) vars[v.name || ('var' + idx)] = el.value;
+                            if (el && el.value) vars[v.name || ('var' + idx)] = v.type === 'int' ? parseInt(el.value) : el.value;
                         });
-                        body.variables = vars;
+                        if (Object.keys(vars).length > 0) body.variables = vars;
                     }
 
                     modal.remove();

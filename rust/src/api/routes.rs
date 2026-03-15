@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::api::state::AppState;
 use crate::api::handlers;
 use crate::api::websocket::websocket_handler;
-use crate::api::handlers::projects::{schedules, views, integration as project_integration, integration_alias, secret_storages, users as project_users, tasks, notifications, backup_restore, refs, invites, roles as project_roles};
+use crate::api::handlers::projects::{schedules, views, integration as project_integration, integration_alias, secret_storages, users as project_users, tasks, notifications, backup_restore, refs, invites, roles};
 use crate::api::{events, apps, options, runners, cache, system_info, user, graphql};
 use tower_http::services::{ServeDir, ServeFile};
 
@@ -61,8 +61,10 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/project/{project_id}/templates/{id}", get(handlers::get_template))
         .route("/api/project/{project_id}/templates/{id}", put(handlers::update_template))
         .route("/api/project/{project_id}/templates/{id}", delete(handlers::delete_template))
+        .route("/api/project/{project_id}/templates/{id}/stop_all_tasks", post(handlers::stop_all_template_tasks))
 
         // Задачи
+        .route("/api/tasks", get(handlers::get_all_tasks))
         .route("/api/projects/{project_id}/tasks", get(handlers::get_tasks))
         .route("/api/projects/{project_id}/tasks", post(handlers::create_task))
         .route("/api/projects/{project_id}/tasks/{id}", get(handlers::get_task))
@@ -73,7 +75,7 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/project/{project_id}/tasks/{id}", get(handlers::get_task))
         .route("/api/project/{project_id}/tasks/{id}", delete(handlers::delete_task))
         // Последние задачи проекта (History)
-        .route("/api/project/{project_id}/tasks/last", get(handlers::tasks::get_last_tasks))
+        .route("/api/project/{project_id}/tasks/last", get(tasks::get_last_tasks))
 
         // Инвентари
         .route("/api/projects/{project_id}/inventories", get(handlers::get_inventories))
@@ -226,6 +228,14 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/projects/{project_id}/role", get(handlers::get_user_role))
         .route("/api/project/{project_id}/role", get(handlers::get_user_role))
 
+        // Кастомные роли (Custom Roles)
+        .route("/api/project/{project_id}/roles/all", get(roles::get_all_roles))
+        .route("/api/project/{project_id}/roles", get(roles::get_roles))
+        .route("/api/project/{project_id}/roles", post(roles::create_role))
+        .route("/api/project/{project_id}/roles/{id}", get(roles::get_role))
+        .route("/api/project/{project_id}/roles/{id}", put(roles::update_role))
+        .route("/api/project/{project_id}/roles/{id}", delete(roles::delete_role))
+
         // Backup/Restore
         .route("/api/project/{project_id}/backup", get(backup_restore::get_backup))
         .route("/api/project/{project_id}/backup", post(backup_restore::restore_backup))
@@ -322,13 +332,6 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/project/{project_id}/templates/{id}/description", put(handlers::projects::templates::update_template_description))
         .route("/api/projects/{project_id}/templates/{id}/stop_all_tasks", post(handlers::projects::templates::stop_all_template_tasks))
         .route("/api/projects/{project_id}/templates/{id}/description", put(handlers::projects::templates::update_template_description))
-
-        // Кастомные роли проекта (B-BE-09/10/11)
-        .route("/api/project/{project_id}/roles", get(project_roles::get_project_roles))
-        .route("/api/project/{project_id}/roles", post(project_roles::add_project_role))
-        .route("/api/project/{project_id}/roles/all", get(project_roles::get_all_roles))
-        .route("/api/project/{project_id}/roles/{role_id}", put(project_roles::update_project_role))
-        .route("/api/project/{project_id}/roles/{role_id}", delete(project_roles::delete_project_role))
 
         // Integration Matchers CRUD (B-BE-20)
         .route("/api/project/{project_id}/integrations/{integration_id}/matchers", get(project_integration::get_integration_matchers))

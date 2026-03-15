@@ -173,6 +173,87 @@ where
     }
 }
 
+/// Тип источника хранения ключа
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum AccessKeySourceStorageType {
+    #[default]
+    DB,
+    Storage,
+    Env,
+    File,
+}
+
+impl std::fmt::Display for AccessKeySourceStorageType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AccessKeySourceStorageType::DB => write!(f, "db"),
+            AccessKeySourceStorageType::Storage => write!(f, "storage"),
+            AccessKeySourceStorageType::Env => write!(f, "env"),
+            AccessKeySourceStorageType::File => write!(f, "file"),
+        }
+    }
+}
+
+impl std::str::FromStr for AccessKeySourceStorageType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "db" => Ok(AccessKeySourceStorageType::DB),
+            "storage" => Ok(AccessKeySourceStorageType::Storage),
+            "env" => Ok(AccessKeySourceStorageType::Env),
+            "file" => Ok(AccessKeySourceStorageType::File),
+            _ => Ok(AccessKeySourceStorageType::DB),
+        }
+    }
+}
+
+impl<DB: Database> Type<DB> for AccessKeySourceStorageType
+where
+    String: Type<DB>,
+{
+    fn type_info() -> DB::TypeInfo {
+        <String as Type<DB>>::type_info()
+    }
+
+    fn compatible(ty: &DB::TypeInfo) -> bool {
+        <String as Type<DB>>::compatible(ty)
+    }
+}
+
+impl<'r, DB: Database> Decode<'r, DB> for AccessKeySourceStorageType
+where
+    String: Decode<'r, DB>,
+{
+    fn decode(value: <DB as Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let s = <String as Decode<'r, DB>>::decode(value)?;
+        Ok(match s.as_str() {
+            "db" => AccessKeySourceStorageType::DB,
+            "storage" => AccessKeySourceStorageType::Storage,
+            "env" => AccessKeySourceStorageType::Env,
+            "file" => AccessKeySourceStorageType::File,
+            _ => AccessKeySourceStorageType::DB,
+        })
+    }
+}
+
+impl<'q, DB: Database> Encode<'q, DB> for AccessKeySourceStorageType
+where
+    DB: 'q,
+    String: Encode<'q, DB>,
+{
+    fn encode_by_ref(&self, buf: &mut <DB as Database>::ArgumentBuffer<'q>) -> Result<sqlx::encode::IsNull, Box<dyn std::error::Error + Send + Sync>> {
+        let s = match self {
+            AccessKeySourceStorageType::DB => "db",
+            AccessKeySourceStorageType::Storage => "storage",
+            AccessKeySourceStorageType::Env => "env",
+            AccessKeySourceStorageType::File => "file",
+        }.to_string();
+        <String as Encode<'q, DB>>::encode(s, buf)
+    }
+}
+
 /// Ключ доступа - учётные данные для подключения
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct AccessKey {
@@ -221,15 +302,15 @@ pub struct AccessKey {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub secret_storage_id: Option<i32>,
 
-    /// Тип источника хранилища (vault, db и т.д.)
+    /// Тип источника хранения
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub source_storage_type: Option<String>,
+    pub source_storage_type: Option<AccessKeySourceStorageType>,
 
-    /// ID источника хранилища
+    /// ID источника (для типа storage)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_storage_id: Option<i32>,
 
-    /// Ключ в источнике хранилища
+    /// Ключ источника (путь/имя переменной для env/file)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_key: Option<String>,
 
@@ -262,7 +343,7 @@ impl AccessKey {
             access_key_access_key: None,
             access_key_secret_key: None,
             secret_storage_id: None,
-            source_storage_type: None,
+            source_storage_type: Some(AccessKeySourceStorageType::DB),
             source_storage_id: None,
             source_key: None,
             owner: None,
@@ -286,7 +367,7 @@ impl AccessKey {
             access_key_access_key: None,
             access_key_secret_key: None,
             secret_storage_id: None,
-            source_storage_type: None,
+            source_storage_type: Some(AccessKeySourceStorageType::DB),
             source_storage_id: None,
             source_key: None,
             owner: None,
@@ -310,7 +391,7 @@ impl AccessKey {
             access_key_access_key: None,
             access_key_secret_key: None,
             secret_storage_id: None,
-            source_storage_type: None,
+            source_storage_type: Some(AccessKeySourceStorageType::DB),
             source_storage_id: None,
             source_key: None,
             owner: None,

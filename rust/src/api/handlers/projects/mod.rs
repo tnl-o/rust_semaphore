@@ -38,3 +38,4 @@ pub use backup_restore::*;
 pub use refs::*;
 pub use invites::*;
 pub use notifications::*;
+pub use roles::*;

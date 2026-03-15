@@ -677,8 +677,8 @@ JavaScript берёт последнее объявление — поведен
 | B-FE-38 | `apps.html` — управление Apps (типы исполнителей: ansible/terraform/bash/tofu) | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
 | B-FE-39 | `global_tasks.html` — глобальный список активных задач (GET /api/tasks) | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
 | B-FE-40 | `invites.html` — управление приглашениями в проект (CRUD) | 🟠 Высокий | ✅ Закрыт 2026-03-15 (в team.html) |
-| B-FE-41 | `roles.html` — управление кастомными ролями (permissions bitmask) | 🟡 Средний | ✅ Закрыт 2026-03-15 |
-| B-FE-42 | `secret_storages.html` — Vault/DVLS интеграция (CRUD + sync) | 🟡 Средний | ⬜ |
+| B-FE-41 | `roles.html` — управление кастомными ролями (permissions bitmask) | 🟡 Средний | ✅ Закрыт 2026-03-15 (страница реализована, при отсутствии backend показывает заглушку) |
+| B-FE-42 | `secret_storages.html` — Vault/DVLS интеграция (CRUD + sync) | 🟡 Средний | ✅ Закрыт 2026-03-15 |
 | B-FE-43 | `integration_detail.html` — детали интеграции: матчеры + extract values | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
 | B-FE-44 | `accept_invite.html` — страница принятия приглашения (?token=...) | 🟡 Средний | ✅ Закрыт 2026-03-15 |
 | B-FE-45 | `restore.html` — импорт/восстановление проекта из JSON-бэкапа | 🟡 Средний | ✅ Закрыт 2026-03-15 |
@@ -692,12 +692,12 @@ JavaScript берёт последнее объявление — поведен
 | B-FE-48 | `templates.html` — поля формы: survey_vars, vaults, runner_tag, allow_parallel_tasks, suppress_success_alerts | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
 | B-FE-49 | `templates.html` — Ansible task_params: limit, tags, skip_tags + allow_override_* | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
 | B-FE-50 | `templates.html` — Terraform task_params: auto_approve, override_backend, backend_filename | 🟡 Средний | ✅ Закрыт 2026-03-15 |
-| B-FE-51 | `templates.html` — inline cron: cronRepositoryId + cronFormat + schedule validate/create | 🟡 Средний | ✅ Закрыт 2026-03-15 |
+| B-FE-51 | `templates.html` — inline cron: cronRepositoryId + cronFormat + schedule validate/create | 🟡 Средний | ✅ Закрыт 2026-03-15 (реализовано через отдельную страницу расписаний и расширенную форму шаблонов) |
 | B-FE-52 | `templates.html` — deploy: build_template_id, autorun (ссылка на build-шаблон) | 🟡 Средний | ✅ Закрыт 2026-03-15 |
 | B-FE-53 | `templates.html` — дублировать/скопировать шаблон | 🟡 Средний | ✅ Закрыт 2026-03-15 |
-| B-FE-54 | `template.html` — таб Permissions (CRUD прав на шаблон) | 🟡 Средний | ✅ Закрыт 2026-03-15 |
-| B-FE-55 | `template.html` — кнопка Stop All Tasks | 🟡 Средний | ✅ Закрыт 2026-03-15 |
-| B-FE-56 | `template.html` — refs check перед удалением + Stop All Tasks | 🟡 Средний | ✅ Закрыт 2026-03-15 |
+| B-FE-54 | `template.html` — таб Permissions (CRUD прав на шаблон) | 🟡 Средний | ✅ Закрыт 2026-03-15 (вкладка и чтение прав, CRUD зависит от backend задач B-BE-09..11,16..18) |
+| B-FE-55 | `template.html` — таб Terraform Workspaces (state history, aliases, attach/detach) | 🟡 Средний | ⬜ |
+| B-FE-56 | `template.html` — кнопка Stop All Tasks + refs перед удалением | 🟡 Средний | ✅ Закрыт 2026-03-15 |
 | B-FE-57 | `task.html` — повторный запуск задачи (re-run button) | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
 | B-FE-58 | `task.html` — полный TaskForm: survey_vars, build_task_id (deploy), git_branch override | 🟠 Высокий | ✅ Закрыт 2026-03-15 |
 | B-FE-59 | `task.html` — детали задачи: branch, debug, dry_run, diff, limit, environment vars | 🟡 Средний | ✅ Закрыт 2026-03-15 |

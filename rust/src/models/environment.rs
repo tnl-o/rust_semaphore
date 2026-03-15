@@ -83,7 +83,7 @@ pub struct Environment {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub secret_storage_id: Option<i32>,
 
-    /// Префикс ключа в хранилище секретов
+    /// Префикс ключей в хранилище секретов
     #[serde(skip_serializing_if = "Option::is_none")]
     pub secret_storage_key_prefix: Option<String>,
 
