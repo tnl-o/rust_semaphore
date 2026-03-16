@@ -5,7 +5,7 @@
 >
 > **Репозиторий:** https://github.com/tnl-o/rust_semaphore
 > **Upstream (Go оригинал):** https://github.com/semaphoreui/semaphore
-> **Последнее обновление:** 2026-03-15 (обновление 29 — дополнительные Go-совместимые API: schedules toggle_active, template schedules/tasks/stats, repo branches, task raw_output/stages, integration /values alias, POST /api/users; frontend: branch autocomplete в templates/run формах)
+> **Последнее обновление:** 2026-03-16 (обновление 30 — реализованы Custom Roles CRUD с DB таблицей project_role + SQL store; leave_project теперь реально удаляет из project__user; переработан ProjectRoleManager из стаба в реальный SQLx impl)
 
 ---
 

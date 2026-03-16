@@ -101,6 +101,8 @@ pub trait ProjectStore: Send + Sync {
     async fn delete_project(&self, project_id: i32) -> Result<()>;
     /// Добавляет пользователя в проект (связь project__user)
     async fn create_project_user(&self, project_user: crate::models::ProjectUser) -> Result<()>;
+    /// Удаляет пользователя из проекта
+    async fn delete_project_user(&self, project_id: i32, user_id: i32) -> Result<()>;
 }
 
 /// Менеджер шаблонов
