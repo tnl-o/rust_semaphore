@@ -34,10 +34,19 @@ impl ServerCommand {
 
         runtime.block_on(async {
             // Создаём хранилище
-            let store = Self::create_store_async(&config).await?;
+            let store: Arc<dyn crate::db::Store + Send + Sync> =
+                Arc::from(Self::create_store_async(&config).await?);
 
             // Сид admin-пользователя при первом запуске
-            Self::seed_admin_if_empty(&*store).await;
+            Self::seed_admin_if_empty(store.as_ref()).await;
+
+            // Запускаем планировщик задач
+            let scheduler = crate::services::scheduler::SchedulePool::new(store.clone());
+            if let Err(e) = scheduler.start().await {
+                eprintln!("Warning: scheduler failed to start: {e}");
+            } else {
+                println!("Task scheduler started");
+            }
 
             // Создаём приложение
             let app = api::create_app(store);

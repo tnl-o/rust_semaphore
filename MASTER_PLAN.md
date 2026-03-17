@@ -5,7 +5,7 @@
 >
 > **Репозиторий:** https://github.com/tnl-o/rust_semaphore
 > **Upstream (Go оригинал):** https://github.com/semaphoreui/semaphore
-> **Последнее обновление:** 2026-03-17 (обновление 34 — реализованы get_global_tasks, get_all_schedules, playbook_run_status_service, vault/environment secrets parsing, ssh_auth_service)
+> **Последнее обновление:** 2026-03-17 (обновление 35 — SchedulePool подключён к запуску сервера; рефакторинг Store chain на Arc<dyn Store+Send+Sync>; create_task_execution shared service)
 
 ---
 
@@ -1339,7 +1339,7 @@ rust_semaphore/
 
 #### 3.7 Schedules
 - [x] Валидация cron-выражения — `services/scheduler.rs`
-- [x] Cron-runner (tokio background task) — `services/scheduler_pool.rs`
+- [x] Cron-runner (tokio background task) — `services/scheduler.rs` (SchedulePool, подключён к cmd_server.rs)
 - [x] Включение / выключение расписания
 - [x] Эндпоинт `GET /api/project/{id}/schedules`
 
@@ -1624,7 +1624,7 @@ web/vanilla/
 - WebSocket лог-стриминг — **реально работает**
 - JWT/TOTP/OIDC/LDAP аутентификация — **реально работает**
 - CRUD всех основных сущностей (projects, templates, inventory, keys, repos, envs, schedules) — **работает**
-- Cron scheduler — **работает**
+- Cron scheduler — **работает**, запускается при старте сервера (cmd_server.rs)
 - Custom Roles CRUD (project_role) — **реализован 2026-03-16**
 - leave_project (delete_project_user) — **реализован 2026-03-16**
 - Frontend: 28 HTML-страниц, Material Design, sidebar — **работает**

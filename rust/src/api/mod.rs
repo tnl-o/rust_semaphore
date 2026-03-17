@@ -33,12 +33,9 @@ use state::AppState;
 
 // Ре-экспорт middleware
 pub use middleware::{rate_limiter, security_headers};
-use websocket::WebSocketManager;
 
 /// Создаёт приложение Axum
-pub fn create_app(store: Box<dyn crate::db::Store + Send + Sync>) -> Router {
-    let ws_manager = Arc::new(WebSocketManager::new());
-
+pub fn create_app(store: Arc<dyn crate::db::Store + Send + Sync>) -> Router {
     let state = Arc::new(AppState::new(
         store,
         crate::config::Config::default(),
