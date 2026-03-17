@@ -561,6 +561,8 @@ impl SqlStore {
             ("build_template_id", "INTEGER"),
             ("autorun", "INTEGER NOT NULL DEFAULT 0"),
             ("survey_vars", "TEXT"),
+            ("task_params", "TEXT"),
+            ("vaults", "TEXT"),
             ("allow_override_args_vars", "INTEGER NOT NULL DEFAULT 0"),
             ("allow_override_branch_in_task", "INTEGER NOT NULL DEFAULT 0"),
             ("allow_inventory_in_task", "INTEGER NOT NULL DEFAULT 0"),
