@@ -12,8 +12,10 @@ use tower_http::services::{ServeDir, ServeFile};
 /// Создаёт маршруты API
 pub fn api_routes() -> Router<Arc<AppState>> {
     Router::new()
-        // Health check
+        // Health checks
         .route("/api/health", get(handlers::health))
+        .route("/api/health/live", get(handlers::health_live))
+        .route("/api/health/ready", get(handlers::health_ready))
 
         // Аутентификация
         .route("/api/auth/login", post(handlers::login))

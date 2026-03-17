@@ -377,7 +377,7 @@ mod tests {
             git_url: "https://github.com/test/repo.git".to_string(),
             git_type: RepositoryType::Git,
             git_branch: None,
-            key_id: 1,
+            key_id: Some(1),
             git_path: None,
             created: None,
         };
@@ -397,7 +397,7 @@ mod tests {
             git_url: "https://github.com/test/repo.git".to_string(),
             git_type: RepositoryType::Git,
             git_branch: None,
-            key_id: 1,
+            key_id: Some(1),
             git_path: None,
             created: None,
         };
@@ -418,7 +418,7 @@ mod tests {
             git_url: "https://github.com/test/repo.git".to_string(),
             git_type: RepositoryType::Git,
             git_branch: None,
-            key_id: 1,
+            key_id: Some(1),
             git_path: None,
             created: None,
         };
@@ -438,7 +438,7 @@ mod tests {
             git_url: "https://github.com/test/repo.git".to_string(),
             git_type: RepositoryType::Git,
             git_branch: None,
-            key_id: 1,
+            key_id: Some(1),
             git_path: None,
             created: None,
         };

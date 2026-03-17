@@ -32,6 +32,11 @@ impl StoreWrapper {
     pub fn as_arc(&self) -> Arc<dyn Store + Send + Sync> {
         self.inner.clone()
     }
+
+    /// Проверка подключения к БД
+    pub async fn ping(&self) -> Result<()> {
+        self.inner.as_ref().as_ref().connect().await
+    }
 }
 
 #[async_trait]

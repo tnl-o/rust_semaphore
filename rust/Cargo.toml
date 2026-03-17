@@ -29,8 +29,8 @@ async-graphql-axum = "7.0"
 # Telegram Bot
 teloxide = { version = "0.13", features = ["macros"] }
 
-# Prometheus метрики
-prometheus = "0.13"
+# Prometheus метрики (обновлено для устранения RUSTSEC-2024-0437 - protobuf уязвимость)
+prometheus = "0.14"
 lazy_static = "1.5"
 
 # Сериализация
@@ -100,7 +100,7 @@ ssh2 = "0.9"
 # ssh2-agent = "0.1"  # Опционально для SSH agent forwarding
 
 # Сжатие
-flate2 = "1.1"
+flate2 = { version = "1.1", features = ["zlib"] }
 
 # Хэширование
 sha2 = "0.10"
@@ -121,9 +121,9 @@ ldap3 = { version = "0.11", default-features = false, features = ["tls-native"] 
 # OIDC (опционально, для OAuth)
 # oidc = "0.18"
 
-# WASM runtime для плагинов
-wasmtime = "29"
-wasmtime-wasi = "29"
+# WASM runtime для плагинов (обновлено для устранения RUSTSEC-2025-0046, RUSTSEC-2026-0006, RUSTSEC-2026-0020, RUSTSEC-2026-0021)
+wasmtime = "41.0.4"
+wasmtime-wasi = "41.0.4"
 
 # Redis кэширование
 redis = { version = "0.29", features = ["tokio-comp", "connection-manager", "cluster"] }
