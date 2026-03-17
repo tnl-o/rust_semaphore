@@ -48,6 +48,33 @@ impl ServerCommand {
                 println!("Task scheduler started");
             }
 
+            // Запускаем сервис автобэкапа (если включён через env)
+            let backup_enabled = std::env::var("SEMAPHORE_AUTO_BACKUP_ENABLED")
+                .map(|v| v == "true" || v == "1")
+                .unwrap_or(false);
+            if backup_enabled {
+                let backup_config = crate::services::auto_backup::AutoBackupConfig {
+                    enabled: true,
+                    interval_hours: std::env::var("SEMAPHORE_AUTO_BACKUP_INTERVAL_HOURS")
+                        .ok()
+                        .and_then(|v| v.parse().ok())
+                        .unwrap_or(24),
+                    backup_path: std::env::var("SEMAPHORE_AUTO_BACKUP_PATH")
+                        .unwrap_or_else(|_| "./backups".to_string()),
+                    max_backups: std::env::var("SEMAPHORE_AUTO_BACKUP_MAX")
+                        .ok()
+                        .and_then(|v| v.parse().ok())
+                        .unwrap_or(7),
+                    compress: true,
+                };
+                let backup_svc = crate::services::auto_backup::AutoBackupService::new(
+                    backup_config,
+                    store.clone(),
+                );
+                backup_svc.start().await;
+                println!("Auto backup service started");
+            }
+
             // Создаём приложение
             let app = api::create_app(store);
 

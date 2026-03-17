@@ -35,7 +35,7 @@ impl StoreWrapper {
 
     /// Проверка подключения к БД
     pub async fn ping(&self) -> Result<()> {
-        self.inner.as_ref().as_ref().connect().await
+        self.inner.as_ref().connect().await
     }
 }
 

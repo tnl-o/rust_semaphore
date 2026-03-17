@@ -24,7 +24,7 @@ pub mod user;
 pub mod users;
 pub mod websocket;
 
-use axum::Router;
+use axum::{Router, middleware as axum_middleware};
 use tower_http::cors::{CorsLayer, Any};
 use tower_http::trace::TraceLayer;
 use std::sync::Arc;
@@ -53,7 +53,8 @@ pub fn create_app(store: Arc<dyn crate::db::Store + Send + Sync>) -> Router {
         .merge(routes::api_routes())
         // Static files с fallback
         .merge(routes::static_routes())
-        // Middleware
+        // Middleware (порядок: последний layer применяется первым)
+        .layer(axum_middleware::from_fn(middleware::security_headers))
         .layer(TraceLayer::new_for_http())
         .layer(cors)
         .with_state(state)

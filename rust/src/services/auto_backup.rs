@@ -53,14 +53,14 @@ pub struct BackupStats {
 /// AutoBackupService - сервис автоматического резервного копирования
 pub struct AutoBackupService {
     config: AutoBackupConfig,
-    store: Arc<Box<dyn Store>>,
+    store: Arc<dyn Store + Send + Sync>,
     stats: Arc<RwLock<BackupStats>>,
     running: Arc<RwLock<bool>>,
 }
 
 impl AutoBackupService {
     /// Создаёт новый сервис автобэкапа
-    pub fn new(config: AutoBackupConfig, store: Arc<Box<dyn Store>>) -> Self {
+    pub fn new(config: AutoBackupConfig, store: Arc<dyn Store + Send + Sync>) -> Self {
         Self {
             config,
             store,
@@ -133,7 +133,7 @@ impl AutoBackupService {
     #[instrument(skip(config, store, stats), name = "auto_backup")]
     async fn run_backup(
         config: &AutoBackupConfig,
-        store: &Arc<Box<dyn Store>>,
+        store: &Arc<dyn Store + Send + Sync>,
         stats: &Arc<RwLock<BackupStats>>,
     ) -> Result<()> {
         info!("Starting automatic backup...");
@@ -324,7 +324,7 @@ mod tests {
 
     #[test]
     fn test_auto_backup_service_creation() {
-        let store = Arc::new(Box::new(MockStore::new()) as Box<dyn Store>);
+        let store: Arc<dyn Store + Send + Sync> = Arc::new(MockStore::new());
         let config = AutoBackupConfig::default();
         let service = AutoBackupService::new(config, store);
 
@@ -333,7 +333,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_backup_stats_default() {
-        let store = Arc::new(Box::new(MockStore::new()) as Box<dyn Store>);
+        let store: Arc<dyn Store + Send + Sync> = Arc::new(MockStore::new());
         let config = AutoBackupConfig::default();
         let service = AutoBackupService::new(config, store);
 

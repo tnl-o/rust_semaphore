@@ -150,11 +150,11 @@ where
     S: AccessKeyManager,
 {
     // Загружаем данные ключа async перед входом в spawn_blocking
-    let (ssh_key, ssh_passphrase, login, password) = if repository.key_id != 0 {
-        match store.get_access_key(project_id, repository.key_id).await {
+    let (ssh_key, ssh_passphrase, login, password) = if let Some(key_id) = repository.key_id {
+        match store.get_access_key(project_id, key_id).await {
             Ok(key) => (key.ssh_key, key.ssh_passphrase, key.login_password_login, key.login_password_password),
             Err(e) => {
-                warn!("Failed to load access key {} for repository: {}", repository.key_id, e);
+                warn!("Failed to load access key {:?} for repository: {}", repository.key_id, e);
                 (None, None, None, None)
             }
         }
