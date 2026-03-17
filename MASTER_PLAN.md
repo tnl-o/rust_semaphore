@@ -5,7 +5,7 @@
 >
 > **Репозиторий:** https://github.com/tnl-o/rust_semaphore
 > **Upstream (Go оригинал):** https://github.com/semaphoreui/semaphore
-> **Последнее обновление:** 2026-03-16 (обновление 32 — закрыты T-BE-01..05, 07..14; открыты T-BE-06, T-BE-15)
+> **Последнее обновление:** 2026-03-17 (обновление 33 — закрыты T-FE-01..10, кроме T-FE-15 blocked)
 
 ---
 
@@ -2209,16 +2209,16 @@ web/vanilla/
 
 | ID | Задача | Приоритет | Зависит от | Статус |
 |---|---|---|---|---|
-| T-FE-01 | Баннер нешифрованных ключей | 🔴 | T-BE-01 | ⬜ |
-| T-FE-02 | Integration Matchers UI | 🟠 | T-BE-05 | ⬜ |
-| T-FE-03 | Backup/Restore UI | 🟠 | T-BE-06/07 | ⬜ |
-| T-FE-04 | Roles CRUD в team.html | 🟠 | ✅ Custom Roles | ⬜ |
-| T-FE-05 | Branch autocomplete реальный | 🟠 | T-BE-12 | ⬜ |
-| T-FE-06 | Статус шифрования в keys.html | 🟡 | T-BE-01 | ⬜ |
-| T-FE-07 | PlaybookRun история | 🟡 | T-BE-10 | ⬜ |
-| T-FE-08 | Task Stages прогресс-шкала | 🟡 | — | ⬜ |
-| T-FE-09 | 2FA управление в users.html | 🟡 | T-BE-13 | ⬜ |
-| T-FE-10 | Ошибки задачи — UX улучшения | 🟡 | — | ⬜ |
+| T-FE-01 | Баннер нешифрованных ключей | 🔴 | T-BE-01 | ✅ Закрыт 2026-03-17 |
+| T-FE-02 | Integration Matchers UI | 🟠 | T-BE-05 | ✅ Закрыт 2026-03-15 (integration_detail.html реализован) |
+| T-FE-03 | Backup/Restore UI | 🟠 | T-BE-06/07 | ✅ Закрыт 2026-03-15 (restore.html + project.html backup) |
+| T-FE-04 | Roles CRUD в team.html | 🟠 | ✅ Custom Roles | ✅ Закрыт 2026-03-15 (team.html Roles tab с полным CRUD) |
+| T-FE-05 | Branch autocomplete реальный | 🟠 | T-BE-12 | ✅ Закрыт 2026-03-15 (datalist + API /repositories/:id/branches) |
+| T-FE-06 | Статус шифрования в keys.html | 🟡 | T-BE-01 | ✅ Закрыт 2026-03-17 (badge + banner в keys.html) |
+| T-FE-07 | PlaybookRun история | 🟡 | T-BE-10 | ✅ Закрыт 2026-03-17 (история запусков в playbooks.html) |
+| T-FE-08 | Task Stages прогресс-шкала | 🟡 | — | ✅ Закрыт 2026-03-17 (stepper в task detail modal) |
+| T-FE-09 | 2FA управление в users.html | 🟡 | T-BE-13 | ✅ Закрыт 2026-03-15 (TOTP enable/disable + QR код) |
+| T-FE-10 | Ошибки задачи — UX улучшения | 🟡 | — | ✅ Закрыт 2026-03-17 (error summary при failed статусе) |
 
 ---
 
