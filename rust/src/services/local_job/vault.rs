@@ -66,8 +66,10 @@ impl LocalJob {
             if !password.is_empty() {
                 let _vault_file = self.create_vault_password_file(&vault_name, password).await?;
                 self.log(&format!("Vault key installed: {}", vault_name));
-                let mut installation = crate::services::ssh_agent::AccessKeyInstallation::default();
-                installation.password = Some(password.to_string());
+                let installation = crate::services::ssh_agent::AccessKeyInstallation {
+                    password: Some(password.to_string()),
+                    ..Default::default()
+                };
                 self.vault_file_installations.insert(vault_name, installation);
             }
         }
