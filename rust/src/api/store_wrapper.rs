@@ -27,6 +27,11 @@ impl StoreWrapper {
     pub fn store(&self) -> &dyn Store {
         self.inner.as_ref().as_ref()
     }
+
+    /// Проверка подключения к БД
+    pub async fn ping(&self) -> Result<()> {
+        self.inner.as_ref().as_ref().connect().await
+    }
 }
 
 #[async_trait]

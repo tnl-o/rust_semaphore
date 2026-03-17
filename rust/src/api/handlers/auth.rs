@@ -21,6 +21,64 @@ pub async fn health() -> &'static str {
     "OK"
 }
 
+/// Расширенная проверка здоровья сервиса
+/// 
+/// GET /api/health/live
+pub async fn health_live(
+    State(state): State<Arc<AppState>>,
+) -> impl IntoResponse {
+    use serde_json::json;
+    
+    // Проверка подключения к БД
+    let db_status = match state.store.ping().await {
+        Ok(_) => "connected",
+        Err(_) => "disconnected",
+    };
+    
+    let status = if db_status == "connected" {
+        StatusCode::OK
+    } else {
+        StatusCode::SERVICE_UNAVAILABLE
+    };
+    
+    (
+        status,
+        Json(json!({
+            "status": if status == StatusCode::OK { "healthy" } else { "unhealthy" },
+            "database": db_status,
+            "version": env!("CARGO_PKG_VERSION"),
+        }))
+    )
+}
+
+/// Готовность сервиса к приёму запросов
+/// 
+/// GET /api/health/ready
+pub async fn health_ready(
+    State(state): State<Arc<AppState>>,
+) -> impl IntoResponse {
+    use serde_json::json;
+    
+    // Проверка подключения к БД
+    let db_ready = state.store.ping().await.is_ok();
+    
+    let status = if db_ready {
+        StatusCode::OK
+    } else {
+        StatusCode::SERVICE_UNAVAILABLE
+    };
+    
+    (
+        status,
+        Json(json!({
+            "ready": db_ready,
+            "checks": {
+                "database": db_ready,
+            }
+        }))
+    )
+}
+
 /// Вход в систему
 ///
 /// POST /api/auth/login
