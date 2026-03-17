@@ -85,9 +85,7 @@ impl SchedulePool {
 
     /// Загружает все активные расписания из БД
     async fn load_schedules(&self) -> Result<()> {
-        // Получаем все расписания (перебираем проекты)
-        // TODO: Реализовать метод get_all_schedules() в Store
-        let schedules = self.store.get_schedules(0).await?;
+        let schedules = self.store.get_all_schedules().await?;
         
         let mut jobs = self.jobs.write().await;
         jobs.clear();

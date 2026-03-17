@@ -98,26 +98,22 @@ impl SshAuthService {
     /// Получает SSH ключ из AccessKeyManager и создает callbacks
     ///
     /// # Arguments
+    /// * `project_id` - ID проекта
     /// * `key_id` - ID ключа доступа
     /// * `store` - Менеджер ключей доступа
     ///
     /// # Returns
     /// * `Result<RemoteCallbacks<'static>>` - Callbacks для git2
     pub async fn create_callbacks_from_key_id<S>(
+        project_id: i32,
         key_id: i32,
         store: &S,
     ) -> Result<RemoteCallbacks<'static>>
     where
         S: AccessKeyManager,
     {
-        // Получаем ключ из БД
-        // TODO: Нужен метод get_access_key(id: i32)
-        
-        // Временно возвращаем ошибку
-        Err(Error::NotFound(format!(
-            "SSH аутентификация требует реализации get_access_key({})",
-            key_id
-        )))
+        let access_key = store.get_access_key(project_id, key_id).await?;
+        Self::create_ssh_callbacks(&access_key)
     }
 
     /// Проверяет валидность SSH ключа

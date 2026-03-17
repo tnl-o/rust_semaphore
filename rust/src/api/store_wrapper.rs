@@ -335,6 +335,10 @@ impl ScheduleManager for StoreWrapper {
         self.inner.as_ref().as_ref().get_schedules(project_id).await
     }
 
+    async fn get_all_schedules(&self) -> Result<Vec<Schedule>> {
+        self.inner.as_ref().as_ref().get_all_schedules().await
+    }
+
     async fn get_schedule(&self, project_id: i32, schedule_id: i32) -> Result<Schedule> {
         self.inner.as_ref().as_ref().get_schedule(project_id, schedule_id).await
     }

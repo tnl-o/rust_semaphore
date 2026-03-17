@@ -377,6 +377,9 @@ impl ScheduleManager for MockStore {
     async fn get_schedules(&self, _project_id: i32) -> Result<Vec<Schedule>> {
         Ok(vec![])
     }
+    async fn get_all_schedules(&self) -> Result<Vec<Schedule>> {
+        Ok(vec![])
+    }
     async fn get_schedule(&self, _project_id: i32, schedule_id: i32) -> Result<Schedule> {
         Err(Error::NotFound(format!("Schedule {} not found", schedule_id)))
     }
