@@ -5,7 +5,7 @@
 
 use crate::db::store::*;
 use crate::error::Result;
-use crate::models::playbook_run_history::{PlaybookRunStatus, PlaybookRunUpdate};
+use crate::models::playbook_run_history::PlaybookRunStatus;
 use crate::services::task_logger::TaskStatus;
 use chrono::Utc;
 use tracing::info;
@@ -29,8 +29,16 @@ impl PlaybookRunStatusService {
         S: PlaybookRunManager,
     {
         // Находим playbook run по task_id
-        // TODO: Нужен метод get_playbook_run_by_task_id
-        
+        let run = store.get_playbook_run_by_task_id(task_id).await?;
+        let run = match run {
+            Some(r) => r,
+            None => {
+                // Нет связанного playbook run — это обычная задача, не через playbook
+                info!("Task {} has no associated playbook run", task_id);
+                return Ok(());
+            }
+        };
+
         // Маппинг статусов TaskStatus -> PlaybookRunStatus
         let playbook_status = match new_status {
             TaskStatus::Waiting => PlaybookRunStatus::Waiting,
@@ -46,16 +54,7 @@ impl PlaybookRunStatusService {
             TaskStatus::NotExecuted => PlaybookRunStatus::Waiting,
         };
 
-        // TODO: Обновить запись playbook_run
-        // store.update_playbook_run(id, project_id, PlaybookRunUpdate {
-        //     status: Some(playbook_status),
-        //     end_time: if matches!(new_status, TaskStatus::Success | TaskStatus::Error | TaskStatus::Stopped) {
-        //         Some(Utc::now())
-        //     } else {
-        //         None
-        //     },
-        //     ..Default::default()
-        // }).await?;
+        store.update_playbook_run_status(run.id, playbook_status).await?;
 
         info!("Task {} status updated to {:?}", task_id, new_status);
 
