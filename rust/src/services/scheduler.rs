@@ -13,6 +13,7 @@ use tracing::{error, info};
 use crate::error::{Error, Result};
 use crate::models::Schedule;
 use crate::db::store::Store;
+use crate::services::task_execution;
 
 /// Задача планировщика
 #[derive(Debug, Clone)]
@@ -28,14 +29,14 @@ pub struct ScheduledJob {
 
 /// Менеджер пула планировщика
 pub struct SchedulePool {
-    store: Arc<dyn Store>,
+    store: Arc<dyn Store + Send + Sync>,
     jobs: Arc<RwLock<HashMap<i32, ScheduledJob>>>,
     running: Arc<RwLock<bool>>,
 }
 
 impl SchedulePool {
     /// Создаёт новый пул планировщика
-    pub fn new(store: Arc<dyn Store>) -> Self {
+    pub fn new(store: Arc<dyn Store + Send + Sync>) -> Self {
         Self {
             store,
             jobs: Arc::new(RwLock::new(HashMap::new())),
@@ -85,9 +86,7 @@ impl SchedulePool {
 
     /// Загружает все активные расписания из БД
     async fn load_schedules(&self) -> Result<()> {
-        // Получаем все расписания (перебираем проекты)
-        // TODO: Реализовать метод get_all_schedules() в Store
-        let schedules = self.store.get_schedules(0).await?;
+        let schedules = self.store.get_all_schedules().await?;
         
         let mut jobs = self.jobs.write().await;
         jobs.clear();
@@ -114,7 +113,7 @@ impl SchedulePool {
     /// Проверяет расписания и запускает задачи
     async fn check_schedules(
         jobs: &Arc<RwLock<HashMap<i32, ScheduledJob>>>,
-        store: &Arc<dyn Store>,
+        store: &Arc<dyn Store + Send + Sync>,
     ) {
         let now = Utc::now();
         let mut jobs_to_run = Vec::new();
@@ -149,7 +148,7 @@ impl SchedulePool {
 
     /// Запускает задачу
     async fn trigger_task(
-        store: &Arc<dyn Store>,
+        store: &Arc<dyn Store + Send + Sync>,
         schedule_id: i32,
         template_id: i32,
         project_id: i32,
@@ -186,8 +185,11 @@ impl SchedulePool {
 
         info!("Создана задача {} по расписанию {}", created_task.id, schedule_id);
 
-        // Здесь должна быть логика отправки задачи в TaskPool
-        // TODO: Интеграция с TaskPool
+        // Запускаем задачу в фоновом потоке
+        let store_clone = store.clone();
+        tokio::spawn(async move {
+            task_execution::execute_task(store_clone, created_task).await;
+        });
 
         Ok(())
     }

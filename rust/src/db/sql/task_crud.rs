@@ -115,6 +115,50 @@ impl SqlDb {
         })
     }
     
+    /// Получает все задачи без фильтра проекта (глобальный список)
+    pub async fn get_global_tasks(
+        &self,
+        status_filter: Option<Vec<String>>,
+        limit: Option<i32>,
+    ) -> Result<Vec<TaskWithTpl>> {
+        let lim = limit.unwrap_or(100);
+        match self.get_dialect() {
+            crate::db::sql::types::SqlDialect::SQLite => {
+                let pool = self.get_sqlite_pool()
+                    .ok_or_else(|| Error::Other("SQLite pool not found".to_string()))?;
+
+                let base = "SELECT t.*, tpl.playbook as tpl_playbook FROM task t \
+                             LEFT JOIN template tpl ON t.template_id = tpl.id AND tpl.project_id = t.project_id";
+                let filter = if let Some(ref statuses) = status_filter {
+                    if statuses.is_empty() {
+                        String::new()
+                    } else {
+                        let placeholders: Vec<&str> = statuses.iter().map(|_| "?").collect();
+                        format!(" WHERE t.status IN ({})", placeholders.join(", "))
+                    }
+                } else {
+                    String::new()
+                };
+                let q = format!("{}{} ORDER BY t.created DESC LIMIT {}", base, filter, lim);
+                let mut query = sqlx::query(&q);
+                if let Some(ref statuses) = status_filter {
+                    for s in statuses {
+                        query = query.bind(s);
+                    }
+                }
+                let rows = query.fetch_all(pool).await.map_err(Error::Database)?;
+                let mut tasks = Vec::new();
+                for row in rows {
+                    let task = Self::row_to_task(&row)?;
+                    let tpl_playbook: Option<String> = row.try_get("tpl_playbook").ok();
+                    tasks.push(TaskWithTpl { task, tpl_playbook, tpl_type: None, tpl_app: None, user_name: None, build_task: None });
+                }
+                Ok(tasks)
+            }
+            _ => Err(Error::Other("Only SQLite supported for now".to_string())),
+        }
+    }
+
     /// Получает задачу по ID
     pub async fn get_task(&self, project_id: i32, task_id: i32) -> Result<Task> {
         match self.get_dialect() {

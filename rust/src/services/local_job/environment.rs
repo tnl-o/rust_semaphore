@@ -112,14 +112,15 @@ impl LocalJob {
         }
 
         // Секретные ENV переменные
-        // secrets - это JSON строка, нужно распарсить
-        if let Some(ref _secrets_json) = self.environment.secrets {
-            // TODO: Распарсить secrets_json и получить секреты
-            // for secret in secrets {
-            //     if secret.secret_type == crate::models::EnvironmentSecretType::Env {
-            //         res.push(format!("{}={}", secret.name, secret.secret));
-            //     }
-            // }
+        // secrets - это JSON строка со списком EnvironmentSecretValue
+        if let Some(ref secrets_json) = self.environment.secrets {
+            if let Ok(secrets) = serde_json::from_str::<Vec<crate::models::EnvironmentSecretValue>>(secrets_json) {
+                for secret in secrets {
+                    if secret.secret_type == crate::models::EnvironmentSecretType::Env {
+                        res.push(format!("{}={}", secret.name, secret.secret));
+                    }
+                }
+            }
         }
 
         Ok(res)

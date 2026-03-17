@@ -5,7 +5,7 @@
 >
 > **Репозиторий:** https://github.com/tnl-o/rust_semaphore
 > **Upstream (Go оригинал):** https://github.com/semaphoreui/semaphore
-> **Последнее обновление:** 2026-03-16 (обновление 32 — закрыты T-BE-01..05, 07..14; открыты T-BE-06, T-BE-15)
+> **Последнее обновление:** 2026-03-17 (обновление 36 — AutoBackupService подключён к серверу; security_headers middleware в router; 665 unit-тестов зелёные; merge upstream/main + origin/main)
 
 ---
 
@@ -1339,7 +1339,7 @@ rust_semaphore/
 
 #### 3.7 Schedules
 - [x] Валидация cron-выражения — `services/scheduler.rs`
-- [x] Cron-runner (tokio background task) — `services/scheduler_pool.rs`
+- [x] Cron-runner (tokio background task) — `services/scheduler.rs` (SchedulePool, подключён к cmd_server.rs)
 - [x] Включение / выключение расписания
 - [x] Эндпоинт `GET /api/project/{id}/schedules`
 
@@ -1543,7 +1543,7 @@ web/vanilla/
 - [x] Health check — `GET /api/health` → `"OK"` (`routes.rs:16`)
 
 #### 8.4 Тесты
-- [x] 682 unit-тестов — `cargo test --lib` green (2026-03-15)
+- [x] 665 unit-тестов — `cargo test --lib` green (2026-03-17, исправлены тесты после merge)
 - [x] 35 integration-тестов — `cargo test --test api_integration` green (2026-03-15)
 - [x] E2E тесты: full resource cycle, team management, update resources, WebSocket upgrade (2026-03-15)
 - [x] Integration тесты с реальной SQLite БД — `rust/tests/api_integration.rs`
@@ -1551,7 +1551,8 @@ web/vanilla/
 #### 8.5 Безопасность
 - [x] Rate limiting — `api/middleware/rate_limiter.rs` (commit 67bfce0)
 - [x] CORS настройки — реализованы
-- [x] Security headers (`X-Frame-Options`, CSP, etc.) — `api/middleware/security_headers.rs` (commit 67bfce0)
+- [x] Security headers (`X-Frame-Options`, CSP, HSTS, etc.) — применяются глобально через axum middleware (2026-03-17)
+- [x] AutoBackupService — подключён к серверу, включается через `SEMAPHORE_AUTO_BACKUP_ENABLED=true` (2026-03-17)
 - [ ] Аудит: секреты не утекают в логи
 
 ### Критерии готовности
@@ -1624,7 +1625,7 @@ web/vanilla/
 - WebSocket лог-стриминг — **реально работает**
 - JWT/TOTP/OIDC/LDAP аутентификация — **реально работает**
 - CRUD всех основных сущностей (projects, templates, inventory, keys, repos, envs, schedules) — **работает**
-- Cron scheduler — **работает**
+- Cron scheduler — **работает**, запускается при старте сервера (cmd_server.rs)
 - Custom Roles CRUD (project_role) — **реализован 2026-03-16**
 - leave_project (delete_project_user) — **реализован 2026-03-16**
 - Frontend: 28 HTML-страниц, Material Design, sidebar — **работает**
@@ -1643,7 +1644,7 @@ web/vanilla/
 
 **Приоритет:** 🔴 Критично — ключи хранятся plaintext
 **Файлы:** `rust/src/services/access_key_installation_service.rs`, `rust/src/utils/encryption.rs`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1667,7 +1668,7 @@ web/vanilla/
 
 **Приоритет:** 🔴 Критично — ansible-playbook запускается без SSH аутентификации
 **Файлы:** `rust/src/services/local_job/ssh.rs`, `rust/src/services/local_job/vault.rs`, `rust/src/services/local_job/mod.rs`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1692,7 +1693,7 @@ web/vanilla/
 
 **Приоритет:** 🔴 Критично — секретные переменные из Environment не попадают в задачу
 **Файлы:** `rust/src/services/local_job/args.rs:27,85`, `rust/src/services/local_job/environment.rs:117`, `rust/src/services/local_job/vault.rs:18`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1719,7 +1720,7 @@ web/vanilla/
 
 **Приоритет:** 🟠 Высокий — задачи всегда берут HEAD вместо нужной ветки
 **Файлы:** `rust/src/services/local_job/repository.rs:61`, `rust/src/services/git_repository.rs`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1748,7 +1749,7 @@ web/vanilla/
 
 **Приоритет:** 🟠 Высокий — входящие вебхуки не фильтруются (матчеры не сохраняются)
 **Файлы:** `rust/src/db/sql/managers/integration_matcher.rs`, `rust/src/db/sql/mod.rs`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1796,7 +1797,7 @@ web/vanilla/
 
 **Приоритет:** 🟠 Высокий — backup endpoint возвращает ошибку из-за несовпадения полей
 **Файлы:** `rust/src/services/backup.rs`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1816,7 +1817,7 @@ web/vanilla/
 
 **Приоритет:** 🟠 Высокий — backup бесполезен если restore неполный
 **Файл:** `rust/src/services/restore.rs:499`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1838,7 +1839,7 @@ web/vanilla/
 
 **Приоритет:** 🟠 Высокий — export (backup) не работает полностью
 **Файл:** `rust/src/services/exporter.rs:421,439`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1862,7 +1863,7 @@ web/vanilla/
 
 **Приоритет:** 🟡 Средний
 **Файл:** `rust/src/db/sql/managers/playbook_run.rs:588`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1878,7 +1879,7 @@ web/vanilla/
 
 **Приоритет:** 🟡 Средний
 **Файлы:** `rust/src/services/playbook_run_status_service.rs:49,87`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1896,7 +1897,7 @@ web/vanilla/
 
 **Приоритет:** 🟡 Средний (зависит от T-BE-10)
 **Файл:** `rust/src/services/playbook_run_status_service.rs:32`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1917,7 +1918,7 @@ web/vanilla/
 
 **Приоритет:** 🟡 Средний — autocomplete показывает hardcoded ветки
 **Файл:** `rust/src/api/handlers/projects/repository.rs`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1938,7 +1939,7 @@ web/vanilla/
 
 **Приоритет:** 🟡 Средний
 **Файл:** `rust/src/api/handlers/auth.rs:304`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1958,7 +1959,7 @@ web/vanilla/
 
 **Приоритет:** 🟡 Средний
 **Файлы:** `rust/src/api/auth.rs:45`, `rust/src/db/sql/managers/session.rs:154`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-16
 
 **Что сделать:**
 
@@ -1979,7 +1980,7 @@ web/vanilla/
 
 **Приоритет:** 🟡 Средний
 **Файл:** `rust/src/services/exporter_entities.rs:37,80`
-**Статус:** ⬜ Не начато
+**Статус:** ⏸ Заблокирован (async/sync mismatch)
 
 **Что сделать:**
 
@@ -2003,7 +2004,7 @@ web/vanilla/
 
 **Приоритет:** 🔴 Критично — пользователь должен знать о риске
 **Файл:** `web/public/keys.html`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-17
 
 **Что сделать:**
 
@@ -2019,7 +2020,7 @@ web/vanilla/
 
 **Приоритет:** 🟠 Высокий — интерфейс матчеров присутствует, но данные не сохраняются
 **Файл:** `web/public/integration_detail.html`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-15
 
 **Что сделать:**
 
@@ -2041,7 +2042,7 @@ web/vanilla/
 
 **Приоритет:** 🟠 Высокий
 **Файлы:** `web/public/project.html`, `web/public/restore.html`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-15
 
 **Что сделать:**
 
@@ -2062,7 +2063,7 @@ web/vanilla/
 
 **Приоритет:** 🟠 Высокий — Custom Roles теперь реализованы в бэкенде (2026-03-16)
 **Файл:** `web/public/team.html`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-15
 
 **Что сделать:**
 
@@ -2081,7 +2082,7 @@ web/vanilla/
 
 **Приоритет:** 🟠 Высокий — сейчас показываются hardcoded ветки
 **Файлы:** `web/public/templates.html`, `web/public/run.html`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-17
 
 **Что сделать:**
 
@@ -2104,7 +2105,7 @@ web/vanilla/
 
 **Приоритет:** 🟡 Средний (после T-BE-01)
 **Файл:** `web/public/keys.html`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-15
 
 **Что сделать:**
 
@@ -2121,7 +2122,7 @@ web/vanilla/
 
 **Приоритет:** 🟡 Средний
 **Файл:** `web/public/playbooks.html`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-15
 
 **Что сделать:**
 
@@ -2138,7 +2139,7 @@ web/vanilla/
 
 **Приоритет:** 🟡 Средний
 **Файл:** `web/public/task.html`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-15
 
 **Что сделать:**
 
@@ -2154,7 +2155,7 @@ web/vanilla/
 
 **Приоритет:** 🟡 Средний
 **Файл:** `web/public/users.html`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-15
 
 **Что сделать:**
 
@@ -2170,7 +2171,7 @@ web/vanilla/
 
 **Приоритет:** 🟡 Средний — UX улучшение
 **Файл:** `web/public/task.html`, `web/public/history.html`
-**Статус:** ⬜ Не начато
+**Статус:** ✅ Закрыт 2026-03-17
 
 **Что сделать:**
 
@@ -2209,16 +2210,16 @@ web/vanilla/
 
 | ID | Задача | Приоритет | Зависит от | Статус |
 |---|---|---|---|---|
-| T-FE-01 | Баннер нешифрованных ключей | 🔴 | T-BE-01 | ⬜ |
-| T-FE-02 | Integration Matchers UI | 🟠 | T-BE-05 | ⬜ |
-| T-FE-03 | Backup/Restore UI | 🟠 | T-BE-06/07 | ⬜ |
-| T-FE-04 | Roles CRUD в team.html | 🟠 | ✅ Custom Roles | ⬜ |
-| T-FE-05 | Branch autocomplete реальный | 🟠 | T-BE-12 | ⬜ |
-| T-FE-06 | Статус шифрования в keys.html | 🟡 | T-BE-01 | ⬜ |
-| T-FE-07 | PlaybookRun история | 🟡 | T-BE-10 | ⬜ |
-| T-FE-08 | Task Stages прогресс-шкала | 🟡 | — | ⬜ |
-| T-FE-09 | 2FA управление в users.html | 🟡 | T-BE-13 | ⬜ |
-| T-FE-10 | Ошибки задачи — UX улучшения | 🟡 | — | ⬜ |
+| T-FE-01 | Баннер нешифрованных ключей | 🔴 | T-BE-01 | ✅ Закрыт 2026-03-17 |
+| T-FE-02 | Integration Matchers UI | 🟠 | T-BE-05 | ✅ Закрыт 2026-03-15 (integration_detail.html реализован) |
+| T-FE-03 | Backup/Restore UI | 🟠 | T-BE-06/07 | ✅ Закрыт 2026-03-15 (restore.html + project.html backup) |
+| T-FE-04 | Roles CRUD в team.html | 🟠 | ✅ Custom Roles | ✅ Закрыт 2026-03-15 (team.html Roles tab с полным CRUD) |
+| T-FE-05 | Branch autocomplete реальный | 🟠 | T-BE-12 | ✅ Закрыт 2026-03-15 (datalist + API /repositories/:id/branches) |
+| T-FE-06 | Статус шифрования в keys.html | 🟡 | T-BE-01 | ✅ Закрыт 2026-03-17 (badge + banner в keys.html) |
+| T-FE-07 | PlaybookRun история | 🟡 | T-BE-10 | ✅ Закрыт 2026-03-17 (история запусков в playbooks.html) |
+| T-FE-08 | Task Stages прогресс-шкала | 🟡 | — | ✅ Закрыт 2026-03-17 (stepper в task detail modal) |
+| T-FE-09 | 2FA управление в users.html | 🟡 | T-BE-13 | ✅ Закрыт 2026-03-15 (TOTP enable/disable + QR код) |
+| T-FE-10 | Ошибки задачи — UX улучшения | 🟡 | — | ✅ Закрыт 2026-03-17 (error summary при failed статусе) |
 
 ---
 

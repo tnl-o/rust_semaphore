@@ -165,6 +165,7 @@ pub trait AccessKeyManager: Send + Sync {
 #[async_trait]
 pub trait TaskManager: Send + Sync {
     async fn get_tasks(&self, project_id: i32, template_id: Option<i32>) -> Result<Vec<TaskWithTpl>>;
+    async fn get_global_tasks(&self, status_filter: Option<Vec<String>>, limit: Option<i32>) -> Result<Vec<TaskWithTpl>>;
     async fn get_task(&self, project_id: i32, task_id: i32) -> Result<Task>;
     async fn create_task(&self, task: Task) -> Result<Task>;
     async fn update_task(&self, task: Task) -> Result<()>;
@@ -178,6 +179,7 @@ pub trait TaskManager: Send + Sync {
 #[async_trait]
 pub trait ScheduleManager: Send + Sync {
     async fn get_schedules(&self, project_id: i32) -> Result<Vec<Schedule>>;
+    async fn get_all_schedules(&self) -> Result<Vec<Schedule>>;
     async fn get_schedule(&self, project_id: i32, schedule_id: i32) -> Result<Schedule>;
     async fn create_schedule(&self, schedule: Schedule) -> Result<Schedule>;
     async fn update_schedule(&self, schedule: Schedule) -> Result<()>;

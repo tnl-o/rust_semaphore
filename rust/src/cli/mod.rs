@@ -367,7 +367,8 @@ fn cmd_server(args: ServerArgs, config: Config) -> anyhow::Result<()> {
     tracing::info!("Запуск сервера Semaphore...");
 
     // Создание хранилища
-    let store = create_store(&config).map_err(|e| anyhow::anyhow!(e))?;
+    let store: std::sync::Arc<dyn crate::db::Store + Send + Sync> =
+        std::sync::Arc::from(create_store(&config).map_err(|e| anyhow::anyhow!(e))?);
 
     // Создание приложения Axum
     let app = create_app(store);

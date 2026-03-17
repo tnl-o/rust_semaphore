@@ -106,7 +106,7 @@ mod tests {
             default_secret_storage_id: None,
         };
         
-        TaskPool::new(store, project)
+        TaskPool::new(store, project, Arc::new(crate::api::websocket::WebSocketManager::new()))
     }
 
     #[tokio::test]

@@ -29,8 +29,16 @@ impl PlaybookRunStatusService {
         S: PlaybookRunManager,
     {
         // Находим playbook run по task_id
-        // TODO: Нужен метод get_playbook_run_by_task_id
-        
+        let run = store.get_playbook_run_by_task_id(task_id).await?;
+        let run = match run {
+            Some(r) => r,
+            None => {
+                // Нет связанного playbook run — это обычная задача, не через playbook
+                info!("Task {} has no associated playbook run", task_id);
+                return Ok(());
+            }
+        };
+
         // Маппинг статусов TaskStatus -> PlaybookRunStatus
         let playbook_status = match new_status {
             TaskStatus::Waiting => PlaybookRunStatus::Waiting,
@@ -46,16 +54,7 @@ impl PlaybookRunStatusService {
             TaskStatus::NotExecuted => PlaybookRunStatus::Waiting,
         };
 
-        // TODO: Обновить запись playbook_run
-        // store.update_playbook_run(id, project_id, PlaybookRunUpdate {
-        //     status: Some(playbook_status),
-        //     end_time: if matches!(new_status, TaskStatus::Success | TaskStatus::Error | TaskStatus::Stopped) {
-        //         Some(Utc::now())
-        //     } else {
-        //         None
-        //     },
-        //     ..Default::default()
-        // }).await?;
+        store.update_playbook_run_status(run.id, playbook_status).await?;
 
         info!("Task {} status updated to {:?}", task_id, new_status);
 
@@ -84,7 +83,21 @@ impl PlaybookRunStatusService {
     where
         S: PlaybookRunManager,
     {
-        // TODO: Реализовать обновление статистики
+        let update = PlaybookRunUpdate {
+            status: None,
+            start_time: None,
+            end_time: None,
+            duration_seconds: None,
+            hosts_total: Some(hosts_total),
+            hosts_changed: Some(hosts_changed),
+            hosts_unreachable: Some(hosts_unreachable),
+            hosts_failed: Some(hosts_failed),
+            output: None,
+            error_message: None,
+        };
+
+        store.update_playbook_run(run_id, project_id, update).await?;
+
         info!(
             "Playbook run {} statistics updated: total={}, changed={}, unreachable={}, failed={}",
             run_id, hosts_total, hosts_changed, hosts_unreachable, hosts_failed

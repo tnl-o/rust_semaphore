@@ -9,23 +9,27 @@ use chrono::{DateTime, Utc};
 use crate::models::{Task, Template, Project};
 use crate::services::task_logger::TaskLogger;
 use crate::db::store::Store;
+use crate::api::websocket::WebSocketManager;
 
 /// Пул задач - управляет очередью и выполнением задач
 pub struct TaskPool {
     /// Хранилище данных
     pub store: Arc<dyn Store + Send + Sync>,
-    
+
     /// Проект
     pub project: Project,
-    
+
     /// Запущенные задачи
     pub running_tasks: Arc<RwLock<std::collections::HashMap<i32, RunningTask>>>,
-    
+
     /// Очередь задач
     pub task_queue: Arc<Mutex<Vec<Task>>>,
-    
+
     /// Флаг остановки
     pub shutdown: Arc<Mutex<bool>>,
+
+    /// WebSocket менеджер для real-time уведомлений
+    pub ws_manager: Arc<WebSocketManager>,
 }
 
 /// Запущенная задача
@@ -51,6 +55,7 @@ impl TaskPool {
     pub fn new(
         store: Arc<dyn Store + Send + Sync>,
         project: Project,
+        ws_manager: Arc<WebSocketManager>,
     ) -> Self {
         Self {
             store,
@@ -58,6 +63,7 @@ impl TaskPool {
             running_tasks: Arc::new(RwLock::new(std::collections::HashMap::new())),
             task_queue: Arc::new(Mutex::new(Vec::new())),
             shutdown: Arc::new(Mutex::new(false)),
+            ws_manager,
         }
     }
     
@@ -133,8 +139,9 @@ mod tests {
     fn test_task_pool_creation() {
         let store = create_test_store();
         let project = create_test_project();
-        
-        let pool = TaskPool::new(store, project);
+        let ws_manager = Arc::new(crate::api::websocket::WebSocketManager::new());
+
+        let pool = TaskPool::new(store, project, ws_manager);
         assert!(!pool.running_tasks.try_read().unwrap().is_empty() || true); // HashMap может быть пустым
     }
 
@@ -142,8 +149,9 @@ mod tests {
     async fn test_task_pool_shutdown() {
         let store = Arc::new(crate::db::sql::SqlStore::new("sqlite::memory:").await.unwrap());
         let project = create_test_project();
-        
-        let pool = TaskPool::new(store, project);
+        let ws_manager = Arc::new(crate::api::websocket::WebSocketManager::new());
+
+        let pool = TaskPool::new(store, project, ws_manager);
         
         assert!(!pool.is_shutdown().await);
         

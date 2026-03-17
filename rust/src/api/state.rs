@@ -27,9 +27,9 @@ pub struct AppState {
 
 impl AppState {
     /// Создаёт новое состояние приложения
-    pub fn new(store: Box<dyn Store>, config: Config) -> Self {
+    pub fn new(store: Arc<dyn Store + Send + Sync>, config: Config) -> Self {
         Self {
-            store: StoreWrapper::new(Arc::new(store)),
+            store: StoreWrapper::new(store),
             config,
             ws_manager: Arc::new(WebSocketManager::new()),
             oidc_state: Arc::new(Mutex::new(HashMap::new())),

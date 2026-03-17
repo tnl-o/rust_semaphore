@@ -13,10 +13,65 @@ impl LocalJob {
     pub async fn install_vault_key_files(&mut self) -> Result<()> {
         self.vault_file_installations = HashMap::new();
 
-        // vaults - это JSON строка, нужно распарсить
-        if let Some(ref vaults_json) = self.inventory.vaults {
-            // TODO: Распарсить vaults_json и загрузить ключи из БД
-            self.log(&format!("Vault configuration loaded: {}", vaults_json));
+        // vaults - это JSON строка со списком TemplateVaultRef [{vault_key_id, type}]
+        let vaults_json = match self.inventory.vaults.clone() {
+            Some(j) if !j.is_empty() => j,
+            _ => return Ok(()),
+        };
+
+        #[derive(serde::Deserialize)]
+        struct VaultRef {
+            vault_key_id: i32,
+            #[serde(default)]
+            r#type: String,
+        }
+
+        let vault_refs: Vec<VaultRef> = match serde_json::from_str(&vaults_json) {
+            Ok(v) => v,
+            Err(e) => {
+                self.log(&format!("Warning: failed to parse vault refs: {}", e));
+                return Ok(());
+            }
+        };
+
+        let store = match self.store.as_ref() {
+            Some(s) => s.clone(),
+            None => {
+                self.log("Warning: no store available for vault key loading");
+                return Ok(());
+            }
+        };
+
+        for (i, vref) in vault_refs.iter().enumerate() {
+            use crate::db::store::AccessKeyManager;
+            let key = match store.get_access_key(self.task.project_id, vref.vault_key_id).await {
+                Ok(k) => k,
+                Err(e) => {
+                    self.log(&format!("Warning: vault key {} not found: {}", vref.vault_key_id, e));
+                    continue;
+                }
+            };
+
+            let vault_name = if vref.r#type.is_empty() {
+                format!("vault_{}", i)
+            } else {
+                vref.r#type.clone()
+            };
+
+            // Получаем пароль из ключа
+            let password = key.login_password_password
+                .as_deref()
+                .unwrap_or("");
+
+            if !password.is_empty() {
+                let _vault_file = self.create_vault_password_file(&vault_name, password).await?;
+                self.log(&format!("Vault key installed: {}", vault_name));
+                let installation = crate::services::ssh_agent::AccessKeyInstallation {
+                    password: Some(password.to_string()),
+                    ..Default::default()
+                };
+                self.vault_file_installations.insert(vault_name, installation);
+            }
         }
 
         Ok(())

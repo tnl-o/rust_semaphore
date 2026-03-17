@@ -14,7 +14,7 @@ mod tests {
     use crate::db::mock::MockStore;
 
     fn create_test_app() -> axum::Router {
-        let store = Box::new(MockStore::new());
+        let store = Arc::new(MockStore::new());
         create_app(store)
     }
 
@@ -46,7 +46,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_logout_handler() {
-        let store = Box::new(MockStore::new());
+        let store: Arc<dyn crate::db::Store + Send + Sync> = Arc::new(MockStore::new());
         let state = Arc::new(crate::api::state::AppState::new(
             store,
             crate::config::Config::default(),

@@ -25,6 +25,23 @@ impl SqlDb {
         }
     }
 
+    /// Получает все активные расписания (без фильтра по проекту)
+    pub async fn get_all_schedules(&self) -> Result<Vec<Schedule>> {
+        match self.get_dialect() {
+            crate::db::sql::types::SqlDialect::SQLite => {
+                let schedules = sqlx::query_as::<_, Schedule>(
+                    "SELECT * FROM schedule WHERE active = 1 ORDER BY name"
+                )
+                .fetch_all(self.get_sqlite_pool().ok_or(Error::Other("SQLite pool not found".to_string()))?)
+                .await
+                .map_err(Error::Database)?;
+
+                Ok(schedules)
+            }
+            _ => Err(Error::Other("Only SQLite supported for now".to_string()))
+        }
+    }
+
     /// Получает расписание по ID
     pub async fn get_schedule(&self, project_id: i32, schedule_id: i32) -> Result<Schedule> {
         match self.get_dialect() {
