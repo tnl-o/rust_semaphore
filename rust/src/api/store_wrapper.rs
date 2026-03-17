@@ -162,6 +162,10 @@ impl ProjectStore for StoreWrapper {
     async fn create_project_user(&self, project_user: crate::models::ProjectUser) -> Result<()> {
         self.inner.as_ref().as_ref().create_project_user(project_user).await
     }
+
+    async fn delete_project_user(&self, project_id: i32, user_id: i32) -> Result<()> {
+        self.inner.as_ref().as_ref().delete_project_user(project_id, user_id).await
+    }
 }
 
 #[async_trait]

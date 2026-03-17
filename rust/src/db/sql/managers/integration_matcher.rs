@@ -1,9 +1,9 @@
-//! IntegrationMatcherManager + IntegrationExtractValueManager + ProjectRoleManager
+//! IntegrationMatcherManager + IntegrationExtractValueManager
 
 use crate::db::sql::SqlStore;
 use crate::db::store::*;
-use crate::error::{Error, Result};
-use crate::models::{IntegrationMatcher, IntegrationExtractValue, Role};
+use crate::error::Result;
+use crate::models::{IntegrationMatcher, IntegrationExtractValue};
 use async_trait::async_trait;
 
 #[async_trait]
@@ -34,22 +34,6 @@ impl IntegrationExtractValueManager for SqlStore {
         Ok(())
     }
     async fn delete_integration_extract_value(&self, _project_id: i32, _integration_id: i32, _value_id: i32) -> Result<()> {
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl ProjectRoleManager for SqlStore {
-    async fn get_project_roles(&self, _project_id: i32) -> Result<Vec<Role>> {
-        Ok(vec![])
-    }
-    async fn create_project_role(&self, role: Role) -> Result<Role> {
-        Ok(role)
-    }
-    async fn update_project_role(&self, _role: Role) -> Result<()> {
-        Ok(())
-    }
-    async fn delete_project_role(&self, _project_id: i32, _role_id: i32) -> Result<()> {
         Ok(())
     }
 }
