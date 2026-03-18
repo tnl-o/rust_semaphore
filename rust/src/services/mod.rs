@@ -10,6 +10,7 @@ pub mod exporter;
 pub mod exporter_main;
 pub mod executor;
 pub mod git_repository;
+pub mod key_encryption;
 pub mod local_job;
 pub mod metrics;
 pub mod playbook_run_service;

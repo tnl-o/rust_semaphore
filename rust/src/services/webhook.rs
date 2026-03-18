@@ -197,7 +197,7 @@ impl WebhookService {
         json!({
             "attachments": [{
                 "color": color,
-                "author_name": format!("{} Semaphore UI", emoji),
+                "author_name": format!("{} Velum UI", emoji),
                 "title": title,
                 "text": text,
                 "fields": [
@@ -212,7 +212,7 @@ impl WebhookService {
                         "short": true
                     }
                 ],
-                "footer": "Semaphore UI",
+                "footer": "Velum UI",
                 "ts": event.timestamp.timestamp()
             }]
         })
@@ -237,7 +237,7 @@ impl WebhookService {
             "summary": title,
             "sections": [{
                 "activityTitle": title,
-                "activitySubtitle": "Semaphore UI",
+                "activitySubtitle": "Velum UI",
                 "activityText": text,
                 "facts": [
                     {
@@ -283,7 +283,7 @@ impl WebhookService {
                     }
                 ],
                 "footer": {
-                    "text": "Semaphore UI"
+                    "text": "Velum UI"
                 },
                 "timestamp": event.timestamp.to_rfc3339()
             }]
@@ -397,7 +397,7 @@ pub fn create_task_event(
             "text": format!("Задача '{}' изменила статус на: {}", task_name, status.unwrap_or("unknown"))
         }),
         metadata: WebhookMetadata {
-            source: "semaphore-ui".to_string(),
+            source: "velum".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             project_id,
             user_id,
@@ -422,7 +422,7 @@ pub fn create_user_event(
             "text": format!("Действие с пользователем: {}", username)
         }),
         metadata: WebhookMetadata {
-            source: "semaphore-ui".to_string(),
+            source: "velum".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             project_id,
             user_id: Some(user_id),
@@ -447,7 +447,7 @@ pub fn create_project_event(
             "text": format!("Действие с проектом: {}", project_name)
         }),
         metadata: WebhookMetadata {
-            source: "semaphore-ui".to_string(),
+            source: "velum".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             project_id: Some(project_id),
             user_id,

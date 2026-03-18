@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Принятие приглашения - СЕМАФОРЪ</title>
+    <title>Принятие приглашения - Velum</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         body { background:var(--primary); }
@@ -33,7 +33,7 @@
             showError('Неверная ссылка приглашения. Токен не найден.');
         } else {
             // Check if user is logged in
-            const authToken = localStorage.getItem('semaphore_token');
+            const authToken = localStorage.getItem('velum_token');
             if (!authToken) {
                 // Redirect to login, then back
                 localStorage.setItem('invite_token', token);
@@ -45,13 +45,13 @@
 
         // After login, check if there's a pending invite token
         const pendingToken = localStorage.getItem('invite_token');
-        if (pendingToken && localStorage.getItem('semaphore_token') && !token) {
+        if (pendingToken && localStorage.getItem('velum_token') && !token) {
             localStorage.removeItem('invite_token');
             window.location.href = '/accept_invite.html?token=' + pendingToken;
         }
 
         function showAcceptForm() {
-            document.getElementById('invite-desc').textContent = 'Вы получили приглашение в проект Semaphore.';
+            document.getElementById('invite-desc').textContent = 'Вы получили приглашение в проект Velum.';
             document.getElementById('invite-action').innerHTML = `
                 <button class="btn btn-primary" style="width:100%; margin-bottom:10px;" onclick="acceptInvite()">
                     ✓ Принять приглашение
@@ -69,7 +69,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + localStorage.getItem('semaphore_token')
+                    'Authorization': 'Bearer ' + localStorage.getItem('velum_token')
                 }
             })
             .then(r => r.json().then(data => ({ ok: r.ok, data })))
