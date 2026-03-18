@@ -6,11 +6,11 @@
 // ==================== Конфигурация ====================
 
 const API_BASE = '/api';
-const STORAGE_KEY = 'semaphore_token';
-const USER_KEY = 'semaphore_user';
-const THEME_KEY = 'semaphore_theme';
-const LANG_KEY = 'semaphore_lang';
-const PROJECT_KEY = 'semaphore_last_project';
+const STORAGE_KEY = 'velum_token';
+const USER_KEY = 'velum_user';
+const THEME_KEY = 'velum_theme';
+const LANG_KEY = 'velum_lang';
+const PROJECT_KEY = 'velum_last_project';
 
 // ==================== Утилиты ====================
 

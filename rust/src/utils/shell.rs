@@ -10,7 +10,7 @@
 /// # Пример
 ///
 /// ```
-/// use semaphore_ffi::utils::shell::shell_quote;
+/// use velum_ffi::utils::shell::shell_quote;
 ///
 /// assert_eq!(shell_quote("hello world"), "'hello world'");
 /// assert_eq!(shell_quote("hello"), "hello");
@@ -70,7 +70,7 @@ fn needs_quoting(s: &str) -> bool {
 /// # Пример
 ///
 /// ```
-/// use semaphore_ffi::utils::shell::shell_strip_unsafe;
+/// use velum_ffi::utils::shell::shell_strip_unsafe;
 ///
 /// assert_eq!(shell_strip_unsafe("hello\x00world"), "helloworld");
 /// assert_eq!(shell_strip_unsafe("normal text"), "normal text");

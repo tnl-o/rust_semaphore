@@ -1,14 +1,14 @@
 [package]
-name = "semaphore"
+name = "velum"
 version = "0.1.0"
 edition = "2021"
 authors = ["Alexander Vashurin <alexandervashurin@yandex.ru>"]
-description = "Rust-реализация Velum UI - современный веб-интерфейс для управления DevOps-инструментами (Ansible, Terraform, PowerShell и др.)"
+description = "Velum — Rust-port of Semaphore UI. DevOps task management with Ansible, Terraform, PowerShell support."
 license = "MIT"
-repository = "https://github.com/alexandervashurin/semaphore"
+repository = "https://github.com/tnl-o/velum"
 
 [lib]
-name = "semaphore_ffi"
+name = "velum_ffi"
 crate-type = ["cdylib", "staticlib", "rlib"]
 path = "src/lib.rs"
 
