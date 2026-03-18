@@ -38,7 +38,12 @@
 
     <script src="app.js"></script>
     <script>
-        checkAuth();
+        // Проверка авторизации перед загрузкой страницы
+        if (!checkAuth()) {
+            // Перенаправление уже выполнено в checkAuth()
+        } else {
+            loadProjects();
+        }
 
         function loadProjects() {
             api.getProjects()
@@ -65,8 +70,6 @@
                     ui.showError($('#projects-grid'), error.message);
                 });
         }
-
-        loadProjects();
 
         function openProjectModal() {
             const modal = document.createElement('div');
