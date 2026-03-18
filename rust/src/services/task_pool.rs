@@ -10,9 +10,9 @@ use chrono::{DateTime, Utc};
 use tracing::{info, warn, error, debug};
 
 use crate::error::{Error, Result};
-use crate::models::{Task, Project};
+use crate::models::{Task, Project, TaskOutput};
 use crate::services::task_logger::TaskStatus;
-use crate::db::store::Store;
+use crate::db::store::{Store, TaskManager};
 use crate::api::websocket::WebSocketManager;
 
 /// Событие пула задач
@@ -131,13 +131,22 @@ impl TaskPool {
             }
         });
 
-        // Запускаем обработчик логов
-        let _store_clone = store.clone();
+        // Запускаем обработчик логов — сохраняем в БД
+        let store_log = store.clone();
         tokio::spawn(async move {
             while let Some(record) = logger_rx.recv().await {
-                // Сохраняем лог в БД
-                // TODO: Реализовать сохранение в БД
                 debug!("Лог задачи {}: {}", record.task_id, record.output);
+                let output = TaskOutput {
+                    id: 0,
+                    task_id: record.task_id,
+                    project_id: 0,
+                    output: record.output,
+                    time: record.time,
+                    stage_id: None,
+                };
+                if let Err(e) = store_log.create_task_output(output).await {
+                    error!("Ошибка сохранения лога задачи {}: {}", record.task_id, e);
+                }
             }
         });
 

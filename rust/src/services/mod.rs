@@ -3,6 +3,7 @@
 pub mod access_key_installation_service;
 pub mod access_key_installer;
 pub mod alert;
+pub mod auto_backup;
 pub mod backup;
 pub mod cache_service;
 pub mod exporter;
@@ -18,6 +19,7 @@ pub mod restore;
 pub mod scheduler;
 pub mod ssh_agent;
 pub mod ssh_auth_service;
+pub mod task_execution;
 pub mod task_logger;
 pub mod task_pool;
 pub mod task_pool_queue;

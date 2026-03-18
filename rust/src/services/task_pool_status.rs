@@ -10,6 +10,7 @@ use chrono::{DateTime, Utc};
 use crate::models::Task;
 use crate::services::task_logger::TaskStatus;
 use crate::services::task_pool_types::TaskPool;
+use crate::api::websocket::WsMessage;
 
 /// Сообщение статуса задачи
 #[derive(Debug, Clone)]
@@ -107,14 +108,18 @@ impl TaskPool {
             }
         };
         
-        // Создаём сообщение
-        let message = TaskStatusMessage::new(&task);
-        let json = message.to_json();
-        
-        // TODO: Отправка через WebSocketManager
-        // self.ws_manager.broadcast(&json).await;
-        
-        info!("WebSocket notification sent for task {}", task_id);
+        // Отправляем WebSocket уведомление через broadcast
+        let ws_msg = WsMessage::Status {
+            task_id,
+            status: status.to_string(),
+            time: Utc::now(),
+        };
+        if let Err(e) = self.ws_manager.broadcast(ws_msg) {
+            // Ошибка отправки — нет подписчиков, не критично
+            info!("WebSocket broadcast for task {}: {}", task_id, e);
+        } else {
+            info!("WebSocket notification sent for task {}", task_id);
+        }
     }
     
     /// Логирует задачу

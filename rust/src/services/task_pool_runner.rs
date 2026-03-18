@@ -228,6 +228,7 @@ impl Clone for TaskPool {
             running_tasks: self.running_tasks.clone(),
             task_queue: self.task_queue.clone(),
             shutdown: self.shutdown.clone(),
+            ws_manager: self.ws_manager.clone(),
         }
     }
 }
@@ -252,7 +253,7 @@ mod tests {
             default_secret_storage_id: None,
         };
         
-        TaskPool::new(store, project)
+        TaskPool::new(store, project, Arc::new(crate::api::websocket::WebSocketManager::new()))
     }
 
     #[tokio::test]

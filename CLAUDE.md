@@ -19,33 +19,25 @@
 
 ---
 
-## Текущее состояние проекта (2026-03-15)
+## Текущее состояние проекта (2026-03-17)
 
 ### Что готово
-- **Бэкенд: 95%+** — все 75+ API эндпоинтов реализованы, 555 тестов (524 unit + 31 integration) зелёные
-- **Дизайн** — приведён к upstream semaphoreui/semaphore Material Design (Roboto, teal sidebar #005057, logo.svg, background.svg)
+- **Бэкенд: 99%+** — все 75+ API эндпоинтов реализованы, тесты зелёные (cargo test + clippy 0 warnings)
+- **Cron Scheduler** — SchedulePool подключён к запуску сервера (`cmd_server.rs`), задачи стартуют автоматически
+- **Shared Task Execution** — `services/task_execution.rs` — единая точка запуска задач (HTTP + scheduler)
+- **Store Chain** — рефакторинг `Box<dyn Store>` → `Arc<dyn Store + Send + Sync>` по всей цепочке
+- **Дизайн** — Material Design (Roboto, teal sidebar #005057, logo.svg, background.svg)
 - **Docker** — `docker-compose.demo.yml` для быстрого запуска с SQLite, автосид admin/admin123
 - **Auth** — JWT, bcrypt, TOTP, LDAP, OIDC, refresh token — всё реализовано
 - **Task Runner** — реальный запуск ansible/terraform/bash с WebSocket логами
-- **Фаза 6** (Vanilla JS frontend) — частично: core flows работают, CRUD формы отсутствуют
+- **Фаза 6** (Vanilla JS frontend) — 100% CRUD форм, 28+ HTML-страниц, полный feature parity
 
-### Главный блокер — CRUD формы на фронтенде
+### Открытые задачи
+- **T-BE-15** — `exporter_entities.rs` restore пользователей/проектов (⏸ dead code, низкий приоритет)
 
-Страницы отображают списки (GET работает), но нет форм создания/редактирования:
-
-| Задача | Страница | Приоритет |
-|--------|----------|-----------|
-| B-FE-11 | templates.html — формы create/edit/delete | 🔴 Критично |
-| B-FE-12 | inventory.html — формы create/edit/delete | 🔴 Критично |
-| B-FE-13 | keys.html — формы create/edit/delete (ssh/token/password) | 🔴 Критично |
-| B-FE-14 | repositories.html — формы create/edit/delete | 🟠 Высокий |
-| B-FE-15 | environments.html — формы create/edit/delete | 🟠 Высокий |
-| B-FE-16 | schedules.html — формы create/edit/delete | 🟠 Высокий |
-| B-FE-17 | run.html — страница запуска задачи (50% done) | 🟠 Высокий |
-| B-FE-18 | webhooks.html — формы матчеров/алиасов | 🟡 Средний |
-| B-FE-19 | playbooks.html — sync/run форма | 🟡 Средний |
-| B-FE-20 | team.html — управление командой проекта | 🟡 Средний |
-| B-FE-22 | E2E тесты полного цикла | 🟡 Средний |
+### Текущий приоритет
+Все критичные и высокоприоритетные задачи закрыты. Смотри MASTER_PLAN.md раздел 2е для полного списка.
+Следующие работы: E2E тестирование реального деплоя, production hardening, документация.
 
 ---
 
@@ -97,13 +89,10 @@ git merge upstream/main --no-edit
 3. Помечай задачи `in_progress` → `completed` в реальном времени
 4. `cargo check` после каждого значимого изменения Rust
 
-**Текущий приоритет (2026-03-15):**
-- 🔴 B-FE-11, B-FE-12, B-FE-13 — CRUD формы для templates/inventory/keys
-- 🟠 B-FE-14..17 — CRUD для repositories/environments/schedules + run.html
-- 🟡 B-FE-18..22 — webhooks, playbooks, team page, E2E тесты
-
-**Паттерн для CRUD форм** — смотри на `users.html` как образец: модальное окно с формой,
-вызов API через `api.createX()` / `api.updateX()` / `api.deleteX()`, обновление списка после успеха.
+**Текущий приоритет (2026-03-17):**
+- Все B-FE и B-BE задачи закрыты (B-FE-11..75, B-BE-01..25, T-BE-01..14, T-FE-01..10)
+- Единственная открытая: T-BE-15 (⏸ dead code, низкий приоритет)
+- Следующий шаг: E2E тестирование, production hardening, документация
 
 ---
 
@@ -195,19 +184,25 @@ web/public/
 ├── login.html      # Страница входа (teal фон + белая карточка, как Auth.vue)
 ├── index.html      # Dashboard (список проектов, создание)
 ├── project.html    # Обзор проекта + настройки
-├── templates.html  # ⬜ Список шаблонов (CRUD формы ОТСУТСТВУЮТ — B-FE-11)
-├── inventory.html  # ⬜ Список инвентарей (CRUD формы ОТСУТСТВУЮТ — B-FE-12)
-├── keys.html       # ⬜ Список ключей (CRUD формы ОТСУТСТВУЮТ — B-FE-13)
-├── repositories.html # ⬜ Список репозиториев (CRUD ОТСУТСТВУЕТ — B-FE-14)
-├── environments.html # ⬜ Список окружений (CRUD ОТСУТСТВУЕТ — B-FE-15)
-├── schedules.html  # ⬜ Список расписаний (CRUD ОТСУТСТВУЕТ — B-FE-16)
+├── templates.html  # ✅ CRUD + NewTaskDialog + Views/Tabs
+├── inventory.html  # ✅ CRUD (все типы: static/dynamic/terraform/etc)
+├── keys.html       # ✅ CRUD (ssh/token/password/none)
+├── repositories.html # ✅ CRUD
+├── environments.html # ✅ CRUD + secrets tab
+├── schedules.html  # ✅ CRUD + visual cron builder
 ├── task.html       # ✅ Лог задачи с WebSocket live-стримингом
-├── run.html        # ⬜ Запуск задачи (50% готово — B-FE-17)
-├── users.html      # ✅ Управление пользователями (образец CRUD форм)
+├── template.html   # ✅ Template View — Tasks/Details/Permissions tabs
+├── users.html      # ✅ Управление пользователями + TOTP
 ├── analytics.html  # ✅ Аналитика с Chart.js
-├── webhooks.html   # ⬜ Webhooks (список есть, формы нет — B-FE-18)
-├── playbooks.html  # ⬜ Playbooks (неполная — B-FE-19)
-└── schedules.html  # ⬜ Расписания (CRUD нет — B-FE-16)
+├── webhooks.html   # ✅ Webhooks CRUD + матчеры + алиасы
+├── playbooks.html  # ✅ Playbooks CRUD + sync/run + история запусков
+├── team.html       # ✅ Team members + Invites + Custom Roles
+├── history.html    # ✅ История задач проекта
+├── activity.html   # ✅ Audit log событий
+├── runners.html    # ✅ Runners CRUD
+├── apps.html       # ✅ Apps управление
+├── global_tasks.html # ✅ Глобальный список задач
+└── ... (28+ страниц)
 ```
 
 ---

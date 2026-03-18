@@ -299,5 +299,9 @@ impl ScheduleManager for SqlStore {
         }
         Ok(())
     }
+
+    async fn get_all_schedules(&self) -> Result<Vec<Schedule>> {
+        self.db.get_all_schedules().await
+    }
 }
 

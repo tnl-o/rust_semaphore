@@ -538,5 +538,9 @@ impl TaskManager for SqlStore {
         }
         Ok(())
     }
+
+    async fn get_global_tasks(&self, status_filter: Option<Vec<String>>, limit: Option<i32>) -> Result<Vec<TaskWithTpl>> {
+        self.db.get_global_tasks(status_filter, limit).await
+    }
 }
 

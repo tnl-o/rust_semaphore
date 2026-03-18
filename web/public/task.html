@@ -60,6 +60,30 @@
             100% { transform: translateX(350%); }
         }
 
+        /* Task stages stepper */
+        .task-stages { display: flex; align-items: center; gap: 0; margin-bottom: 12px; }
+        .task-stage { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; position: relative; }
+        .task-stage:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 14px; left: 60%;
+            width: 80%; height: 2px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+        .task-stage.done:not(:last-child)::after  { background: #005057; }
+        .task-stage.active:not(:last-child)::after { background: linear-gradient(90deg, #005057, #e0e0e0); }
+        .task-stage-dot {
+            width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; z-index: 1;
+            background: #e0e0e0; color: #999; border: 2px solid #e0e0e0;
+        }
+        .task-stage.done .task-stage-dot   { background: #005057; color: #fff; border-color: #005057; }
+        .task-stage.active .task-stage-dot { background: #fff; color: #005057; border-color: #005057; }
+        .task-stage.error .task-stage-dot  { background: #fed7d7; color: #c53030; border-color: #f56565; }
+        .task-stage-label { font-size: 11px; color: var(--text-light); text-align: center; }
+
         .task-row { cursor: pointer; }
         .task-row:hover td { background: #f5f5f5; }
     </style>
@@ -108,6 +132,7 @@
                 <div id="modal-progress" style="display:none;">
                     <div class="progress-bar"><div class="progress-bar-fill"></div></div>
                 </div>
+                <div id="modal-stages" style="display:none;"></div>
                 <div class="task-meta-grid" id="modal-meta"></div>
                 <div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -242,6 +267,7 @@
             if (!currentTaskId) return;
             api.getTask(projectId, currentTaskId).then(task => {
                 renderTaskMeta(task);
+                renderTaskStages(task);
                 const running = task.status === 'running' || task.status === 'waiting' || task.status === 'starting';
                 const confirming = task.status === 'waiting_confirmation';
                 const finished = !running && !confirming;
@@ -263,6 +289,43 @@
                     loadTaskLog(currentTaskId);
                 }
             }).catch(err => { $('#modal-meta').innerHTML = '<div class="alert alert-danger">' + escapeHtml(err.message) + '</div>'; });
+        }
+
+        function renderTaskStages(task) {
+            const stagesEl = $('#modal-stages');
+            if (!stagesEl) return;
+
+            // Derive stages from task status
+            const s = task.status;
+            const stages = [
+                { key: 'queued',    label: 'В очереди',   icon: '⏳' },
+                { key: 'preparing', label: 'Подготовка',  icon: '🔧' },
+                { key: 'running',   label: 'Выполнение',  icon: '▶' },
+                { key: 'finished',  label: 'Завершено',   icon: s === 'success' ? '✓' : (s === 'error' || s === 'failed' ? '✗' : '■') },
+            ];
+
+            // Map task status to active stage index
+            let activeIdx;
+            if (s === 'waiting' || s === 'queued') activeIdx = 0;
+            else if (s === 'starting') activeIdx = 1;
+            else if (s === 'running' || s === 'waiting_confirmation') activeIdx = 2;
+            else activeIdx = 3; // success, error, failed, stopped, cancelled
+
+            const isError = s === 'error' || s === 'failed';
+
+            const html = stages.map((stage, i) => {
+                let cls = '';
+                if (i < activeIdx) cls = 'done';
+                else if (i === activeIdx) cls = isError && i === stages.length - 1 ? 'error' : 'active';
+                return `
+                    <div class="task-stage ${cls}">
+                        <div class="task-stage-dot">${i < activeIdx ? '✓' : stage.icon}</div>
+                        <div class="task-stage-label">${stage.label}</div>
+                    </div>`;
+            }).join('');
+
+            stagesEl.style.display = 'block';
+            stagesEl.innerHTML = `<div class="task-stages">${html}</div>`;
         }
 
         function renderTaskMeta(task) {
@@ -323,9 +386,37 @@
                     return `<div class="log-line ${getLogClass(line)}">${escapeHtml(fullLine)}</div>`;
                 }).join('');
                 container.scrollTop = container.scrollHeight;
+
+                // T-FE-10: Show error summary when task failed
+                showErrorSummaryIfNeeded(output);
             }).catch(err => {
                 $('#modal-log').innerHTML = '<div style="color:#f48771; padding:16px;">Ошибка загрузки лога: ' + escapeHtml(err.message) + '</div>';
             });
+        }
+
+        function showErrorSummaryIfNeeded(output) {
+            const badge = $('#modal-status-badge');
+            if (!badge) return;
+            const isFailed = badge.classList.contains('status-error') || badge.classList.contains('status-failed');
+            if (!isFailed) return;
+
+            // Find last error/fatal line in output
+            const lines = output.map(item => typeof item === 'string' ? item : (item.output || ''));
+            const errorLines = lines.filter(l => /FAILED|fatal|error|Error/i.test(l) && l.trim()).slice(-5);
+            if (!errorLines.length) return;
+
+            const summaryEl = document.getElementById('error-summary');
+            if (summaryEl) summaryEl.remove();
+
+            const div = document.createElement('div');
+            div.id = 'error-summary';
+            div.style.cssText = 'background:#fff5f5;border:1px solid #feb2b2;border-radius:6px;padding:10px 14px;font-size:12px;font-family:monospace;';
+            div.innerHTML = `<div style="font-weight:600;color:#c53030;margin-bottom:6px;">❌ Последние ошибки:</div>` +
+                errorLines.map(l => `<div style="color:#742a2a;padding:1px 0;white-space:pre-wrap;word-break:break-all;">${escapeHtml(l)}</div>`).join('');
+
+            // Insert before log container
+            const logSection = $('#modal-log').parentElement;
+            if (logSection) logSection.insertBefore(div, $('#modal-log'));
         }
 
         function connectDetailWs(taskId) {

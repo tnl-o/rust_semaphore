@@ -359,11 +359,25 @@ impl TaskManager for MockStore {
     async fn update_task_status(&self, _project_id: i32, _task_id: i32, _status: TaskStatus) -> Result<()> {
         Ok(())
     }
+    async fn get_global_tasks(&self, _status_filter: Option<Vec<String>>, _limit: Option<i32>) -> Result<Vec<TaskWithTpl>> {
+        let tasks: Vec<Task> = self.tasks.read().unwrap().values().cloned().collect();
+        Ok(tasks.into_iter().map(|t| TaskWithTpl {
+            task: t,
+            tpl_playbook: None,
+            tpl_type: None,
+            tpl_app: None,
+            user_name: None,
+            build_task: None,
+        }).collect())
+    }
 }
 
 #[async_trait]
 impl ScheduleManager for MockStore {
     async fn get_schedules(&self, _project_id: i32) -> Result<Vec<Schedule>> {
+        Ok(vec![])
+    }
+    async fn get_all_schedules(&self) -> Result<Vec<Schedule>> {
         Ok(vec![])
     }
     async fn get_schedule(&self, _project_id: i32, schedule_id: i32) -> Result<Schedule> {
