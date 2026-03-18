@@ -151,7 +151,7 @@
                 })
                 .catch(() => {
                     container.innerHTML += `<div style="padding:12px; background:#fff3cd; border-radius:6px; font-size:13px;">
-                        ⚠️ API матчеров не реализован (B-BE-20). Матчеры будут доступны в следующих версиях.
+                        ⚠️ Ошибка загрузки матчеров.
                     </div>`;
                     renderMatcherAddHint(container);
                 });
@@ -280,7 +280,7 @@
                 })
                 .catch(() => {
                     container.innerHTML += `<div style="padding:12px; background:#fff3cd; border-radius:6px; font-size:13px;">
-                        ⚠️ API extract values не реализован (B-BE-21). Будет доступно в следующих версиях.
+                        ⚠️ Ошибка загрузки extract values.
                     </div>`;
                 });
         }

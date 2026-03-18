@@ -7,6 +7,7 @@ use crate::api::handlers;
 use crate::api::websocket::websocket_handler;
 use crate::api::handlers::projects::{schedules, views, integration as project_integration, integration_alias, secret_storages, users as project_users, tasks, templates, repository, notifications, backup_restore, refs, invites, roles};
 use crate::api::{events, apps, options, runners, cache, system_info, user, graphql};
+use crate::api::handlers::totp;
 use tower_http::services::{ServeDir, ServeFile};
 
 /// Создаёт маршруты API
@@ -28,6 +29,11 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         // OIDC
         .route("/api/auth/oidc/{provider}", get(handlers::oidc_login))
         .route("/api/auth/oidc/{provider}/callback", get(handlers::oidc_callback))
+
+        // TOTP
+        .route("/api/auth/totp/start", post(totp::start_totp_setup))
+        .route("/api/auth/totp/confirm", post(totp::confirm_totp_setup))
+        .route("/api/auth/totp/disable", post(totp::disable_totp))
 
         // Текущий пользователь
         .route("/api/user", get(handlers::get_current_user))
@@ -116,6 +122,7 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         // Playbook Runs - история запусков
         .route("/api/project/{project_id}/playbook-runs", get(handlers::playbook_runs::get_playbook_runs))
         .route("/api/project/{project_id}/playbook-runs/{id}", get(handlers::playbook_runs::get_playbook_run))
+        .route("/api/project/{project_id}/playbook-runs/{id}", delete(handlers::playbook_runs::delete_playbook_run))
         .route("/api/project/{project_id}/playbooks/{playbook_id}/runs/stats", get(handlers::playbook_runs::get_playbook_run_stats))
         
         // Репозитории

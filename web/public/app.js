@@ -6,11 +6,11 @@
 // ==================== Конфигурация ====================
 
 const API_BASE = '/api';
-const STORAGE_KEY = 'semaphore_token';
-const USER_KEY = 'semaphore_user';
-const THEME_KEY = 'semaphore_theme';
-const LANG_KEY = 'semaphore_lang';
-const PROJECT_KEY = 'semaphore_last_project';
+const STORAGE_KEY = 'velum_token';
+const USER_KEY = 'velum_user';
+const THEME_KEY = 'velum_theme';
+const LANG_KEY = 'velum_lang';
+const PROJECT_KEY = 'velum_last_project';
 
 // ==================== Утилиты ====================
 
@@ -60,7 +60,28 @@ function formatRelativeTime(dateStr) {
 // ==================== API ====================
 
 const api = {
-    async request(url, options = {}) {
+    async request(urlOrMethod, urlOrOptions = {}, payload) {
+        // Support both signatures:
+        //   new: request(url, options?)
+        //   old: request(method, url, payload?)
+        const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD'];
+        let url, options;
+        if (typeof urlOrMethod === 'string' && HTTP_METHODS.includes(urlOrMethod.toUpperCase())) {
+            url = urlOrOptions;
+            options = { method: urlOrMethod.toUpperCase() };
+            if (payload !== undefined && payload !== null) {
+                options.body = JSON.stringify(payload);
+            }
+        } else {
+            url = urlOrMethod;
+            options = urlOrOptions || {};
+        }
+
+        // Strip double /api prefix (pages that build URLs with API_BASE constant)
+        if (typeof url === 'string' && url.startsWith(API_BASE + '/')) {
+            url = url.slice(API_BASE.length);
+        }
+
         const token = localStorage.getItem(STORAGE_KEY);
         const headers = {
             'Content-Type': 'application/json',
@@ -348,6 +369,194 @@ const api = {
 
     rejectTask(projectId, id) {
         return this.post('/project/' + projectId + '/tasks/' + id + '/reject', {});
+    },
+
+    getTaskRawOutput(projectId, id) {
+        return this.get('/project/' + projectId + '/tasks/' + id + '/output');
+    },
+
+    getTaskStages(projectId, id) {
+        return this.get('/project/' + projectId + '/tasks/' + id + '/stages');
+    },
+
+    // Playbook runs
+    getPlaybookRuns(projectId, playbookId) {
+        return this.get('/project/' + projectId + '/playbooks/' + playbookId + '/runs');
+    },
+
+    getPlaybookStats(projectId, playbookId) {
+        return this.get('/project/' + projectId + '/playbooks/' + playbookId + '/stats');
+    },
+
+    runPlaybook(projectId, playbookId, data) {
+        return this.post('/project/' + projectId + '/playbooks/' + playbookId + '/run', data || {});
+    },
+
+    // API Tokens
+    getTokens() {
+        return this.get('/user/tokens');
+    },
+
+    createToken(data) {
+        return this.post('/user/tokens', data);
+    },
+
+    deleteToken(id) {
+        return this.delete('/user/tokens/' + id);
+    },
+
+    // TOTP
+    startTotp() {
+        return this.post('/auth/totp/start', {});
+    },
+
+    confirmTotp(code) {
+        return this.post('/auth/totp/confirm', { code });
+    },
+
+    disableTotp(recoveryCode) {
+        return this.post('/auth/totp/disable', { recovery_code: recoveryCode });
+    },
+
+    // Runners
+    getRunners() {
+        return this.get('/runners');
+    },
+
+    createRunner(data) {
+        return this.post('/runners', data);
+    },
+
+    updateRunner(id, data) {
+        return this.put('/runners/' + id, data);
+    },
+
+    deleteRunner(id) {
+        return this.delete('/runners/' + id);
+    },
+
+    toggleRunnerActive(id) {
+        return this.post('/runners/' + id + '/active', {});
+    },
+
+    // Apps
+    getApps() {
+        return this.get('/apps');
+    },
+
+    updateApp(id, data) {
+        return this.put('/apps/' + id, data);
+    },
+
+    toggleAppActive(id) {
+        return this.post('/apps/' + id + '/active', {});
+    },
+
+    // Schedules
+    getSchedules(projectId) {
+        return this.get('/project/' + projectId + '/schedules');
+    },
+
+    createSchedule(projectId, data) {
+        return this.post('/project/' + projectId + '/schedules', data);
+    },
+
+    updateSchedule(projectId, id, data) {
+        return this.put('/project/' + projectId + '/schedules/' + id, data);
+    },
+
+    deleteSchedule(projectId, id) {
+        return this.delete('/project/' + projectId + '/schedules/' + id);
+    },
+
+    // Webhooks / Integrations
+    getIntegrations(projectId) {
+        return this.get('/project/' + projectId + '/integrations');
+    },
+
+    createIntegration(projectId, data) {
+        return this.post('/project/' + projectId + '/integrations', data);
+    },
+
+    updateIntegration(projectId, id, data) {
+        return this.put('/project/' + projectId + '/integrations/' + id, data);
+    },
+
+    deleteIntegration(projectId, id) {
+        return this.delete('/project/' + projectId + '/integrations/' + id);
+    },
+
+    getIntegrationAliases(projectId) {
+        return this.get('/project/' + projectId + '/integrations/aliases');
+    },
+
+    createIntegrationAlias(projectId, data) {
+        return this.post('/project/' + projectId + '/integrations/aliases', data);
+    },
+
+    deleteIntegrationAlias(projectId, id) {
+        return this.delete('/project/' + projectId + '/integrations/aliases/' + id);
+    },
+
+    // Events / Activity
+    getProjectEvents(projectId) {
+        return this.get('/project/' + projectId + '/events');
+    },
+
+    getAllEvents() {
+        return this.get('/events');
+    },
+
+    // Roles
+    getRoles(projectId) {
+        return this.get('/project/' + projectId + '/roles');
+    },
+
+    createRole(projectId, data) {
+        return this.post('/project/' + projectId + '/roles', data);
+    },
+
+    updateRole(projectId, id, data) {
+        return this.put('/project/' + projectId + '/roles/' + id, data);
+    },
+
+    deleteRole(projectId, id) {
+        return this.delete('/project/' + projectId + '/roles/' + id);
+    },
+
+    // Secret Storages
+    getSecretStorages(projectId) {
+        return this.get('/project/' + projectId + '/secret_storages');
+    },
+
+    createSecretStorage(projectId, data) {
+        return this.post('/project/' + projectId + '/secret_storages', data);
+    },
+
+    updateSecretStorage(projectId, id, data) {
+        return this.put('/project/' + projectId + '/secret_storages/' + id, data);
+    },
+
+    deleteSecretStorage(projectId, id) {
+        return this.delete('/project/' + projectId + '/secret_storages/' + id);
+    },
+
+    syncSecretStorage(projectId, id) {
+        return this.post('/project/' + projectId + '/secret_storages/' + id + '/sync', {});
+    },
+
+    // Notifications
+    testNotification(projectId) {
+        return this.post('/project/' + projectId + '/notifications/test', {});
+    },
+
+    // Cache
+    clearCache() {
+        return this.delete('/cache');
+    },
+
+    clearProjectCache(projectId) {
+        return this.delete('/project/' + projectId + '/cache');
     }
 };
 

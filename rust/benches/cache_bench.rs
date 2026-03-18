@@ -94,4 +94,4 @@ criterion_group!(
 
 criterion_main!(benches);
 
-use semaphore_ffi::cache::{RedisCache, RedisConfig, CacheStats, cache_key};
+use velum_ffi::cache::{RedisCache, RedisConfig, CacheStats, cache_key};

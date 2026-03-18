@@ -72,6 +72,21 @@ pub async fn get_playbook_run_stats(
     Ok(Json(stats))
 }
 
+/// DELETE /api/project/{project_id}/playbook-runs/{id}
+pub async fn delete_playbook_run(
+    State(state): State<Arc<AppState>>,
+    Path((project_id, id)): Path<(i32, i32)>,
+) -> Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
+    state.store.delete_playbook_run(id, project_id).await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse::new(e.to_string()))
+        )
+    })?;
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
 /// Параметры запроса для фильтрации
 #[derive(Debug, Deserialize)]
 pub struct PlaybookRunFilterQuery {

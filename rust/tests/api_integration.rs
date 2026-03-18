@@ -16,7 +16,7 @@ use axum::body::Body;
 use axum::http::{Request, StatusCode, header};
 use http_body_util::BodyExt; // .collect() on response body
 use serde_json::{json, Value};
-use semaphore_ffi::{api::create_app, db::SqlStore};
+use velum_ffi::{api::create_app, db::SqlStore};
 use tower::ServiceExt; // .oneshot()
 
 // ── helpers ───────────────────────────────────────────────────────────────
@@ -195,8 +195,8 @@ async fn seeded_app() -> (axum::Router, tempfile::NamedTempFile) {
 
     // Seed the user into the DB before building the app
     {
-        use semaphore_ffi::db::store::UserManager;
-        use semaphore_ffi::models::User;
+        use velum_ffi::db::store::UserManager;
+        use velum_ffi::models::User;
         use chrono::Utc;
 
         let store = SqlStore::new(&url).await.expect("SqlStore::new for seeding");
@@ -1302,8 +1302,8 @@ async fn test_project_team_management() {
     let url = sqlite_url_from_path(temp.path());
     let teammate_id;
     {
-        use semaphore_ffi::db::store::UserManager;
-        use semaphore_ffi::models::User;
+        use velum_ffi::db::store::UserManager;
+        use velum_ffi::models::User;
         use chrono::Utc;
         let store = SqlStore::new(&url).await.expect("seed store");
         store.create_user(
@@ -1323,7 +1323,7 @@ async fn test_project_team_management() {
         teammate_id = teammate.id as i64;
     }
     let store2 = SqlStore::new(&url).await.expect("app store");
-    let app = semaphore_ffi::api::create_app(std::sync::Arc::new(store2));
+    let app = velum_ffi::api::create_app(std::sync::Arc::new(store2));
     let token = register_and_login(&app).await;
 
     // Create project
