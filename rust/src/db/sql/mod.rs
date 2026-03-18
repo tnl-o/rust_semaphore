@@ -73,9 +73,21 @@ impl SqlStore {
 
     /// Инициализирует схему БД при первом запуске (если таблицы не существуют)
     async fn ensure_schema(&self) -> Result<()> {
-        if self.get_dialect() != SqlDialect::SQLite {
-            return Ok(());
+        match self.get_dialect() {
+            SqlDialect::SQLite => {
+                self.ensure_schema_sqlite().await
+            }
+            SqlDialect::PostgreSQL => {
+                self.ensure_schema_postgres().await
+            }
+            SqlDialect::MySQL => {
+                self.ensure_schema_mysql().await
+            }
         }
+    }
+
+    /// Инициализирует схему БД для SQLite
+    async fn ensure_schema_sqlite(&self) -> Result<()> {
         let pool = self.get_sqlite_pool().ok_or_else(|| Error::Other("SQLite pool not found".to_string()))?;
 
         // Всегда применяем миграции (CREATE TABLE IF NOT EXISTS идемпотентны)
@@ -607,6 +619,158 @@ impl SqlStore {
                 tracing::info!("Миграция: добавлена колонка {col} в template");
             }
         }
+
+        Ok(())
+    }
+
+    /// Инициализирует схему БД для PostgreSQL
+    async fn ensure_schema_postgres(&self) -> Result<()> {
+        let pool = self.get_postgres_pool().ok_or_else(|| Error::Other("PostgreSQL pool not found".to_string()))?;
+
+        tracing::info!("Применение схемы БД PostgreSQL (CREATE TABLE IF NOT EXISTS)...");
+
+        // Таблица миграций
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS migration (version INTEGER PRIMARY KEY, name VARCHAR(255))",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        // Таблица пользователей
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS \"user\" (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(255) NOT NULL UNIQUE,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                admin BOOLEAN NOT NULL DEFAULT false,
+                external BOOLEAN NOT NULL DEFAULT false,
+                alert BOOLEAN NOT NULL DEFAULT false,
+                pro BOOLEAN NOT NULL DEFAULT false,
+                created TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                totp TEXT,
+                email_otp TEXT
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        // Таблица опций
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS option (key VARCHAR(255) PRIMARY KEY, value TEXT NOT NULL)",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        // Таблица проектов
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS project (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                created TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                alert BOOLEAN NOT NULL DEFAULT false,
+                alert_chat VARCHAR(255),
+                max_parallel_tasks INTEGER NOT NULL DEFAULT 0,
+                type VARCHAR(50) NOT NULL DEFAULT '',
+                default_secret_storage_id INTEGER
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        // Таблица secret_storage
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS secret_storage (
+                id SERIAL PRIMARY KEY,
+                project_id INTEGER NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+                name VARCHAR(255) NOT NULL,
+                type VARCHAR(50) NOT NULL DEFAULT 'local',
+                params TEXT NOT NULL DEFAULT '{}',
+                read_only BOOLEAN NOT NULL DEFAULT false,
+                source_storage_type VARCHAR(50),
+                secret TEXT
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        // Таблица project__user
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS project__user (
+                id SERIAL PRIMARY KEY,
+                project_id INTEGER NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES \"user\"(id) ON DELETE CASCADE,
+                owner BOOLEAN NOT NULL DEFAULT false,
+                admin BOOLEAN NOT NULL DEFAULT false,
+                manager BOOLEAN NOT NULL DEFAULT false,
+                task_runner BOOLEAN NOT NULL DEFAULT false,
+                viewer BOOLEAN NOT NULL DEFAULT false
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        Ok(())
+    }
+
+    /// Инициализирует схему БД для MySQL
+    async fn ensure_schema_mysql(&self) -> Result<()> {
+        let pool = self.get_mysql_pool().ok_or_else(|| Error::Other("MySQL pool not found".to_string()))?;
+
+        tracing::info!("Применение схемы БД MySQL (CREATE TABLE IF NOT EXISTS)...");
+
+        // Таблица миграций
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS migration (version BIGINT PRIMARY KEY, name VARCHAR(255))",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        // Таблица пользователей
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS `user` (
+                id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(255) NOT NULL UNIQUE,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                admin BOOLEAN NOT NULL DEFAULT false,
+                external BOOLEAN NOT NULL DEFAULT false,
+                alert BOOLEAN NOT NULL DEFAULT false,
+                pro BOOLEAN NOT NULL DEFAULT false,
+                created DATETIME NOT NULL,
+                totp TEXT,
+                email_otp TEXT
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        // Таблица проектов
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS project (
+                id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                created DATETIME NOT NULL,
+                alert BOOLEAN NOT NULL DEFAULT false,
+                alert_chat VARCHAR(255),
+                max_parallel_tasks INT NOT NULL DEFAULT 0,
+                type VARCHAR(50) NOT NULL DEFAULT '',
+                default_secret_storage_id BIGINT
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
 
         Ok(())
     }
