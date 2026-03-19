@@ -727,7 +727,7 @@ function renderSidebar() {
 
     sidebar.innerHTML = `
         <div class="sidebar-logo">
-            <div class="sidebar-logo-dot"><img src="/logo.png" alt=""></div>
+            <div class="sidebar-logo-dot"><img src="/logo.svg" alt=""></div>
             <h2>Velum</h2>
         </div>
         <div class="sidebar-section">
@@ -749,17 +749,17 @@ function renderSidebar() {
                 </div>
             </div>` : ''}
             <div class="sidebar-footer-controls">
-                <button type="button" class="btn btn-sm sidebar-theme-toggle">${currentTheme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}</button>
-                <select class="form-control sidebar-lang-select">
+                <button type="button" class="sidebar-theme-toggle" title="${currentTheme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}">
+                    <i class="fa-solid ${currentTheme === 'dark' ? 'fa-sun' : 'fa-moon'}"></i>
+                </button>
+                <select class="sidebar-lang-select">
                     <option value="ru"${currentLang === 'ru' ? ' selected' : ''}>RU</option>
                     <option value="en"${currentLang === 'en' ? ' selected' : ''}>EN</option>
                 </select>
+                <a href="tokens.html" class="sidebar-icon-btn" title="API Токены"><i class="fa-solid fa-key"></i></a>
+                <a href="users.html" class="sidebar-icon-btn" title="Аккаунт"><i class="fa-solid fa-user-gear"></i></a>
+                <button class="sidebar-icon-btn" type="button" onclick="api.logout()" title="Выйти"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
-            <div class="sidebar-footer-links">
-                <a href="tokens.html" class="btn btn-sm sidebar-footer-btn">Токены</a>
-                <a href="users.html" class="btn btn-sm sidebar-footer-btn">Аккаунт</a>
-            </div>
-            <button class="btn btn-logout" type="button" onclick="api.logout()">Выйти</button>
         </div>
     `;
 
@@ -824,7 +824,9 @@ function renderSidebar() {
             const next = current === 'dark' ? 'light' : 'dark';
             localStorage.setItem(THEME_KEY, next);
             document.body.classList.toggle('theme-dark', next === 'dark');
-            themeToggle.textContent = next === 'dark' ? 'Светлая тема' : 'Тёмная тема';
+            const icon = themeToggle.querySelector('i');
+            if (icon) icon.className = `fa-solid ${next === 'dark' ? 'fa-sun' : 'fa-moon'}`;
+            themeToggle.title = next === 'dark' ? 'Светлая тема' : 'Тёмная тема';
         });
     }
 

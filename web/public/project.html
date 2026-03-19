@@ -198,28 +198,28 @@
             const content = $('#project-content');
             content.innerHTML = `
                 <div class="grid" style="margin-bottom: 30px;">
-                    <div class="card text-center">
-                        <div style="font-size: 32px; margin-bottom: 10px;">📜</div>
-                        <div style="font-size: 24px; font-weight: bold; color: var(--primary);">${stats.playbooks.length}</div>
-                        <div style="color: var(--text-light);">Playbooks</div>
+                    <div class="card text-center stat-card">
+                        <div class="stat-icon" style="color:#1976d2;"><i class="fa-solid fa-book"></i></div>
+                        <div class="stat-number">${stats.playbooks.length}</div>
+                        <div class="stat-label">Playbooks</div>
                         <a href="playbooks.html?id=${projectId}" class="btn btn-primary btn-sm mt-2">Открыть</a>
                     </div>
-                    <div class="card text-center">
-                        <div style="font-size: 32px; margin-bottom: 10px;">📋</div>
-                        <div style="font-size: 24px; font-weight: bold; color: var(--primary);">${stats.templates.length}</div>
-                        <div style="color: var(--text-light);">Шаблоны</div>
+                    <div class="card text-center stat-card">
+                        <div class="stat-icon" style="color:#2e7d32;"><i class="fa-solid fa-list-check"></i></div>
+                        <div class="stat-number">${stats.templates.length}</div>
+                        <div class="stat-label">Шаблоны</div>
                         <a href="templates.html?id=${projectId}" class="btn btn-primary btn-sm mt-2">Открыть</a>
                     </div>
-                    <div class="card text-center">
-                        <div style="font-size: 32px; margin-bottom: 10px;">📦</div>
-                        <div style="font-size: 24px; font-weight: bold; color: var(--primary);">${stats.inventories.length}</div>
-                        <div style="color: var(--text-light);">Инвентари</div>
+                    <div class="card text-center stat-card">
+                        <div class="stat-icon" style="color:#e65100;"><i class="fa-solid fa-boxes-stacked"></i></div>
+                        <div class="stat-number">${stats.inventories.length}</div>
+                        <div class="stat-label">Инвентари</div>
                         <a href="inventory.html?id=${projectId}" class="btn btn-primary btn-sm mt-2">Открыть</a>
                     </div>
-                    <div class="card text-center">
-                        <div style="font-size: 32px; margin-bottom: 10px;">⚙️</div>
-                        <div style="font-size: 24px; font-weight: bold; color: var(--primary);">${stats.environments.length}</div>
-                        <div style="color: var(--text-light);">Окружения</div>
+                    <div class="card text-center stat-card">
+                        <div class="stat-icon" style="color:#6a1b9a;"><i class="fa-solid fa-leaf"></i></div>
+                        <div class="stat-number">${stats.environments.length}</div>
+                        <div class="stat-label">Окружения</div>
                         <a href="environments.html?id=${projectId}" class="btn btn-primary btn-sm mt-2">Открыть</a>
                     </div>
                 </div>
@@ -240,17 +240,17 @@
                 <div class="card mt-4">
                     <h3 style="margin-bottom: 15px;">Быстрый доступ</h3>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <a href="playbooks.html?id=${projectId}" class="btn btn-primary">📜 Playbooks</a>
-                        <a href="templates.html?id=${projectId}" class="btn btn-primary">📋 Шаблоны</a>
-                        <a href="inventory.html?id=${projectId}" class="btn btn-primary">📦 Инвентарь</a>
-                        <a href="environments.html?id=${projectId}" class="btn btn-primary">⚙️ Окружения</a>
-                        <a href="repositories.html?id=${projectId}" class="btn btn-primary">🗂️ Репозитории</a>
-                        <a href="keys.html?id=${projectId}" class="btn btn-primary">🔐 Ключи</a>
+                        <a href="playbooks.html?id=${projectId}" class="btn btn-primary"><i class="fa-solid fa-book"></i> Playbooks</a>
+                        <a href="templates.html?id=${projectId}" class="btn btn-primary"><i class="fa-solid fa-list-check"></i> Шаблоны</a>
+                        <a href="inventory.html?id=${projectId}" class="btn btn-primary"><i class="fa-solid fa-boxes-stacked"></i> Инвентарь</a>
+                        <a href="environments.html?id=${projectId}" class="btn btn-primary"><i class="fa-solid fa-leaf"></i> Окружения</a>
+                        <a href="repositories.html?id=${projectId}" class="btn btn-primary"><i class="fa-solid fa-code-branch"></i> Репозитории</a>
+                        <a href="keys.html?id=${projectId}" class="btn btn-primary"><i class="fa-solid fa-key"></i> Ключи</a>
                     </div>
                 </div>
 
                 <div class="card mt-4">
-                    <h3 style="margin-bottom: 20px;">⚙️ Настройки проекта</h3>
+                    <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-gear" style="color:var(--text-muted); margin-right:8px;"></i>Настройки проекта</h3>
 
                     <form id="settings-form" onsubmit="saveSettings(event)">
                         <div class="form-group">
@@ -272,7 +272,7 @@
                             </label>
                         </div>
                         <div style="display:flex; gap:8px; align-items:center;">
-                            <button type="submit" class="btn btn-primary">💾 Сохранить настройки</button>
+                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Сохранить настройки</button>
                             <span id="settings-msg" style="font-size:13px;"></span>
                         </div>
                     </form>
@@ -280,10 +280,10 @@
                     <hr style="border:none; border-top:1px solid var(--border); margin:24px 0;">
 
                     <div style="margin-bottom:20px;">
-                        <h4 style="margin-bottom:10px;">📦 Управление</h4>
+                        <h4 style="margin-bottom:10px;"><i class="fa-solid fa-database" style="color:var(--text-muted); margin-right:6px;"></i>Управление</h4>
                         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                            <button id="btn-backup" class="btn btn-sm" onclick="backupProject()">📥 Скачать резервную копию</button>
-                            <button class="btn btn-sm" onclick="restoreProject()">📤 Восстановить из файла</button>
+                            <button id="btn-backup" class="btn btn-sm" onclick="backupProject()"><i class="fa-solid fa-download"></i> Резервная копия</button>
+                            <button class="btn btn-sm" onclick="restoreProject()"><i class="fa-solid fa-upload"></i> Восстановить</button>
                         </div>
                     </div>
 
