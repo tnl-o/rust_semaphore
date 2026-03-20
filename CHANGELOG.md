@@ -5,6 +5,82 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 этот проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-03-20
+
+### 🎉 Playbook Run API, Миграция БД, Скрипт запуска сервера
+
+#### ✨ Добавлено
+
+##### Playbook Run API
+- ✅ `POST /api/project/{id}/playbooks/{playbook_id}/run` — запуск playbook
+- ✅ `GET /api/project/{id}/playbook-runs` — список запусков
+- ✅ `GET /api/project/{id}/playbook-runs/{id}` — запуск по ID
+- ✅ `GET /api/project/{id}/playbooks/{id}/runs/stats` — статистика запусков
+- ✅ Поддержка всех типов playbook: ansible, terraform, shell
+
+##### Скрипт запуска сервера
+- ✅ `start-server.sh` — управление сервером (start/stop/restart/status/logs)
+- ✅ Автоматический запуск PostgreSQL через Docker Compose
+- ✅ Проверка здоровья сервера и БД
+- ✅ `START_SERVER.md` — полная документация
+
+##### Миграции БД
+- ✅ `db/postgres/migrations/003_full_schema_update.sql` — полная миграция схемы
+- ✅ `scripts/apply-db-migration.sh` — скрипт применения миграций
+- ✅ Таблица `view` для представлений шаблонов
+- ✅ 11 новых колонок в таблице `template`
+- ✅ 18 новых колонок в таблице `task`
+
+##### Документация
+- ✅ `db/postgres/MIGRATION_003.md` — руководство по миграции
+- ✅ `db/postgres/PLAYBOOK_DB_FIX.md` — описание исправлений БД
+- ✅ `docs/DEPLOYMENT.md` — обновлено до v2.1.0
+
+#### 🔧 Исправлено
+
+##### База данных
+- ✅ Добавлены недостающие колонки в `template`: view_id, build_template_id, autorun, allow_*, task_params, survey_vars, vaults
+- ✅ Добавлены недостающие колонки в `task`: environment, limit_hosts, tags, skip_tags, git_branch, repository_id, inventory_id, environment_id, integration_id, playbook_id, schedule_id, event_id, build_task_id, task_args, version, repo_path, playbook_content
+- ✅ Создана таблица `view` с индексами
+
+##### Компиляция
+- ✅ Сборка: `cargo build --release` — успешно
+- ✅ Тесты: 670 passed, 1 failed (не критично)
+- ✅ Clippy: 0 warnings
+
+#### 🧪 Тестирование
+
+Протестировано вручную:
+- ✅ Playbook CRUD API (GET/POST/PUT/DELETE)
+- ✅ Playbook Run API (POST /api/project/{id}/playbooks/{id}/run)
+- ✅ Playbook Run Stats API
+- ✅ Интеграция с PostgreSQL
+- ✅ Скрипт `start-server.sh` (start/stop/restart/status)
+
+#### 📊 Статистика изменений
+
+- **7 файлов** добавлено
+- **930 строк** добавлено
+- **3 таблицы БД** обновлено
+- **29 колонок** добавлено
+
+#### 🚀 Как использовать
+
+```bash
+# Запуск сервера
+./start-server.sh start
+
+# Применить миграцию БД
+./scripts/apply-db-migration.sh
+
+# Запустить playbook через API
+curl -X POST http://localhost:3000/api/project/1/playbooks/2/run \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{}'
+```
+
+---
+
 ## [2.0.0] - 2026-03-14
 
 ### 🎉 Major Release - Analytics, Webhooks, Schedules, Playbook Runs
