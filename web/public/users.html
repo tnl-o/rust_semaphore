@@ -8,25 +8,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
 </head>
 <body>
-    <div class="header">
-        <h1><i class="fa-solid fa-rocket"></i> Velum</h1>
-        <div class="user-menu">
-            <span id="user-name">Admin</span>
-            <a href="/" class="btn btn-sm" style="margin-right: 8px;">← Dashboard</a>
-            <button class="btn-logout" onclick="api.logout()">Выйти</button>
-        </div>
-    </div>
+    <div class="layout">
+        <aside class="sidebar"></aside>
 
-    <div class="container">
-        <div class="page-header">
-            <h1><i class="fa-solid fa-users"></i> Пользователи</h1>
-            <button class="btn btn-primary" onclick="openUserModal()">+ Новый пользователь</button>
-        </div>
+        <div class="main-content">
+            <div class="main-header">
+                <h2><i class="fa-solid fa-users"></i> Пользователи</h2>
+                <button class="btn btn-primary" onclick="openUserModal()">
+                    <i class="fa-solid fa-plus"></i> Новый пользователь
+                </button>
+            </div>
 
-        <div id="users-content">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <p>Загрузка пользователей...</p>
+            <div class="main-body">
+                <div id="users-content">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Загрузка пользователей...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
