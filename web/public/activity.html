@@ -17,7 +17,7 @@
             <div class="main-body">
                 <div class="page-header">
                     <h1><i class="fa-solid fa-chart-line"></i> Активность проекта</h1>
-                    <button class="btn btn-sm" onclick="loadActivity()">↺ Обновить</button>
+                    <button class="btn btn-sm" onclick="loadActivity()"><i class="fa-solid fa-rotate-right"></i> Обновить</button>
                 </div>
                 <div id="activity-content">
                     <div class="loading"><div class="loading-spinner"></div><p>Загрузка...</p></div>
@@ -34,7 +34,7 @@
         if (!projectId) { window.location.href = 'index.html'; }
 
         api.getProject(projectId).then(p => {
-            $('#project-title').textContent = p.name + ' → Активность';
+            $('#project-title').innerHTML = escapeHtml(p.name) + ' <span style="color:var(--text-light)">→</span> <i class="fa-solid fa-clock-rotate-left"></i> Активность';
             document.title = 'Активность - ' + p.name;
         }).catch(() => {});
 

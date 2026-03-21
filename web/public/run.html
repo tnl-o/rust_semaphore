@@ -115,7 +115,7 @@
 
                         <div style="display:flex; gap:10px; justify-content:flex-end;">
                             <a href="templates.html?id=${projectId}" class="btn">Отмена</a>
-                            <button type="submit" id="run-btn" class="btn btn-primary">▶ Запустить</button>
+                            <button type="submit" id="run-btn" class="btn btn-primary"><i class="fa-solid fa-play"></i> Запустить</button>
                         </div>
                     </form>
                 </div>
@@ -125,7 +125,7 @@
                 e.preventDefault();
                 const btn = $('#run-btn');
                 btn.disabled = true;
-                btn.textContent = 'Запуск...';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Запуск...';
 
                 const body = { template_id: parseInt(templateId) };
                 const msgEl = document.getElementById('run-message');
@@ -147,7 +147,7 @@
                     .catch(err => {
                         ui.showAlert('Ошибка: ' + err.message, 'danger');
                         btn.disabled = false;
-                        btn.textContent = '▶ Запустить';
+                        btn.innerHTML = '<i class="fa-solid fa-play"></i> Запустить';
                     });
             });
         }
@@ -208,7 +208,7 @@
                         </div>
                         <div style="display:flex; gap:10px; justify-content:flex-end;">
                             <a href="playbooks.html?id=${projectId}" class="btn">Отмена</a>
-                            <button type="submit" id="run-btn" class="btn btn-primary">▶ Запустить</button>
+                            <button type="submit" id="run-btn" class="btn btn-primary"><i class="fa-solid fa-play"></i> Запустить</button>
                         </div>
                     </form>
                 </div>
@@ -218,7 +218,7 @@
                 e.preventDefault();
                 const btn = $('#run-btn');
                 btn.disabled = true;
-                btn.textContent = 'Запуск...';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Запуск...';
                 const invId = document.getElementById('run-inventory').value;
                 const envId = document.getElementById('run-env').value;
 
@@ -238,7 +238,7 @@
                     .catch(err => {
                         ui.showAlert('Ошибка: ' + err.message, 'danger');
                         btn.disabled = false;
-                        btn.textContent = '▶ Запустить';
+                        btn.innerHTML = '<i class="fa-solid fa-play"></i> Запустить';
                     });
             });
         }
@@ -263,7 +263,7 @@
                                             <strong>${escapeHtml(tpl.name)}</strong>
                                             <div style="font-size:12px; color:var(--text-light);">${escapeHtml(tpl.playbook || '')}</div>
                                         </div>
-                                        <a href="run.html?id=${projectId}&tpl=${tpl.id}" class="btn btn-primary btn-sm">▶ Запустить</a>
+                                        <a href="run.html?id=${projectId}&tpl=${tpl.id}" class="btn btn-primary btn-sm"><i class="fa-solid fa-play"></i> Запустить</a>
                                     </div>
                                 `).join('')}
                             </div>

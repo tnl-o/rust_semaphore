@@ -35,13 +35,13 @@
             </div>
             <div class="main-body">
                 <div class="page-header">
-                    <h1>▶ История задач</h1>
+                    <h1><i class="fa-solid fa-clock-rotate-left"></i> История задач</h1>
                     <div style="display:flex; gap:8px; align-items:center;">
                         <label class="auto-refresh-toggle">
                             <input type="checkbox" id="auto-refresh" checked>
                             Авто-обновление
                         </label>
-                        <button class="btn btn-sm" onclick="loadHistory()">↺ Обновить</button>
+                        <button class="btn btn-sm" onclick="loadHistory()"><i class="fa-solid fa-rotate-right"></i> Обновить</button>
                     </div>
                 </div>
 
@@ -88,7 +88,7 @@
 
         // Load project name
         api.getProject(projectId).then(p => {
-            $('#project-title').textContent = p.name + ' → История задач';
+            $('#project-title').innerHTML = escapeHtml(p.name) + ' <span style="color:var(--text-light)">→</span> <i class="fa-solid fa-clock-rotate-left"></i> История задач';
             document.title = 'История — ' + p.name;
         }).catch(() => {});
 
@@ -173,7 +173,7 @@
 
             if (!filteredTasks || filteredTasks.length === 0) {
                 pagination.style.display = 'none';
-                ui.showEmpty(container, '▶', 'Нет задач', 'Запустите шаблон чтобы появились задачи');
+                ui.showEmpty(container, '<i class="fa-solid fa-play fa-2x"></i>', 'Нет задач', 'Запустите шаблон чтобы появились задачи');
                 return;
             }
 
@@ -211,8 +211,8 @@
                                     <div style="display:flex; gap:4px;">
                                         <a href="task.html?id=${projectId}&task=${t.id}" class="btn btn-sm" title="Просмотр"><i class="fa-solid fa-eye"></i></a>
                                         ${t.status === 'running' || t.status === 'waiting'
-                                            ? `<button class="btn btn-sm btn-danger" onclick="stopTask(${t.id})" title="Остановить">■</button>`
-                                            : `<button class="btn btn-sm" onclick="rerunTask(${t.template_id})" title="Повторить">↺</button>`}
+                                            ? `<button class="btn btn-sm btn-danger" onclick="stopTask(${t.id})" title="Остановить"><i class="fa-solid fa-stop"></i></button>`
+                                            : `<button class="btn btn-sm" onclick="rerunTask(${t.template_id})" title="Повторить"><i class="fa-solid fa-rotate-right"></i></button>`}
                                         ${t.status === 'waiting_confirmation'
                                             ? `<button class="btn btn-sm btn-primary" onclick="confirmTask(${t.id})" title="Подтвердить"><i class="fa-solid fa-check"></i></button>
                                                <button class="btn btn-sm btn-danger" onclick="rejectTask(${t.id})" title="Отклонить"><i class="fa-solid fa-xmark"></i></button>`

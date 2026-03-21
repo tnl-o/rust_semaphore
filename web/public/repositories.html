@@ -19,7 +19,7 @@
             <div class="main-body">
                 <div class="page-header">
                     <h1><i class="fa-solid fa-code-branch"></i> Репозитории</h1>
-                    <button class="btn btn-primary" onclick="openRepositoryModal()">+ Новый Репозиторий</button>
+                    <button class="btn btn-primary" onclick="openRepositoryModal()"><i class="fa-solid fa-plus"></i> Новый Репозиторий</button>
                 </div>
 
                 <div id="repositories-content">
@@ -45,7 +45,7 @@
 
         api.getProject(projectId)
             .then(project => {
-                $('#project-title').textContent = project.name + ' → Репозитории';
+                $('#project-title').innerHTML = escapeHtml(project.name) + ' <span style="color:var(--text-light)">→</span> <i class="fa-solid fa-code-branch"></i> Репозитории';
                 document.title = 'Репозитории - ' + project.name;
             })
             .catch(console.error);

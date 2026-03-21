@@ -1,0 +1,29 @@
+version: "3.9"
+
+# Run velum-mcp alongside the Velum server.
+# Requires: VELUM_API_TOKEN set in environment or .env file.
+#
+# Usage:
+#   cp .env.example .env          # fill in VELUM_API_TOKEN
+#   docker compose up --build -d
+
+services:
+  velum-mcp:
+    build: .
+    container_name: velum-mcp
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      VELUM_URL: "${VELUM_URL:-http://velum:3000}"
+      MCP_TRANSPORT: "${MCP_TRANSPORT:-http}"
+      MCP_PORT: "${MCP_PORT:-8500}"
+      RUST_LOG: "${RUST_LOG:-velum_mcp=info}"
+    ports:
+      - "${MCP_PORT:-8500}:8500"
+    networks:
+      - velum_net
+
+networks:
+  velum_net:
+    external: true
+    name: "${VELUM_NETWORK:-velum_default}"

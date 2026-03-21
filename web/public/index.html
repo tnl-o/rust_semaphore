@@ -8,31 +8,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
 </head>
 <body>
-    <div class="header">
-        <h1><img src="logo.svg" alt="">Velum</h1>
-        <div class="user-menu">
-            <a href="/users.html" class="btn btn-ghost btn-sm" style="border-color:rgba(255,255,255,0.12);color:var(--gray-400);">
-                Пользователи
-            </a>
-            <button class="btn-logout" onclick="api.logout()">Выйти</button>
-        </div>
-    </div>
+    <div class="layout">
+        <aside class="sidebar"></aside>
 
-    <div class="container">
-        <div class="page-header" style="margin-top: 8px;">
-            <div>
-                <h1 style="font-size:24px;letter-spacing:-0.5px;">Проекты</h1>
-                <p class="text-muted" style="margin-top:3px;">Выберите проект или создайте новый</p>
+        <div class="main-content">
+            <div class="main-header">
+                <h2>Проекты</h2>
+                <button class="btn btn-primary" onclick="openProjectModal()">
+                    <i class="fa-solid fa-plus"></i> Новый проект
+                </button>
             </div>
-            <button class="btn btn-primary" onclick="openProjectModal()">
-                + Новый проект
-            </button>
-        </div>
 
-        <div id="projects-grid" class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <p>Загрузка...</p>
+            <div class="main-body">
+                <p style="color:var(--text-light); margin-bottom:20px;">Выберите проект или создайте новый</p>
+                <div id="projects-grid" class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Загрузка...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -46,18 +40,20 @@
                 .then(projects => {
                     const grid = $('#projects-grid');
                     if (projects.length === 0) {
-                        ui.showEmpty(grid, '◈', 'Нет проектов', 'Создайте первый проект чтобы начать работу');
+                        ui.showEmpty(grid, '<i class="fa-solid fa-folder-open fa-2x"></i>', 'Нет проектов', 'Создайте первый проект чтобы начать работу');
                     } else {
                         grid.innerHTML = projects.map(p => `
-                            <div class="card card-interactive" onclick="location.href='/project.html?id=${p.id}'">
+                            <div class="card card-interactive" onclick="selectProject(${p.id})">
                                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                                    <div style="width:36px;height:36px;background:var(--primary-sub);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">⬡</div>
+                                    <div style="width:40px;height:40px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="fa-solid fa-folder" style="color:#fff;font-size:18px;"></i>
+                                    </div>
                                     <div style="min-width:0;">
-                                        <div style="font-weight:600;color:var(--text);font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.name)}</div>
-                                        <div style="font-size:12px;color:var(--text-muted);">ID: ${p.id}</div>
+                                        <div style="font-weight:600;color:var(--text);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.name)}</div>
+                                        <div style="font-size:12px;color:var(--text-light);">ID: ${p.id}</div>
                                     </div>
                                 </div>
-                                <p style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:0;">${escapeHtml(p.description || 'Нет описания')}</p>
+                                <p style="font-size:13px;color:var(--text-light);line-height:1.5;margin:0;">${escapeHtml(p.description || 'Нет описания')}</p>
                             </div>
                         `).join('');
                     }
@@ -65,6 +61,11 @@
                 .catch(error => {
                     ui.showError($('#projects-grid'), error.message);
                 });
+        }
+
+        function selectProject(id) {
+            localStorage.setItem('velum_project_id', id);
+            window.location.href = '/project.html?id=' + id;
         }
 
         loadProjects();
@@ -76,7 +77,7 @@
             modal.innerHTML = `
                 <div class="modal">
                     <div class="modal-header">
-                        <h2>Новый проект</h2>
+                        <h2><i class="fa-solid fa-folder-plus"></i> Новый проект</h2>
                     </div>
                     <form id="project-form">
                         <div class="form-group">
@@ -90,10 +91,10 @@
                         <div class="form-group">
                             <label for="project-parallel">Макс. параллельных задач</label>
                             <input type="number" id="project-parallel" class="form-control" value="0" min="0">
-                            <p class="form-hint">0 — без ограничений</p>
+                            <small style="color:var(--text-light);">0 — без ограничений</small>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-ghost" onclick="closeProjectModal()">Отмена</button>
+                            <button type="button" class="btn" onclick="closeProjectModal()">Отмена</button>
                             <button type="submit" class="btn btn-primary">Создать проект</button>
                         </div>
                     </form>
@@ -115,7 +116,7 @@
                 })
                 .then(p => {
                     closeProjectModal();
-                    window.location.href = '/project.html?id=' + p.id;
+                    selectProject(p.id);
                 })
                 .catch(error => {
                     ui.showAlert('Ошибка: ' + error.message, 'danger');

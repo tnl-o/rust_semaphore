@@ -1,0 +1,48 @@
+[package]
+name = "velum-mcp"
+version = "1.0.0"
+edition = "2021"
+description = "MCP server for Velum — AI-native control of Ansible, Terraform and DevOps automation"
+license = "MIT"
+repository = "https://github.com/tnl-o/velum"
+readme = "README.md"
+
+[[bin]]
+name = "velum-mcp"
+path = "src/main.rs"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# HTTP client (calls Velum REST API)
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# HTTP server (for HTTP transport mode)
+axum = { version = "0.8", features = ["json"] }
+tower = { version = "0.5" }
+tower-http = { version = "0.6", features = ["cors"] }
+
+# JSON + serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+
+# Config from environment
+dotenvy = "0.15"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+anyhow = "1"
+thiserror = "2"
+
+# Utilities
+uuid = { version = "1", features = ["v4"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

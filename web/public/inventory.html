@@ -19,7 +19,7 @@
             <div class="main-body">
                 <div class="page-header">
                     <h1><i class="fa-solid fa-boxes-stacked"></i> Инвентари</h1>
-                    <button class="btn btn-primary" onclick="openInventoryModal()">+ Новый Инвентарь</button>
+                    <button class="btn btn-primary" onclick="openInventoryModal()"><i class="fa-solid fa-plus"></i> Новый Инвентарь</button>
                 </div>
 
                 <div id="inventory-content">
@@ -45,7 +45,7 @@
 
         api.getProject(projectId)
             .then(project => {
-                $('#project-title').textContent = project.name + ' → Инвентари';
+                $('#project-title').innerHTML = escapeHtml(project.name) + ' <span style="color:var(--text-light)">→</span> <i class="fa-solid fa-server"></i> Инвентари';
                 document.title = 'Инвентари - ' + project.name;
             })
             .catch(console.error);

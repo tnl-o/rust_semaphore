@@ -19,7 +19,7 @@
             <div class="main-body">
                 <div class="page-header">
                     <h1><i class="fa-solid fa-key"></i> Ключи доступа</h1>
-                    <button class="btn btn-primary" onclick="openKeyModal()">+ Новый Ключ</button>
+                    <button class="btn btn-primary" onclick="openKeyModal()"><i class="fa-solid fa-plus"></i> Новый Ключ</button>
                 </div>
 
 
@@ -46,7 +46,7 @@
 
         api.getProject(projectId)
             .then(project => {
-                $('#project-title').textContent = project.name + ' → Ключи доступа';
+                $('#project-title').innerHTML = escapeHtml(project.name) + ' <span style="color:var(--text-light)">→</span> <i class="fa-solid fa-key"></i> Ключи доступа';
                 document.title = 'Ключи - ' + project.name;
             })
             .catch(console.error);

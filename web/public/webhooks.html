@@ -13,8 +13,8 @@
 
         <div class="main-content">
             <div class="main-header">
-                <h2 id="project-title">Интеграции</h2>
-                <button class="btn btn-primary" id="add-btn" onclick="openCreateModal()">+ Добавить интеграцию</button>
+                <h2 id="project-title"><i class="fa-solid fa-plug"></i> Интеграции</h2>
+                <button class="btn btn-primary" id="add-btn" onclick="openCreateModal()"><i class="fa-solid fa-plus"></i> Добавить интеграцию</button>
             </div>
 
             <!-- Tabs -->
@@ -44,7 +44,7 @@
                 <div id="content-aliases" style="display:none;">
                     <div class="main-header" style="padding: 0; margin-bottom: 15px;">
                         <span></span>
-                        <button class="btn btn-primary btn-sm" onclick="openAliasModal()">+ Добавить алиас</button>
+                        <button class="btn btn-primary btn-sm" onclick="openAliasModal()"><i class="fa-solid fa-plus"></i> Добавить алиас</button>
                     </div>
                     <div id="aliases-list">
                         <div class="loading">
@@ -162,7 +162,7 @@
             document.getElementById('tab-aliases').style.color = tab === 'aliases' ? 'var(--primary-color)' : 'var(--text-light)';
             document.getElementById('tab-aliases').style.fontWeight = tab === 'aliases' ? '500' : 'normal';
 
-            document.getElementById('add-btn').textContent = tab === 'integrations' ? '+ Добавить интеграцию' : '+ Добавить алиас';
+            document.getElementById('add-btn').innerHTML = tab === 'integrations' ? '<i class="fa-solid fa-plus"></i> Добавить интеграцию' : '<i class="fa-solid fa-plus"></i> Добавить алиас';
             document.getElementById('add-btn').onclick = tab === 'integrations' ? openCreateModal : openAliasModal;
 
             if (tab === 'aliases' && aliases.length === 0) loadAliases();
@@ -248,7 +248,7 @@
                                     <td>${authBadge}</td>
                                     <td>
                                         <span style="font-family:monospace;font-size:12px;color:var(--text-light)">${escapeHtml(url)}</span>
-                                        <button class="btn btn-sm btn-secondary" onclick="copyUrl('${escapeHtml(url)}')" title="Копировать URL" style="padding:2px 6px;font-size:11px;">⧉</button>
+                                        <button class="btn btn-sm btn-secondary" onclick="copyUrl('${escapeHtml(url)}')" title="Копировать URL" style="padding:2px 6px;font-size:11px;"><i class="fa-regular fa-copy"></i></button>
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-secondary" onclick="editIntegration(${i.id})" title="Редактировать"><i class="fa-solid fa-pen"></i></button>
@@ -297,7 +297,7 @@
                                     <td>${integration ? escapeHtml(integration.name) : '#' + a.integration_id}</td>
                                     <td>
                                         <span style="font-family:monospace;font-size:12px;color:var(--text-light)">${url}</span>
-                                        <button class="btn btn-sm btn-secondary" onclick="copyUrl('${url}')" title="Копировать" style="padding:2px 6px;font-size:11px;">⧉</button>
+                                        <button class="btn btn-sm btn-secondary" onclick="copyUrl('${url}')" title="Копировать" style="padding:2px 6px;font-size:11px;"><i class="fa-regular fa-copy"></i></button>
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-danger" onclick="deleteAlias(${a.id})" title="Удалить"><i class="fa-solid fa-trash"></i></button>

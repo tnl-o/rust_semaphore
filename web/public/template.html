@@ -80,7 +80,7 @@
                     </div>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;">
                         <button class="btn btn-sm" onclick="goToTemplates()">← К шаблонам</button>
-                        <button class="btn btn-primary btn-sm" onclick="runTemplateFromView()">▶ Запустить</button>
+                        <button class="btn btn-primary btn-sm" onclick="runTemplateFromView()"><i class="fa-solid fa-play"></i> Запустить</button>
                     </div>
                 </div>
 
@@ -251,7 +251,7 @@
                 .then(tasks => {
                     const list = (tasks || []).filter(t => String(t.template_id) === String(templateId));
                     if (list.length === 0) {
-                        ui.showEmpty(container, '▶', 'Нет задач для этого шаблона', 'Запустите шаблон, чтобы увидеть историю задач.');
+                        ui.showEmpty(container, '<i class="fa-solid fa-play fa-2x"></i>', 'Нет задач для этого шаблона', 'Запустите шаблон, чтобы увидеть историю задач.');
                         return;
                     }
                     list.sort((a, b) => new Date(b.created) - new Date(a.created));
@@ -423,10 +423,10 @@
             const content = $('#tpl-content');
             content.innerHTML = `
                 <div class="toolbar">
-                    <button class="btn btn-primary" onclick="openRunDialog()">▶ Запустить</button>
+                    <button class="btn btn-primary" onclick="openRunDialog()"><i class="fa-solid fa-play"></i> Запустить</button>
                     <button class="btn btn-danger btn-sm" onclick="stopAllTasks()"><i class="fa-solid fa-stop"></i> Остановить все задачи</button>
                     <button class="btn btn-sm" onclick="openEditDialog()"><i class="fa-solid fa-pen"></i> Редактировать</button>
-                    <button class="btn btn-sm" style="color:#c53030;" onclick="stopAllTasks()" title="Остановить все выполняющиеся задачи">■ Стоп всё</button>
+                    <button class="btn btn-sm" style="color:#c53030;" onclick="stopAllTasks()" title="Остановить все выполняющиеся задачи"><i class="fa-solid fa-stop"></i> Стоп всё</button>
                     <button class="btn btn-danger btn-sm" onclick="deleteTplWithRefsCheck()"><i class="fa-solid fa-trash"></i> Удалить</button>
                     <div style="flex:1"></div>
                     <a href="templates.html?id=${projectId}" class="btn btn-sm">← Шаблоны</a>
@@ -472,7 +472,7 @@
                     .sort((a, b) => new Date(b.created) - new Date(a.created));
 
                 if (!filtered.length) {
-                    ui.showEmpty(container, '▶', 'Нет задач', 'Нажмите "Запустить" для первого запуска');
+                    ui.showEmpty(container, '<i class="fa-solid fa-play fa-2x"></i>', 'Нет задач', 'Нажмите "Запустить" для первого запуска');
                     return;
                 }
 
@@ -560,7 +560,7 @@
                                 Детальные права для отдельных ролей (независимо от прав проекта)
                             </p>
                         </div>
-                        <button class="btn btn-primary" onclick="openPermissionModal()">+ Добавить право</button>
+                        <button class="btn btn-primary" onclick="openPermissionModal()"><i class="fa-solid fa-plus"></i> Добавить право</button>
                     </div>
 
                     <div id="perms-loading" class="loading">
@@ -592,7 +592,7 @@
                                     Для этого шаблона ещё не настроены детальные права.
                                     Базовые роли проекта (owner/manager/runner) продолжают работать.
                                 </p>
-                                <button class="btn btn-primary" onclick="openPermissionModal()">+ Добавить право</button>
+                                <button class="btn btn-primary" onclick="openPermissionModal()"><i class="fa-solid fa-plus"></i> Добавить право</button>
                             </div>
                         `;
                         return;
@@ -639,7 +639,7 @@
 
         function formatPermission(perm) {
             const labels = {
-                'run': '▶ Запуск задач',
+                'run': '<i class="fa-solid fa-play"></i> Запуск задач',
                 'view': '<i class="fa-solid fa-eye"></i> Просмотр',
                 'edit': '<i class="fa-solid fa-pen"></i> Редактирование',
                 'delete': '<i class="fa-solid fa-trash"></i> Удаление',
@@ -938,7 +938,7 @@
             modal.className = 'modal-overlay';
             modal.innerHTML = `
                 <div class="modal" style="max-width:500px;">
-                    <div class="modal-header"><h2>▶ ${escapeHtml(tpl.name)}</h2></div>
+                    <div class="modal-header"><h2><i class="fa-solid fa-play"></i> ${escapeHtml(tpl.name)}</h2></div>
                     <form id="run-form">
                         <div class="form-group">
                             <label>Сообщение <span style="color:var(--text-light); font-size:12px;">(необязательно)</span></label>
@@ -954,7 +954,7 @@
                         </div>` : ''}
                         <div class="modal-footer">
                             <button type="button" class="btn" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
-                            <button type="submit" class="btn btn-primary">▶ Запустить</button>
+                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-play"></i> Запустить</button>
                         </div>
                     </form>
                 </div>
@@ -1066,7 +1066,7 @@
                                 Управление workspace'ами для изоляции окружений (dev, staging, production)
                             </p>
                         </div>
-                        <button class="btn btn-primary" onclick="openCreateWorkspaceModal()">+ Новый Workspace</button>
+                        <button class="btn btn-primary" onclick="openCreateWorkspaceModal()"><i class="fa-solid fa-plus"></i> Новый Workspace</button>
                     </div>
 
                     <div id="workspaces-loading" class="loading">
@@ -1098,7 +1098,7 @@
                                 <p style="color:var(--text-light); margin-bottom:16px;">
                                     Создайте первый workspace для управления состояниями Terraform/OpenTofu
                                 </p>
-                                <button class="btn btn-primary" onclick="openCreateWorkspaceModal()">+ Новый Workspace</button>
+                                <button class="btn btn-primary" onclick="openCreateWorkspaceModal()"><i class="fa-solid fa-plus"></i> Новый Workspace</button>
                             </div>
                         `;
                         return;

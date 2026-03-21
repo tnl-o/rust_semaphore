@@ -5,7 +5,7 @@
 >
 > **Репозиторий:** https://github.com/tnl-o/velum
 > **Upstream (Go оригинал):** https://github.com/velum/velum
-> **Последнее обновление:** 2026-03-18 (обновление 37 — T-BE-15 закрыт: exporter_entities реализован через block_in_place; scheduler_pool.rs удалён (дубликат); README.md обновлён (671 тест, Vanilla JS); все T-BE-01..15 и T-FE-01..10 закрыты; merge upstream/main + origin/main)
+> **Последнее обновление:** 2026-03-21 (обновление 38 — Enterprise UI polish: все ~270 emoji заменены на Font Awesome 6.5 иконки по всем 28+ HTML страницам; index.html и users.html мигрированы на единый sidebar layout; тёмная тема работает; upstream/main смержен (DEB пакет, DB migration 003, start-server.sh))
 
 ---
 

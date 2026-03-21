@@ -6,7 +6,7 @@ use crate::api::state::AppState;
 use crate::api::handlers;
 use crate::api::websocket::websocket_handler;
 use crate::api::handlers::projects::{schedules, views, integration as project_integration, integration_alias, secret_storages, users as project_users, tasks, templates, repository, notifications, backup_restore, refs, invites, roles};
-use crate::api::{events, apps, options, runners, cache, system_info, user, graphql};
+use crate::api::{events, apps, options, runners, cache, system_info, user, graphql, mcp};
 use crate::api::handlers::totp;
 use tower_http::services::{ServeDir, ServeFile};
 
@@ -393,6 +393,14 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/project/{project_id}/tasks/{id}/stages", get(tasks::get_task_stages))
         .route("/api/projects/{project_id}/tasks/{id}/raw_output", get(tasks::get_task_raw_output))
         .route("/api/projects/{project_id}/tasks/{id}/stages", get(tasks::get_task_stages))
+
+        // ── MCP (Model Context Protocol) — embedded AI gateway ──────────────
+        // POST /mcp  — JSON-RPC 2.0 endpoint (Claude Desktop/Code connects here)
+        .route("/mcp", post(mcp::mcp_endpoint))
+        // REST settings & tool catalog (for the Settings UI page)
+        .route("/api/mcp/settings", get(mcp::get_mcp_settings))
+        .route("/api/mcp/settings", put(mcp::update_mcp_settings))
+        .route("/api/mcp/tools", get(mcp::get_mcp_tools))
 }
 
 /// Создаёт маршруты для статических файлов

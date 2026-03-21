@@ -19,7 +19,7 @@
             <div class="main-body">
                 <div class="page-header">
                     <h1><i class="fa-solid fa-book"></i> Playbooks</h1>
-                    <button class="btn btn-primary" onclick="openPlaybookModal()">+ Новый Playbook</button>
+                    <button class="btn btn-primary" onclick="openPlaybookModal()"><i class="fa-solid fa-plus"></i> Новый Playbook</button>
                 </div>
 
                 <div id="playbooks-content">
@@ -56,7 +56,7 @@
         // Загрузка проекта
         api.getProject(projectId)
             .then(project => {
-                $('#project-title').textContent = project.name + ' → Playbooks';
+                $('#project-title').innerHTML = escapeHtml(project.name) + ' <span style="color:var(--text-light)">→</span> <i class="fa-solid fa-book-open"></i> Playbooks';
                 document.title = 'Playbooks - ' + project.name;
             })
             .catch(console.error);
@@ -93,7 +93,7 @@
                                             <td>${pb.repository_id ? '<i class="fa-solid fa-folder"></i> ID: ' + pb.repository_id : '—'}</td>
                                             <td>${formatDate(pb.updated)}</td>
                                             <td>
-                                                <a href="run.html?id=${projectId}&playbook=${pb.id}" class="btn btn-success btn-sm" title="Запустить">▶</a>
+                                                <a href="run.html?id=${projectId}&playbook=${pb.id}" class="btn btn-success btn-sm" title="Запустить"><i class="fa-solid fa-play"></i></a>
                                                 <button class="btn btn-sm" onclick="showRunHistory(${pb.id}, ${JSON.stringify(escapeHtml(pb.name))})" title="История запусков"><i class="fa-solid fa-list"></i></button>
                                                 <button class="btn btn-sm" onclick="editPlaybook(${pb.id})" title="Редактировать"><i class="fa-solid fa-pen"></i></button>
                                                 <button class="btn btn-sm" onclick="syncPlaybook(${pb.id})" title="Синхронизировать из Git"><i class="fa-solid fa-arrows-rotate"></i></button>
