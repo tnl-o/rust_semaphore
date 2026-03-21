@@ -4,27 +4,69 @@
 
 use crate::db::sql::types::SqlDb;
 use crate::error::{Error, Result};
-use crate::models::Session;
+use crate::models::{Session, SessionVerificationMethod};
+use sqlx::Row;
 
 impl SqlDb {
+    fn pg_pool_session(&self) -> Result<&sqlx::PgPool> {
+        self.get_postgres_pool()
+            .ok_or_else(|| Error::Other("PostgreSQL pool not found".to_string()))
+    }
+
     /// Получает сессию по ID
-    pub async fn get_session(&self, user_id: i32, session_id: i32) -> Result<Session> {
-        match unreachable!() {
-            
-        }
+    pub async fn get_session(&self, _user_id: i32, session_id: i32) -> Result<Session> {
+        let row = sqlx::query(
+            "SELECT * FROM session WHERE id = $1"
+        )
+        .bind(session_id)
+        .fetch_optional(self.pg_pool_session()?)
+        .await
+        .map_err(Error::Database)?
+        .ok_or_else(|| Error::NotFound("Сессия не найдена".to_string()))?;
+
+        Ok(Session {
+            id: row.get("id"),
+            user_id: row.get("user_id"),
+            created: row.get("created"),
+            last_active: row.get("last_active"),
+            ip: row.try_get("ip").ok().unwrap_or_default(),
+            user_agent: row.try_get("user_agent").ok().unwrap_or_default(),
+            expired: row.get("expired"),
+            verification_method: row.try_get("verification_method").ok().unwrap_or(SessionVerificationMethod::None),
+            verified: row.try_get("verified").ok().unwrap_or(false),
+        })
     }
 
     /// Создаёт сессию
     pub async fn create_session(&self, mut session: Session) -> Result<Session> {
-        match unreachable!() {
-            
-        }
+        let id: i32 = sqlx::query_scalar(
+            "INSERT INTO session (user_id, created, last_active, ip, user_agent, expired, \
+             verification_method, verified) \
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
+        )
+        .bind(session.user_id)
+        .bind(session.created)
+        .bind(session.last_active)
+        .bind(&session.ip)
+        .bind(&session.user_agent)
+        .bind(session.expired)
+        .bind(&session.verification_method)
+        .bind(session.verified)
+        .fetch_one(self.pg_pool_session()?)
+        .await
+        .map_err(Error::Database)?;
+
+        session.id = id;
+        Ok(session)
     }
 
     /// Истекает сессию
-    pub async fn expire_session(&self, user_id: i32, session_id: i32) -> Result<()> {
-        match unreachable!() {
-            
-        }
+    pub async fn expire_session(&self, _user_id: i32, session_id: i32) -> Result<()> {
+        sqlx::query("UPDATE session SET expired = TRUE WHERE id = $1")
+            .bind(session_id)
+            .execute(self.pg_pool_session()?)
+            .await
+            .map_err(Error::Database)?;
+        Ok(())
     }
 }
