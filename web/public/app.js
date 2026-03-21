@@ -691,6 +691,7 @@ const SIDEBAR_ITEMS = [
     { href: 'workflow.html',     icon: 'fa-solid fa-diagram-project', label: 'Workflows' },
     { href: 'drift.html',        icon: 'fa-solid fa-radar',           label: 'Drift Detection' },
     { href: 'snapshots.html',    icon: 'fa-solid fa-clock-rotate-left', label: 'Rollback' },
+    { href: 'marketplace.html',  icon: 'fa-solid fa-store',           label: 'Marketplace', noId: true },
     { href: 'team.html',         icon: 'fa-solid fa-users',          label: 'Команда' },
     { href: 'runners.html',      icon: 'fa-solid fa-bolt',           label: 'Runners',    noId: true },
     { href: 'apps.html',         icon: 'fa-solid fa-puzzle-piece',   label: 'Apps',       noId: true },
