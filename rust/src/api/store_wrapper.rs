@@ -6,6 +6,7 @@ use crate::models::audit_log::{AuditAction, AuditObjectType, AuditLevel, AuditLo
 use crate::models::webhook::{Webhook, UpdateWebhook, WebhookLog};
 use crate::models::playbook_run_history::{PlaybookRun, PlaybookRunCreate, PlaybookRunUpdate, PlaybookRunStatus, PlaybookRunStats, PlaybookRunFilter};
 use crate::models::workflow::{Workflow, WorkflowCreate, WorkflowUpdate, WorkflowNode, WorkflowNodeCreate, WorkflowNodeUpdate, WorkflowEdge, WorkflowEdgeCreate, WorkflowRun};
+use crate::models::notification::{NotificationPolicy, NotificationPolicyCreate, NotificationPolicyUpdate};
 use crate::error::Result;
 use crate::services::task_logger::TaskStatus;
 use async_trait::async_trait;
@@ -848,6 +849,28 @@ impl crate::db::store::WorkflowManager for StoreWrapper {
     }
     async fn update_workflow_run_status(&self, id: i32, status: &str, message: Option<String>) -> crate::error::Result<()> {
         self.inner.as_ref().update_workflow_run_status(id, status, message).await
+    }
+}
+
+#[async_trait]
+impl crate::db::store::NotificationPolicyManager for StoreWrapper {
+    async fn get_notification_policies(&self, project_id: i32) -> crate::error::Result<Vec<NotificationPolicy>> {
+        self.inner.as_ref().get_notification_policies(project_id).await
+    }
+    async fn get_notification_policy(&self, id: i32, project_id: i32) -> crate::error::Result<NotificationPolicy> {
+        self.inner.as_ref().get_notification_policy(id, project_id).await
+    }
+    async fn create_notification_policy(&self, project_id: i32, payload: NotificationPolicyCreate) -> crate::error::Result<NotificationPolicy> {
+        self.inner.as_ref().create_notification_policy(project_id, payload).await
+    }
+    async fn update_notification_policy(&self, id: i32, project_id: i32, payload: NotificationPolicyUpdate) -> crate::error::Result<NotificationPolicy> {
+        self.inner.as_ref().update_notification_policy(id, project_id, payload).await
+    }
+    async fn delete_notification_policy(&self, id: i32, project_id: i32) -> crate::error::Result<()> {
+        self.inner.as_ref().delete_notification_policy(id, project_id).await
+    }
+    async fn get_matching_policies(&self, project_id: i32, trigger: &str, template_id: Option<i32>) -> crate::error::Result<Vec<NotificationPolicy>> {
+        self.inner.as_ref().get_matching_policies(project_id, trigger, template_id).await
     }
 }
 

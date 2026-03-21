@@ -631,6 +631,24 @@ impl SqlStore {
         .await
         .map_err(Error::Database)?;
 
+        // notification_policy — политики уведомлений (Slack/Teams/PagerDuty/Generic)
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS notification_policy (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                channel_type TEXT NOT NULL DEFAULT 'slack',
+                webhook_url TEXT NOT NULL,
+                trigger TEXT NOT NULL DEFAULT 'on_failure',
+                template_id INTEGER,
+                enabled INTEGER NOT NULL DEFAULT 1,
+                created TEXT NOT NULL DEFAULT (datetime('now'))
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
         tracing::info!("Схема БД инициализирована");
         Ok(())
     }
@@ -836,6 +854,24 @@ impl SqlStore {
         .await
         .map_err(Error::Database)?;
 
+        // notification_policy — политики уведомлений (Slack/Teams/PagerDuty/Generic)
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS notification_policy (
+                id SERIAL PRIMARY KEY,
+                project_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                channel_type TEXT NOT NULL DEFAULT 'slack',
+                webhook_url TEXT NOT NULL,
+                trigger TEXT NOT NULL DEFAULT 'on_failure',
+                template_id INTEGER,
+                enabled BOOLEAN NOT NULL DEFAULT TRUE,
+                created TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
         Ok(())
     }
 
@@ -885,6 +921,24 @@ impl SqlStore {
                 max_parallel_tasks INT NOT NULL DEFAULT 0,
                 type VARCHAR(50) NOT NULL DEFAULT '',
                 default_secret_storage_id BIGINT
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        // notification_policy — политики уведомлений (Slack/Teams/PagerDuty/Generic)
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS `notification_policy` (
+                id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                project_id BIGINT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                channel_type VARCHAR(50) NOT NULL DEFAULT 'slack',
+                webhook_url TEXT NOT NULL,
+                `trigger` VARCHAR(50) NOT NULL DEFAULT 'on_failure',
+                template_id BIGINT,
+                enabled TINYINT(1) NOT NULL DEFAULT 1,
+                created DATETIME NOT NULL DEFAULT NOW()
             )",
         )
         .execute(pool)

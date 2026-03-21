@@ -856,3 +856,25 @@ impl crate::db::store::WorkflowManager for MockStore {
         Ok(())
     }
 }
+
+#[async_trait]
+impl crate::db::store::NotificationPolicyManager for MockStore {
+    async fn get_notification_policies(&self, _project_id: i32) -> Result<Vec<crate::models::notification::NotificationPolicy>> {
+        Ok(Vec::new())
+    }
+    async fn get_notification_policy(&self, _id: i32, _project_id: i32) -> Result<crate::models::notification::NotificationPolicy> {
+        Err(Error::NotFound("NotificationPolicy not found".to_string()))
+    }
+    async fn create_notification_policy(&self, _project_id: i32, _payload: crate::models::notification::NotificationPolicyCreate) -> Result<crate::models::notification::NotificationPolicy> {
+        Err(Error::Other("not implemented".to_string()))
+    }
+    async fn update_notification_policy(&self, _id: i32, _project_id: i32, _payload: crate::models::notification::NotificationPolicyUpdate) -> Result<crate::models::notification::NotificationPolicy> {
+        Err(Error::Other("not implemented".to_string()))
+    }
+    async fn delete_notification_policy(&self, _id: i32, _project_id: i32) -> Result<()> {
+        Ok(())
+    }
+    async fn get_matching_policies(&self, _project_id: i32, _trigger: &str, _template_id: Option<i32>) -> Result<Vec<crate::models::notification::NotificationPolicy>> {
+        Ok(Vec::new())
+    }
+}

@@ -42,6 +42,7 @@ pub mod playbook;
 pub mod playbook_run;
 pub mod playbook_run_history;
 pub mod workflow;
+pub mod notification;
 
 #[cfg(test)]
 mod tests;
@@ -56,6 +57,7 @@ pub use playbook::{Playbook, PlaybookCreate, PlaybookUpdate};
 pub use playbook_run::{PlaybookRunRequest, PlaybookRunResult, AnsiblePlaybookParams};
 pub use playbook_run_history::{PlaybookRun, PlaybookRunCreate, PlaybookRunUpdate, PlaybookRunStatus, PlaybookRunStats, PlaybookRunFilter};
 pub use workflow::{Workflow, WorkflowCreate, WorkflowUpdate, WorkflowNode, WorkflowNodeCreate, WorkflowNodeUpdate, WorkflowEdge, WorkflowEdgeCreate, WorkflowRun as WorkflowRunModel, WorkflowFull, EdgeCondition};
+pub use notification::{NotificationPolicy, NotificationPolicyCreate, NotificationPolicyUpdate, NotificationChannelType};
 pub use totp_verification::TotpVerification;
 pub use inventory::{Inventory, InventoryType};
 pub use repository::{Repository, RepositoryType};

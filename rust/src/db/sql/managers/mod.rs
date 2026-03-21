@@ -60,6 +60,7 @@ pub mod playbook;
 pub mod playbook_run;
 pub mod integration_matcher;
 pub mod workflow;
+pub mod notification;
 
 // Ре-экспорт трейтов для удобства
 pub use connection::*;

@@ -415,6 +415,14 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/mcp/settings", get(mcp::get_mcp_settings))
         .route("/api/mcp/settings", put(mcp::update_mcp_settings))
         .route("/api/mcp/tools", get(mcp::get_mcp_tools))
+
+        // Notification Policies
+        .route("/api/project/{project_id}/notifications", get(handlers::notification::list_notification_policies))
+        .route("/api/project/{project_id}/notifications", post(handlers::notification::create_notification_policy))
+        .route("/api/project/{project_id}/notifications/{id}", get(handlers::notification::get_notification_policy))
+        .route("/api/project/{project_id}/notifications/{id}", put(handlers::notification::update_notification_policy))
+        .route("/api/project/{project_id}/notifications/{id}", delete(handlers::notification::delete_notification_policy))
+        .route("/api/project/{project_id}/notifications/{id}/test", post(handlers::notification::test_notification_policy))
 }
 
 /// Создаёт маршруты для статических файлов

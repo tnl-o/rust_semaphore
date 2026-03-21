@@ -7,6 +7,7 @@ use crate::models::audit_log::{AuditAction, AuditObjectType, AuditLevel, AuditLo
 use crate::models::playbook::{Playbook, PlaybookCreate, PlaybookUpdate};
 use crate::models::playbook_run_history::{PlaybookRun, PlaybookRunCreate, PlaybookRunUpdate, PlaybookRunStatus, PlaybookRunStats, PlaybookRunFilter};
 use crate::models::workflow::{Workflow, WorkflowCreate, WorkflowUpdate, WorkflowNode, WorkflowNodeCreate, WorkflowNodeUpdate, WorkflowEdge, WorkflowEdgeCreate, WorkflowRun};
+use crate::models::notification::{NotificationPolicy, NotificationPolicyCreate, NotificationPolicyUpdate};
 use crate::models::Hook;
 use crate::error::Result;
 use crate::services::task_logger::TaskStatus;
@@ -422,6 +423,17 @@ pub trait WorkflowManager: Send + Sync {
     async fn update_workflow_run_status(&self, id: i32, status: &str, message: Option<String>) -> Result<()>;
 }
 
+/// Менеджер политик уведомлений
+#[async_trait]
+pub trait NotificationPolicyManager: Send + Sync {
+    async fn get_notification_policies(&self, project_id: i32) -> Result<Vec<NotificationPolicy>>;
+    async fn get_notification_policy(&self, id: i32, project_id: i32) -> Result<NotificationPolicy>;
+    async fn create_notification_policy(&self, project_id: i32, payload: NotificationPolicyCreate) -> Result<NotificationPolicy>;
+    async fn update_notification_policy(&self, id: i32, project_id: i32, payload: NotificationPolicyUpdate) -> Result<NotificationPolicy>;
+    async fn delete_notification_policy(&self, id: i32, project_id: i32) -> Result<()>;
+    async fn get_matching_policies(&self, project_id: i32, trigger: &str, template_id: Option<i32>) -> Result<Vec<NotificationPolicy>>;
+}
+
 /// Менеджер Playbook
 pub trait Store:
     ConnectionManager
@@ -454,5 +466,6 @@ pub trait Store:
     + IntegrationExtractValueManager
     + ProjectRoleManager
     + WorkflowManager
+    + NotificationPolicyManager
 {
 }
