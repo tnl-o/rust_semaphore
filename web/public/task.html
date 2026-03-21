@@ -43,11 +43,24 @@
             overflow-y: auto;
         }
         .log-line { margin-bottom: 3px; white-space: pre-wrap; word-break: break-all; }
-        .log-info    { color: #d4d4d4; }
-        .log-success { color: #4ec9b0; }
-        .log-warning { color: #ce9178; }
-        .log-error   { color: #f48771; }
-        .log-debug   { color: #808080; }
+        .log-info      { color: #d4d4d4; }
+        .log-success   { color: #4ec9b0; }
+        .log-changed   { color: #dcdcaa; font-weight: 600; }  /* ansible changed */
+        .log-ok        { color: #6a9955; }                    /* ansible ok */
+        .log-skipped   { color: #808080; }                    /* ansible skipped */
+        .log-warning   { color: #ce9178; }
+        .log-error     { color: #f48771; }
+        .log-fatal     { color: #f44747; font-weight: 700; background: rgba(244,71,71,.08); }
+        .log-recap     { color: #569cd6; font-weight: 700; border-top: 1px solid #333; margin-top: 4px; padding-top: 4px; }
+        .log-task-hdr  { color: #9cdcfe; font-weight: 600; }  /* TASK [xxx] */
+        .log-play-hdr  { color: #c586c0; font-weight: 700; }  /* PLAY [xxx] */
+        .log-tf-plan   { color: #dcdcaa; }                    /* terraform plan lines */
+        .log-tf-add    { color: #4ec9b0; }                    /* + resource */
+        .log-tf-remove { color: #f48771; }                    /* - resource */
+        .log-tf-change { color: #ce9178; }                    /* ~ resource */
+        .log-diff-add  { color: #73c991; }                    /* diff +line */
+        .log-diff-del  { color: #f48771; }                    /* diff -line */
+        .log-debug     { color: #808080; }
 
         .progress-bar { height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
         .progress-bar-fill {
@@ -732,10 +745,45 @@
         }
 
         function getLogClass(line) {
-            const lower = (line || '').toLowerCase();
-            if (lower.includes('ok=') || lower.includes('changed=') || lower.includes('successfully')) return 'log-success';
-            if (lower.includes('failed=') || lower.includes('fatal') || lower.includes('error')) return 'log-error';
+            const s = line || '';
+            const t = s.trim();
+
+            // Ansible: PLAY RECAP summary line
+            if (/^PLAY RECAP\s*[\*]+/.test(t)) return 'log-recap';
+            // Ansible: PLAY [name] header
+            if (/^PLAY\s*\[/.test(t)) return 'log-play-hdr';
+            // Ansible: TASK [name] header
+            if (/^TASK\s*\[/.test(t)) return 'log-task-hdr';
+            // Ansible: fatal/unreachable
+            if (/^fatal\s*:/.test(t) || /UNREACHABLE/.test(t)) return 'log-fatal';
+            // Ansible: failed result
+            if (/^failed\s*:/.test(t)) return 'log-error';
+            // Ansible: changed result
+            if (/^changed\s*:/.test(t)) return 'log-changed';
+            // Ansible: ok result
+            if (/^ok\s*:/.test(t)) return 'log-ok';
+            // Ansible: skipping
+            if (/^skipping\s*:/.test(t) || /^skipped\s*:/.test(t)) return 'log-skipped';
+            // Ansible: recap stats line (host: ok=N changed=M unreachable=X failed=Y)
+            if (/ok=\d+/.test(t) && /changed=\d+/.test(t)) return 'log-recap';
+
+            // Terraform: plan lines
+            if (/^\s*#\s/.test(t) && /(will be|must be|has been)/.test(t)) return 'log-tf-plan';
+            if (/^\s*\+/.test(t)) return 'log-tf-add';
+            if (/^\s*-\s/.test(t) && !/^\s*---/.test(t)) return 'log-tf-remove';
+            if (/^\s*~\s/.test(t)) return 'log-tf-change';
+
+            // Diff output
+            if (/^\+\+\+/.test(t) || t.startsWith('+++')) return 'log-diff-add';
+            if (/^---/.test(t)) return 'log-diff-del';
+            if (t.startsWith('+') && !t.startsWith('+++')) return 'log-diff-add';
+            if (t.startsWith('-') && !t.startsWith('---')) return 'log-diff-del';
+
+            // Generic
+            const lower = s.toLowerCase();
+            if (lower.includes('error') || lower.includes('failed')) return 'log-error';
             if (lower.includes('warning') || lower.includes('warn')) return 'log-warning';
+            if (lower.includes('successfully') || lower.includes('success')) return 'log-success';
             if (lower.includes('debug')) return 'log-debug';
             return 'log-info';
         }
