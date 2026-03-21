@@ -9,6 +9,7 @@ use crate::models::playbook_run_history::{PlaybookRun, PlaybookRunCreate, Playbo
 use crate::models::workflow::{Workflow, WorkflowCreate, WorkflowUpdate, WorkflowNode, WorkflowNodeCreate, WorkflowNodeUpdate, WorkflowEdge, WorkflowEdgeCreate, WorkflowRun};
 use crate::models::notification::{NotificationPolicy, NotificationPolicyCreate, NotificationPolicyUpdate};
 use crate::models::credential_type::{CredentialType, CredentialTypeCreate, CredentialTypeUpdate, CredentialInstance, CredentialInstanceCreate};
+use crate::models::drift::{DriftConfig, DriftConfigCreate, DriftResult};
 use crate::models::Hook;
 use crate::error::Result;
 use crate::services::task_logger::TaskStatus;
@@ -483,5 +484,19 @@ pub trait Store:
     + WorkflowManager
     + NotificationPolicyManager
     + CredentialTypeManager
+    + DriftManager
 {
+}
+
+/// Менеджер Drift Detection (GitOps)
+#[async_trait]
+pub trait DriftManager: Send + Sync {
+    async fn get_drift_configs(&self, project_id: i32) -> Result<Vec<DriftConfig>>;
+    async fn get_drift_config(&self, id: i32, project_id: i32) -> Result<DriftConfig>;
+    async fn create_drift_config(&self, project_id: i32, payload: DriftConfigCreate) -> Result<DriftConfig>;
+    async fn update_drift_config_enabled(&self, id: i32, project_id: i32, enabled: bool) -> Result<()>;
+    async fn delete_drift_config(&self, id: i32, project_id: i32) -> Result<()>;
+    async fn get_drift_results(&self, drift_config_id: i32, limit: i64) -> Result<Vec<DriftResult>>;
+    async fn create_drift_result(&self, project_id: i32, drift_config_id: i32, template_id: i32, status: &str, summary: Option<String>, task_id: Option<i32>) -> Result<DriftResult>;
+    async fn get_latest_drift_results(&self, project_id: i32) -> Result<Vec<DriftResult>>;
 }

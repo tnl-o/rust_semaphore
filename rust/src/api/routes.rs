@@ -430,6 +430,14 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/project/{project_id}/notifications/{id}", delete(handlers::notification::delete_notification_policy))
         .route("/api/project/{project_id}/notifications/{id}/test", post(handlers::notification::test_notification_policy))
 
+        // GitOps Drift Detection
+        .route("/api/project/{project_id}/drift", get(handlers::drift::list_drift_configs))
+        .route("/api/project/{project_id}/drift", post(handlers::drift::create_drift_config))
+        .route("/api/project/{project_id}/drift/{id}", put(handlers::drift::update_drift_config))
+        .route("/api/project/{project_id}/drift/{id}", delete(handlers::drift::delete_drift_config))
+        .route("/api/project/{project_id}/drift/{id}/check", post(handlers::drift::trigger_drift_check))
+        .route("/api/project/{project_id}/drift/{id}/results", get(handlers::drift::get_drift_results))
+
         // Custom Credential Types (global)
         .route("/api/credential-types", get(handlers::credential_type::list_credential_types))
         .route("/api/credential-types", post(handlers::credential_type::create_credential_type))

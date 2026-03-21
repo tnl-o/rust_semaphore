@@ -689,6 +689,7 @@ const SIDEBAR_ITEMS = [
     { href: 'credential_types.html', icon: 'fa-solid fa-id-card',      label: 'Типы ключей',  noId: true },
     { href: 'playbooks.html',    icon: 'fa-solid fa-scroll',         label: 'Playbooks' },
     { href: 'workflow.html',     icon: 'fa-solid fa-diagram-project', label: 'Workflows' },
+    { href: 'drift.html',        icon: 'fa-solid fa-radar',           label: 'Drift Detection' },
     { href: 'team.html',         icon: 'fa-solid fa-users',          label: 'Команда' },
     { href: 'runners.html',      icon: 'fa-solid fa-bolt',           label: 'Runners',    noId: true },
     { href: 'apps.html',         icon: 'fa-solid fa-puzzle-piece',   label: 'Apps',       noId: true },

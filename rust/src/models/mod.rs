@@ -44,6 +44,7 @@ pub mod playbook_run_history;
 pub mod workflow;
 pub mod notification;
 pub mod credential_type;
+pub mod drift;
 
 #[cfg(test)]
 mod tests;

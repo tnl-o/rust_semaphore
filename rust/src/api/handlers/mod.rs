@@ -25,6 +25,7 @@ pub mod workflow;
 pub mod notification;
 pub mod ai;
 pub mod credential_type;
+pub mod drift;
 
 // Ре-экспорт всех handlers для удобства
 pub use auth::*;

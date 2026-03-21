@@ -906,4 +906,32 @@ impl crate::db::store::CredentialTypeManager for StoreWrapper {
 }
 
 #[async_trait]
+impl crate::db::store::DriftManager for StoreWrapper {
+    async fn get_drift_configs(&self, project_id: i32) -> crate::error::Result<Vec<crate::models::drift::DriftConfig>> {
+        self.inner.as_ref().get_drift_configs(project_id).await
+    }
+    async fn get_drift_config(&self, id: i32, project_id: i32) -> crate::error::Result<crate::models::drift::DriftConfig> {
+        self.inner.as_ref().get_drift_config(id, project_id).await
+    }
+    async fn create_drift_config(&self, project_id: i32, payload: crate::models::drift::DriftConfigCreate) -> crate::error::Result<crate::models::drift::DriftConfig> {
+        self.inner.as_ref().create_drift_config(project_id, payload).await
+    }
+    async fn update_drift_config_enabled(&self, id: i32, project_id: i32, enabled: bool) -> crate::error::Result<()> {
+        self.inner.as_ref().update_drift_config_enabled(id, project_id, enabled).await
+    }
+    async fn delete_drift_config(&self, id: i32, project_id: i32) -> crate::error::Result<()> {
+        self.inner.as_ref().delete_drift_config(id, project_id).await
+    }
+    async fn get_drift_results(&self, drift_config_id: i32, limit: i64) -> crate::error::Result<Vec<crate::models::drift::DriftResult>> {
+        self.inner.as_ref().get_drift_results(drift_config_id, limit).await
+    }
+    async fn create_drift_result(&self, project_id: i32, drift_config_id: i32, template_id: i32, status: &str, summary: Option<String>, task_id: Option<i32>) -> crate::error::Result<crate::models::drift::DriftResult> {
+        self.inner.as_ref().create_drift_result(project_id, drift_config_id, template_id, status, summary, task_id).await
+    }
+    async fn get_latest_drift_results(&self, project_id: i32) -> crate::error::Result<Vec<crate::models::drift::DriftResult>> {
+        self.inner.as_ref().get_latest_drift_results(project_id).await
+    }
+}
+
+#[async_trait]
 impl Store for StoreWrapper {}

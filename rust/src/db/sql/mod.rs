@@ -681,6 +681,38 @@ impl SqlStore {
         .await
         .map_err(Error::Database)?;
 
+        // drift_config — конфигурация мониторинга дрейфа
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS drift_config (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL,
+                template_id INTEGER NOT NULL,
+                enabled INTEGER NOT NULL DEFAULT 1,
+                schedule TEXT,
+                created DATETIME NOT NULL DEFAULT (datetime('now'))
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        // drift_result — результаты проверок дрейфа
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS drift_result (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                drift_config_id INTEGER NOT NULL,
+                project_id INTEGER NOT NULL,
+                template_id INTEGER NOT NULL,
+                status TEXT NOT NULL DEFAULT 'clean',
+                summary TEXT,
+                task_id INTEGER,
+                checked_at DATETIME NOT NULL DEFAULT (datetime('now'))
+            )",
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
         tracing::info!("Схема БД инициализирована");
         Ok(())
     }

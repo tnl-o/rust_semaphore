@@ -62,6 +62,7 @@ pub mod integration_matcher;
 pub mod workflow;
 pub mod notification;
 pub mod credential_type;
+pub mod drift;
 
 // Ре-экспорт трейтов для удобства
 pub use connection::*;

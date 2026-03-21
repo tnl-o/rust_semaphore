@@ -714,6 +714,18 @@ impl ProjectRoleManager for MockStore {
 impl Store for MockStore {}
 
 #[async_trait]
+impl crate::db::store::DriftManager for MockStore {
+    async fn get_drift_configs(&self, _project_id: i32) -> Result<Vec<crate::models::drift::DriftConfig>> { Ok(Vec::new()) }
+    async fn get_drift_config(&self, _id: i32, _project_id: i32) -> Result<crate::models::drift::DriftConfig> { Err(Error::NotFound("DriftConfig not found".to_string())) }
+    async fn create_drift_config(&self, _project_id: i32, _payload: crate::models::drift::DriftConfigCreate) -> Result<crate::models::drift::DriftConfig> { Err(Error::Other("not implemented".to_string())) }
+    async fn update_drift_config_enabled(&self, _id: i32, _project_id: i32, _enabled: bool) -> Result<()> { Ok(()) }
+    async fn delete_drift_config(&self, _id: i32, _project_id: i32) -> Result<()> { Ok(()) }
+    async fn get_drift_results(&self, _drift_config_id: i32, _limit: i64) -> Result<Vec<crate::models::drift::DriftResult>> { Ok(Vec::new()) }
+    async fn create_drift_result(&self, _project_id: i32, _drift_config_id: i32, _template_id: i32, _status: &str, _summary: Option<String>, _task_id: Option<i32>) -> Result<crate::models::drift::DriftResult> { Err(Error::Other("not implemented".to_string())) }
+    async fn get_latest_drift_results(&self, _project_id: i32) -> Result<Vec<crate::models::drift::DriftResult>> { Ok(Vec::new()) }
+}
+
+#[async_trait]
 impl WebhookManager for MockStore {
     async fn get_webhook(&self, _webhook_id: i64) -> Result<crate::models::webhook::Webhook> {
         Err(Error::NotFound("Webhook not found".to_string()))
