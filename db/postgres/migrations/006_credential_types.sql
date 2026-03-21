@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS credential_instance (
     project_id INTEGER NOT NULL REFERENCES project(id) ON DELETE CASCADE,
     credential_type_id INTEGER NOT NULL REFERENCES credential_type(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    values TEXT NOT NULL DEFAULT '{}',
+    "values" TEXT NOT NULL DEFAULT '{}',
     description TEXT,
     created TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

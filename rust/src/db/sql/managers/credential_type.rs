@@ -312,7 +312,7 @@ impl CredentialTypeManager for SqlStore {
             SqlDialect::SQLite => {
                 let pool = self.get_sqlite_pool().ok_or_else(|| Error::Other("SQLite pool not found".to_string()))?;
                 let id = sqlx::query(
-                    "INSERT INTO credential_instance (project_id, credential_type_id, name, values, description, created) VALUES (?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO credential_instance (project_id, credential_type_id, name, \"values\", description, created) VALUES (?, ?, ?, ?, ?, ?)"
                 )
                 .bind(project_id)
                 .bind(payload.credential_type_id)
@@ -329,7 +329,7 @@ impl CredentialTypeManager for SqlStore {
             SqlDialect::PostgreSQL => {
                 let pool = self.get_postgres_pool().ok_or_else(|| Error::Other("PostgreSQL pool not found".to_string()))?;
                 let row = sqlx::query_as::<_, CredentialInstance>(
-                    "INSERT INTO credential_instance (project_id, credential_type_id, name, values, description, created) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *"
+                    "INSERT INTO credential_instance (project_id, credential_type_id, name, \"values\", description, created) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *"
                 )
                 .bind(project_id)
                 .bind(payload.credential_type_id)
