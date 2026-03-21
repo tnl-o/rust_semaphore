@@ -807,3 +807,52 @@ impl PlaybookRunManager for MockStore {
         })
     }
 }
+
+#[async_trait]
+impl crate::db::store::WorkflowManager for MockStore {
+    async fn get_workflows(&self, _project_id: i32) -> Result<Vec<crate::models::workflow::Workflow>> {
+        Ok(Vec::new())
+    }
+    async fn get_workflow(&self, _id: i32, _project_id: i32) -> Result<crate::models::workflow::Workflow> {
+        Err(Error::NotFound("Workflow not found".to_string()))
+    }
+    async fn create_workflow(&self, _project_id: i32, _payload: crate::models::workflow::WorkflowCreate) -> Result<crate::models::workflow::Workflow> {
+        Err(Error::Other("not implemented".to_string()))
+    }
+    async fn update_workflow(&self, _id: i32, _project_id: i32, _payload: crate::models::workflow::WorkflowUpdate) -> Result<crate::models::workflow::Workflow> {
+        Err(Error::Other("not implemented".to_string()))
+    }
+    async fn delete_workflow(&self, _id: i32, _project_id: i32) -> Result<()> {
+        Ok(())
+    }
+    async fn get_workflow_nodes(&self, _workflow_id: i32) -> Result<Vec<crate::models::workflow::WorkflowNode>> {
+        Ok(Vec::new())
+    }
+    async fn create_workflow_node(&self, _workflow_id: i32, _payload: crate::models::workflow::WorkflowNodeCreate) -> Result<crate::models::workflow::WorkflowNode> {
+        Err(Error::Other("not implemented".to_string()))
+    }
+    async fn update_workflow_node(&self, _id: i32, _workflow_id: i32, _payload: crate::models::workflow::WorkflowNodeUpdate) -> Result<crate::models::workflow::WorkflowNode> {
+        Err(Error::Other("not implemented".to_string()))
+    }
+    async fn delete_workflow_node(&self, _id: i32, _workflow_id: i32) -> Result<()> {
+        Ok(())
+    }
+    async fn get_workflow_edges(&self, _workflow_id: i32) -> Result<Vec<crate::models::workflow::WorkflowEdge>> {
+        Ok(Vec::new())
+    }
+    async fn create_workflow_edge(&self, _workflow_id: i32, _payload: crate::models::workflow::WorkflowEdgeCreate) -> Result<crate::models::workflow::WorkflowEdge> {
+        Err(Error::Other("not implemented".to_string()))
+    }
+    async fn delete_workflow_edge(&self, _id: i32, _workflow_id: i32) -> Result<()> {
+        Ok(())
+    }
+    async fn get_workflow_runs(&self, _workflow_id: i32, _project_id: i32) -> Result<Vec<crate::models::workflow::WorkflowRun>> {
+        Ok(Vec::new())
+    }
+    async fn create_workflow_run(&self, _workflow_id: i32, _project_id: i32) -> Result<crate::models::workflow::WorkflowRun> {
+        Err(Error::Other("not implemented".to_string()))
+    }
+    async fn update_workflow_run_status(&self, _id: i32, _status: &str, _message: Option<String>) -> Result<()> {
+        Ok(())
+    }
+}

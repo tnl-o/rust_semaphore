@@ -124,7 +124,21 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/project/{project_id}/playbook-runs/{id}", get(handlers::playbook_runs::get_playbook_run))
         .route("/api/project/{project_id}/playbook-runs/{id}", delete(handlers::playbook_runs::delete_playbook_run))
         .route("/api/project/{project_id}/playbooks/{playbook_id}/runs/stats", get(handlers::playbook_runs::get_playbook_run_stats))
-        
+
+        // Workflows (DAG)
+        .route("/api/project/{project_id}/workflows", get(handlers::workflow::get_workflows))
+        .route("/api/project/{project_id}/workflows", post(handlers::workflow::create_workflow))
+        .route("/api/project/{project_id}/workflows/{id}", get(handlers::workflow::get_workflow))
+        .route("/api/project/{project_id}/workflows/{id}", put(handlers::workflow::update_workflow))
+        .route("/api/project/{project_id}/workflows/{id}", delete(handlers::workflow::delete_workflow))
+        .route("/api/project/{project_id}/workflows/{id}/nodes", post(handlers::workflow::add_workflow_node))
+        .route("/api/project/{project_id}/workflows/{id}/nodes/{node_id}", put(handlers::workflow::update_workflow_node))
+        .route("/api/project/{project_id}/workflows/{id}/nodes/{node_id}", delete(handlers::workflow::delete_workflow_node))
+        .route("/api/project/{project_id}/workflows/{id}/edges", post(handlers::workflow::add_workflow_edge))
+        .route("/api/project/{project_id}/workflows/{id}/edges/{edge_id}", delete(handlers::workflow::delete_workflow_edge))
+        .route("/api/project/{project_id}/workflows/{id}/run", post(handlers::workflow::run_workflow))
+        .route("/api/project/{project_id}/workflows/{id}/runs", get(handlers::workflow::get_workflow_runs))
+
         // Репозитории
         .route("/api/projects/{project_id}/repositories", get(handlers::get_repositories))
         .route("/api/projects/{project_id}/repositories", post(handlers::create_repository))

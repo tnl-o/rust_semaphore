@@ -59,6 +59,7 @@ pub mod webhook;
 pub mod playbook;
 pub mod playbook_run;
 pub mod integration_matcher;
+pub mod workflow;
 
 // Ре-экспорт трейтов для удобства
 pub use connection::*;
