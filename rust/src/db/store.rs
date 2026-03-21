@@ -10,6 +10,7 @@ use crate::models::workflow::{Workflow, WorkflowCreate, WorkflowUpdate, Workflow
 use crate::models::notification::{NotificationPolicy, NotificationPolicyCreate, NotificationPolicyUpdate};
 use crate::models::credential_type::{CredentialType, CredentialTypeCreate, CredentialTypeUpdate, CredentialInstance, CredentialInstanceCreate};
 use crate::models::drift::{DriftConfig, DriftConfigCreate, DriftResult};
+use crate::models::ldap_group::{LdapGroupMapping, LdapGroupMappingCreate};
 use crate::models::Hook;
 use crate::error::Result;
 use crate::services::task_logger::TaskStatus;
@@ -485,6 +486,7 @@ pub trait Store:
     + NotificationPolicyManager
     + CredentialTypeManager
     + DriftManager
+    + LdapGroupMappingManager
 {
 }
 
@@ -499,4 +501,13 @@ pub trait DriftManager: Send + Sync {
     async fn get_drift_results(&self, drift_config_id: i32, limit: i64) -> Result<Vec<DriftResult>>;
     async fn create_drift_result(&self, project_id: i32, drift_config_id: i32, template_id: i32, status: &str, summary: Option<String>, task_id: Option<i32>) -> Result<DriftResult>;
     async fn get_latest_drift_results(&self, project_id: i32) -> Result<Vec<DriftResult>>;
+}
+
+/// Менеджер LDAP Group → Team маппингов
+#[async_trait]
+pub trait LdapGroupMappingManager: Send + Sync {
+    async fn get_ldap_group_mappings(&self) -> Result<Vec<LdapGroupMapping>>;
+    async fn create_ldap_group_mapping(&self, payload: LdapGroupMappingCreate) -> Result<LdapGroupMapping>;
+    async fn delete_ldap_group_mapping(&self, id: i32) -> Result<()>;
+    async fn get_mappings_for_groups(&self, group_dns: &[String]) -> Result<Vec<LdapGroupMapping>>;
 }

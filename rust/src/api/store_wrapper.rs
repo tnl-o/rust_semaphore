@@ -934,4 +934,20 @@ impl crate::db::store::DriftManager for StoreWrapper {
 }
 
 #[async_trait]
+impl crate::db::store::LdapGroupMappingManager for StoreWrapper {
+    async fn get_ldap_group_mappings(&self) -> crate::error::Result<Vec<crate::models::ldap_group::LdapGroupMapping>> {
+        self.inner.as_ref().get_ldap_group_mappings().await
+    }
+    async fn create_ldap_group_mapping(&self, payload: crate::models::ldap_group::LdapGroupMappingCreate) -> crate::error::Result<crate::models::ldap_group::LdapGroupMapping> {
+        self.inner.as_ref().create_ldap_group_mapping(payload).await
+    }
+    async fn delete_ldap_group_mapping(&self, id: i32) -> crate::error::Result<()> {
+        self.inner.as_ref().delete_ldap_group_mapping(id).await
+    }
+    async fn get_mappings_for_groups(&self, group_dns: &[String]) -> crate::error::Result<Vec<crate::models::ldap_group::LdapGroupMapping>> {
+        self.inner.as_ref().get_mappings_for_groups(group_dns).await
+    }
+}
+
+#[async_trait]
 impl Store for StoreWrapper {}

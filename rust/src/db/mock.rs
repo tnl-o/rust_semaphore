@@ -726,6 +726,14 @@ impl crate::db::store::DriftManager for MockStore {
 }
 
 #[async_trait]
+impl crate::db::store::LdapGroupMappingManager for MockStore {
+    async fn get_ldap_group_mappings(&self) -> Result<Vec<crate::models::ldap_group::LdapGroupMapping>> { Ok(Vec::new()) }
+    async fn create_ldap_group_mapping(&self, _payload: crate::models::ldap_group::LdapGroupMappingCreate) -> Result<crate::models::ldap_group::LdapGroupMapping> { Err(Error::Other("not implemented".to_string())) }
+    async fn delete_ldap_group_mapping(&self, _id: i32) -> Result<()> { Ok(()) }
+    async fn get_mappings_for_groups(&self, _group_dns: &[String]) -> Result<Vec<crate::models::ldap_group::LdapGroupMapping>> { Ok(Vec::new()) }
+}
+
+#[async_trait]
 impl WebhookManager for MockStore {
     async fn get_webhook(&self, _webhook_id: i64) -> Result<crate::models::webhook::Webhook> {
         Err(Error::NotFound("Webhook not found".to_string()))

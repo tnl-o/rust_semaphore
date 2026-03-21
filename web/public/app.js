@@ -693,6 +693,7 @@ const SIDEBAR_ITEMS = [
     { href: 'team.html',         icon: 'fa-solid fa-users',          label: 'Команда' },
     { href: 'runners.html',      icon: 'fa-solid fa-bolt',           label: 'Runners',    noId: true },
     { href: 'apps.html',         icon: 'fa-solid fa-puzzle-piece',   label: 'Apps',       noId: true },
+    { href: 'ldap_groups.html',  icon: 'fa-solid fa-sitemap',        label: 'LDAP Groups', noId: true },
     { href: 'mcp.html',          icon: 'fa-solid fa-robot',          label: 'MCP / AI',   noId: true },
 ];
 

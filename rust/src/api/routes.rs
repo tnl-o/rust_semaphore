@@ -449,6 +449,11 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/project/{project_id}/credentials", get(handlers::credential_type::list_credential_instances))
         .route("/api/project/{project_id}/credentials", post(handlers::credential_type::create_credential_instance))
         .route("/api/project/{project_id}/credentials/{id}", delete(handlers::credential_type::delete_credential_instance))
+
+        // LDAP Group → Teams mapping (admin)
+        .route("/api/admin/ldap/group-mappings", get(handlers::ldap_groups::list_ldap_group_mappings))
+        .route("/api/admin/ldap/group-mappings", post(handlers::ldap_groups::create_ldap_group_mapping))
+        .route("/api/admin/ldap/group-mappings/{id}", delete(handlers::ldap_groups::delete_ldap_group_mapping))
 }
 
 /// Создаёт маршруты для статических файлов
