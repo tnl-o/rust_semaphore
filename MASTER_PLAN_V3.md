@@ -1,6 +1,6 @@
 # MASTER_PLAN V3 — Velum: Стать лучше AWX и Ansible Tower
 
-> **Последнее обновление:** 2026-03-21 (сессия 3 — Drift, LDAP Groups, Terraform Plan Preview)
+> **Последнее обновление:** 2026-03-21 (сессия 4 — CLI velum, Rollback/Snapshots, Template Marketplace)
 > **Версия:** 3.2
 > **Статус:** АКТИВНЫЙ ПЛАН РАЗРАБОТКИ
 
@@ -28,8 +28,9 @@
 | Terraform Plan Preview | ❌ | ✅ реализован (v2.3) |
 | Template Dry Run | ❌ | ✅ реализован (v2.2) |
 | Log Annotations | ❌ | ✅ реализованы (v2.3) |
-| CLI Tool | ✅ | 🔵 v2.7 |
-| Rollback / Snapshots | ❌ | 🔵 v3.0 |
+| CLI Tool | ✅ | ✅ v2.7 |
+| Rollback / Snapshots | ❌ | ✅ v3.0 |
+| Template Marketplace | ❌ | ✅ v3.0 |
 | Terraform Cost Tracking | ❌ | 🔵 v3.0 |
 
 ---
@@ -405,17 +406,18 @@ claude mcp add-json velum '{"type":"http","url":"http://localhost:3000/mcp","hea
 | 4 | v2.4 | **LDAP Group Sync** + **Custom Credential Types** | ✅ Готово | Q1 2026 |
 | 5 | v2.5 | **Notification Policies** (Slack/Teams/PagerDuty) | ✅ Готово | Q1 2026 |
 | 6 | v2.6 | **Template Dry Run** + **Log Annotations** | ✅ Готово | Q1 2026 |
-| 7 | v2.7 | **CLI Tool `velum`** | 🔵 Запланировано | Q2 2026 |
-| 8 | v3.0 | **Rollback & Snapshots** + **Template Marketplace** + **Cost Tracking** | 🔵 Запланировано | Q3 2026 |
+| 7 | v2.7 | **CLI Tool `velum`** | ✅ Готово | Q1 2026 |
+| 8 | v3.0 | **Rollback & Snapshots** + **Template Marketplace** | ✅ Готово | Q1 2026 |
+| 9 | v3.0+ | **Terraform Cost Tracking** | 🔵 Запланировано | Q2 2026 |
 
 ---
 
-## Текущее состояние (v2.1.0 + v3.1 MCP)
+## Текущее состояние (v3.0 — Feature Complete)
 
 ### Реализовано ✅
 
 - **Бэкенд**: 75+ API endpoints, 667 тестов, 0 Clippy warnings
-- **Фронтенд**: 28+ HTML страниц, полный feature parity с Go-оригиналом
+- **Фронтенд**: 30+ HTML страниц, полный feature parity с Go-оригиналом
 - **Auth**: JWT, bcrypt, TOTP 2FA, LDAP, OIDC, refresh tokens
 - **Task Runner**: реальный запуск ansible/terraform/bash с WebSocket логами
 - **Scheduler**: cron-расписания с автозапуском
@@ -427,6 +429,12 @@ claude mcp add-json velum '{"type":"http","url":"http://localhost:3000/mcp","hea
 - **Deploy**: Docker (demo/dev/prod), DEB пакет, native binary
 - **MCP Server (Rust, standalone)**: 60 инструментов, stdio + HTTP, ~5MB бинарник (`mcp/`)
 - **MCP встроенный (v3.2)**: `POST /mcp` прямо в Velum, страница `mcp.html` с UI настроек, link в сайдбаре
+- **CLI Tool `velum` (v2.7)**: 10 команд (projects, templates, run, status, logs, approve, stop, whoami, version, tasks)
+- **Rollback & Snapshots (v3.0)**: снапшоты задач, rollback в один клик, `snapshots.html`
+- **Template Marketplace (v3.0)**: 11 community templates, import в проект, `marketplace.html`
+- **LDAP Group Sync (v2.4)**: `memberOf` → Teams auto-sync, `ldap_groups.html`
+- **GitOps Drift Detection (v2.3)**: реальный diff git vs live, `drift.html`
+- **Terraform Plan Preview (v2.3)**: Plan/Apply радио-кнопки, dry_run banner в task.html
 
 ### Открытые задачи
 
