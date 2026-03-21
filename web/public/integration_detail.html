@@ -118,7 +118,7 @@
             container.innerHTML = `
                 <div class="page-header" style="margin-bottom:12px;">
                     <h3 style="margin:0;">Матчеры</h3>
-                    <button class="btn btn-primary btn-sm" onclick="openMatcherModal()">+ Добавить матчер</button>
+                    <button class="btn btn-primary btn-sm" onclick="openMatcherModal()"><i class="fa-solid fa-plus"></i> Добавить матчер</button>
                 </div>
             `;
 
@@ -161,7 +161,7 @@
         function renderMatcherAddHint(container) {
             container.innerHTML += `
                 <div style="margin-top:12px;">
-                    <button class="btn btn-primary btn-sm" onclick="openMatcherModal()">+ Добавить матчер</button>
+                    <button class="btn btn-primary btn-sm" onclick="openMatcherModal()"><i class="fa-solid fa-plus"></i> Добавить матчер</button>
                 </div>
             `;
         }
@@ -172,7 +172,7 @@
             modal.id = 'matcher-modal';
             modal.innerHTML = `
                 <div class="modal" style="max-width:540px;">
-                    <div class="modal-header"><h2>+ Добавить матчер</h2></div>
+                    <div class="modal-header"><h2><i class="fa-solid fa-plus"></i> Добавить матчер</h2></div>
                     <form id="matcher-form">
                         <div class="form-group">
                             <label>Название</label>
@@ -248,7 +248,7 @@
             container.innerHTML = `
                 <div class="page-header" style="margin-bottom:12px;">
                     <h3 style="margin:0;">Extract Values</h3>
-                    <button class="btn btn-primary btn-sm" onclick="openValueModal()">+ Добавить</button>
+                    <button class="btn btn-primary btn-sm" onclick="openValueModal()"><i class="fa-solid fa-plus"></i> Добавить</button>
                 </div>
             `;
 
@@ -292,7 +292,7 @@
             modal.id = 'value-modal';
             modal.innerHTML = `
                 <div class="modal" style="max-width:520px;">
-                    <div class="modal-header"><h2>+ Extract Value</h2></div>
+                    <div class="modal-header"><h2><i class="fa-solid fa-plus"></i> Extract Value</h2></div>
                     <form id="value-form">
                         <div class="form-group">
                             <label>Название</label>
@@ -359,7 +359,7 @@
             container.innerHTML = `
                 <div class="page-header" style="margin-bottom:12px;">
                     <h3 style="margin:0;">Aliases</h3>
-                    <button class="btn btn-primary btn-sm" onclick="addAlias()">+ Добавить alias</button>
+                    <button class="btn btn-primary btn-sm" onclick="addAlias()"><i class="fa-solid fa-plus"></i> Добавить alias</button>
                 </div>
             `;
 

@@ -26,8 +26,8 @@
 
         <div class="main-content">
             <div class="main-header">
-                <h2 id="project-title">Расписания</h2>
-                <button class="btn btn-primary" onclick="openScheduleModal()">+ Новое расписание</button>
+                <h2 id="project-title"><i class="fa-solid fa-calendar-days"></i> Расписания</h2>
+                <button class="btn btn-primary" onclick="openScheduleModal()"><i class="fa-solid fa-plus"></i> Новое расписание</button>
             </div>
 
             <div class="main-body">
@@ -67,8 +67,8 @@
                 <div class="form-group">
                     <label>Режим запуска</label>
                     <div class="mode-toggle">
-                        <button id="mode-cron-btn" class="active" onclick="setMode('cron')">↻ Повторяющееся (cron)</button>
-                        <button id="mode-once-btn" onclick="setMode('run_at')">▶ Одноразовый запуск</button>
+                        <button id="mode-cron-btn" class="active" onclick="setMode('cron')"><i class="fa-solid fa-rotate"></i> Повторяющееся (cron)</button>
+                        <button id="mode-once-btn" onclick="setMode('run_at')"><i class="fa-solid fa-play"></i> Одноразовый запуск</button>
                     </div>
                 </div>
 
@@ -164,7 +164,7 @@
                 <!-- Extra params (collapse) -->
                 <div style="margin-top:10px;">
                     <button type="button" class="btn btn-sm btn-secondary" onclick="toggleParams()"
-                        id="params-toggle-btn">▸ Параметры запуска</button>
+                        id="params-toggle-btn"><i class="fa-solid fa-caret-right"></i> Параметры запуска</button>
                     <div id="params-section" style="display:none; margin-top:10px; padding:12px; background:var(--bg-secondary,#f5f5f5); border-radius:4px;">
                         <div class="form-group">
                             <label for="sched-branch">Ветка Git (оставить пустым = из шаблона)</label>
@@ -209,7 +209,7 @@
         // ── Init ────────────────────────────────────────────────────────────
         api.getProject(projectId)
             .then(p => {
-                document.getElementById('project-title').textContent = p.name + ' → Расписания';
+                document.getElementById('project-title').innerHTML = escapeHtml(p.name) + ' <span style="color:var(--text-light)">→</span> <i class="fa-solid fa-calendar-days"></i> Расписания';
                 document.title = 'Расписания — ' + p.name;
             }).catch(() => {});
 
@@ -314,7 +314,7 @@
             document.getElementById('sched-active').checked = sched ? sched.active !== false : true;
             document.getElementById('sched-branch').value = '';
             document.getElementById('params-section').style.display = 'none';
-            document.getElementById('params-toggle-btn').textContent = '▸ Параметры запуска';
+            document.getElementById('params-toggle-btn').innerHTML = '<i class="fa-solid fa-caret-right"></i> Параметры запуска';
 
             // Populate template select
             const tplSel = document.getElementById('sched-template');
@@ -356,7 +356,7 @@
             const btn = document.getElementById('params-toggle-btn');
             const open = sec.style.display === 'none';
             sec.style.display = open ? '' : 'none';
-            btn.textContent = open ? '▾ Параметры запуска' : '▸ Параметры запуска';
+            btn.innerHTML = open ? '<i class="fa-solid fa-caret-down"></i> Параметры запуска' : '<i class="fa-solid fa-caret-right"></i> Параметры запуска';
         }
 
         function saveSchedule() {

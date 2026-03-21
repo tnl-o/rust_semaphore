@@ -21,7 +21,7 @@
                     <h1><i class="fa-solid fa-clipboard"></i> Шаблоны</h1>
                     <div style="display:flex; gap:8px;">
                         <button class="btn btn-sm" onclick="openViewsDialog()" title="Управление группами">⊞ Группы</button>
-                        <button class="btn btn-primary" onclick="openTemplateModal()">+ Новый Шаблон</button>
+                        <button class="btn btn-primary" onclick="openTemplateModal()"><i class="fa-solid fa-plus"></i> Новый Шаблон</button>
                     </div>
                 </div>
 
@@ -55,7 +55,7 @@
 
         api.getProject(projectId)
             .then(project => {
-                $('#project-title').textContent = project.name + ' → Шаблоны';
+                $('#project-title').innerHTML = escapeHtml(project.name) + ' <span style="color:var(--text-light)">→</span> <i class="fa-solid fa-layer-group"></i> Шаблоны';
                 document.title = 'Шаблоны - ' + project.name;
             })
             .catch(console.error);
@@ -171,7 +171,7 @@
                                 return `
                                 <tr>
                                     <td style="text-align:center;">
-                                        ${hasTasks ? `<button class="btn btn-sm" style="padding:0 6px;" onclick="toggleTemplateTasks(${tpl.id})" title="Показать последние задачи">▾</button>` : ''}
+                                        ${hasTasks ? `<button class="btn btn-sm" style="padding:0 6px;" onclick="toggleTemplateTasks(${tpl.id})" title="Показать последние задачи"><i class="fa-solid fa-caret-down"></i></button>` : ''}
                                     </td>
                                     <td>
                                         <div style="display:flex; align-items:center; gap:4px;">
@@ -183,9 +183,9 @@
                                     <td style="color:var(--text-light); font-size:13px;">${escapeHtml(tpl.playbook || '')}</td>
                                     <td>${statusBadge(lastByTpl[tpl.id])}</td>
                                     <td>
-                                        <button class="btn btn-success btn-sm" onclick="runTemplate(${tpl.id}, '${escapeHtml(tpl.name).replace(/'/g,"\\'")}', ${!!tpl.allow_override_args_in_task})" title="Запустить">▶ Запустить</button>
+                                        <button class="btn btn-success btn-sm" onclick="runTemplate(${tpl.id}, '${escapeHtml(tpl.name).replace(/'/g,"\\'")}', ${!!tpl.allow_override_args_in_task})" title="Запустить"><i class="fa-solid fa-play"></i> Запустить</button>
                                         <button class="btn btn-sm" onclick="editTemplate(${tpl.id})" title="Редактировать"><i class="fa-solid fa-pen"></i></button>
-                                        <button class="btn btn-sm" onclick="copyTemplate(${tpl.id})" title="Копировать">⧉</button>
+                                        <button class="btn btn-sm" onclick="copyTemplate(${tpl.id})" title="Копировать"><i class="fa-regular fa-copy"></i></button>
                                         <button class="btn btn-danger btn-sm" onclick="deleteTemplate(${tpl.id})" title="Удалить"><i class="fa-solid fa-trash"></i></button>
                                     </td>
                                 </tr>
@@ -277,7 +277,7 @@
                         </div>
                         <div style="display:flex; gap:8px; align-items:center; border-top:1px solid var(--border); padding-top:12px;">
                             <input type="text" id="new-view-name" class="form-control" placeholder="Название новой группы" style="flex:1;">
-                            <button class="btn btn-primary" onclick="addView()">+ Добавить</button>
+                            <button class="btn btn-primary" onclick="addView()"><i class="fa-solid fa-plus"></i> Добавить</button>
                         </div>
                         <div class="modal-footer">
                             <button class="btn" onclick="document.getElementById('views-dialog').remove()">Закрыть</button>
@@ -399,7 +399,7 @@
                 modal.innerHTML = `
                     <div class="modal" style="max-width:620px;">
                         <div class="modal-header">
-                            <h2>▶ ${escapeHtml(tplName)}</h2>
+                            <h2><i class="fa-solid fa-play"></i> ${escapeHtml(tplName)}</h2>
                         </div>
                         <form id="new-task-form">
                             <div class="form-group">
@@ -457,7 +457,7 @@
                             </div>` : ''}
                             <div class="modal-footer">
                                 <button type="button" class="btn" onclick="document.getElementById('new-task-dialog').remove()">Отмена</button>
-                                <button type="submit" class="btn btn-primary">▶ Запустить</button>
+                                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-play"></i> Запустить</button>
                             </div>
                         </form>
                     </div>
@@ -527,7 +527,7 @@
             modal.innerHTML = `
                 <div class="modal" style="max-width:900px; width:95vw;">
                     <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
-                        <h2>▶ ${escapeHtml(tplName)}</h2>
+                        <h2><i class="fa-solid fa-play"></i> ${escapeHtml(tplName)}</h2>
                         <div style="display:flex; gap:8px; align-items:center;">
                             <span id="run-status-badge" class="run-status-badge">Запуск...</span>
                             <a href="task.html?id=${projectId}" class="btn btn-sm">История задач</a>

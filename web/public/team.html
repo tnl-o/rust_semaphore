@@ -20,7 +20,7 @@
                 <div class="page-header">
                     <h1><i class="fa-solid fa-users"></i> Команда проекта</h1>
                     <div id="page-action-btn" style="display:flex; gap:8px;">
-                        <button class="btn btn-primary" onclick="openMemberModal()">+ Добавить участника</button>
+                        <button class="btn btn-primary" onclick="openMemberModal()"><i class="fa-solid fa-plus"></i> Добавить участника</button>
                         <button class="btn" style="border-color:var(--danger); color:var(--danger);" onclick="leaveProject()" title="Покинуть проект">← Покинуть</button>
                     </div>
                 </div>
@@ -59,7 +59,7 @@
 
         api.getProject(projectId)
             .then(project => {
-                $('#project-title').textContent = project.name + ' → Команда';
+                $('#project-title').innerHTML = escapeHtml(project.name) + ' <span style="color:var(--text-light)">→</span> <i class="fa-solid fa-users-gear"></i> Команда';
                 document.title = 'Команда - ' + project.name;
             })
             .catch(console.error);
@@ -110,7 +110,7 @@
             const map = {
                 'owner':       ['badge-success', '<i class="fa-solid fa-crown"></i> Owner'],
                 'manager':     ['badge-primary', '<i class="fa-solid fa-wrench"></i> Manager'],
-                'task_runner': ['badge-warning', '▶ Task Runner'],
+                'task_runner': ['badge-warning', '<i class="fa-solid fa-play"></i> Task Runner'],
                 'guest':       ['badge-secondary', '<i class="fa-solid fa-eye"></i> Guest'],
                 'none':        ['badge-danger',  'None'],
             };
@@ -284,12 +284,12 @@
 
             const actionBtn = $('#page-action-btn');
             if (tab === 'members') {
-                actionBtn.innerHTML = '<button class="btn btn-primary" onclick="openMemberModal()">+ Добавить участника</button>';
+                actionBtn.innerHTML = '<button class="btn btn-primary" onclick="openMemberModal()"><i class="fa-solid fa-plus"></i> Добавить участника</button>';
             } else if (isInvites) {
-                actionBtn.innerHTML = '<button class="btn btn-primary" onclick="openInviteModal()">+ Создать приглашение</button>';
+                actionBtn.innerHTML = '<button class="btn btn-primary" onclick="openInviteModal()"><i class="fa-solid fa-plus"></i> Создать приглашение</button>';
                 loadInvites();
             } else if (isRoles) {
-                actionBtn.innerHTML = '<button class="btn btn-primary" onclick="openRoleModal()">+ Новая роль</button>';
+                actionBtn.innerHTML = '<button class="btn btn-primary" onclick="openRoleModal()"><i class="fa-solid fa-plus"></i> Новая роль</button>';
                 loadProjectRoles();
             }
         }
@@ -330,7 +330,7 @@
                         <div style="font-size:40px;margin-bottom:10px;"><i class="fa-solid fa-key"></i></div>
                         <h3>Нет ролей</h3>
                         <p style="color:var(--text-light);">Создайте первую роль с нужным набором прав.</p>
-                        <button class="btn btn-primary mt-2" onclick="openRoleModal()">+ Новая роль</button>
+                        <button class="btn btn-primary mt-2" onclick="openRoleModal()"><i class="fa-solid fa-plus"></i> Новая роль</button>
                     </div>
                 `;
                 return;
@@ -351,7 +351,7 @@
                             ${projectRoles.map(r => {
                                 const perms = r.permissions || 0;
                                 const permLabels = [];
-                                if (perms & 1) permLabels.push('▶ Запуск');
+                                if (perms & 1) permLabels.push('Запуск');
                                 if (perms & 2) permLabels.push('<i class="fa-solid fa-pen"></i> Ресурсы');
                                 if (perms & 4) permLabels.push('<i class="fa-solid fa-gear"></i> Проект');
                                 if (perms & 8) permLabels.push('<i class="fa-solid fa-users"></i> Users');
@@ -406,7 +406,7 @@
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
                                 <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
                                     <input type="checkbox" id="perm-run_tasks" ${role?.permissions & 1 ? 'checked' : ''}>
-                                    ▶ Запуск задач
+                                    <i class="fa-solid fa-play"></i> Запуск задач
                                 </label>
                                 <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
                                     <input type="checkbox" id="perm-update_resources" ${role?.permissions & 2 ? 'checked' : ''}>

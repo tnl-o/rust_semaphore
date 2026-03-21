@@ -14,7 +14,7 @@
         <div class="main-content">
             <div class="main-header">
                 <h2 id="project-title">Роли проекта</h2>
-                <button class="btn btn-primary" id="add-role-btn">+ Новая роль</button>
+                <button class="btn btn-primary" id="add-role-btn"><i class="fa-solid fa-plus"></i> Новая роль</button>
             </div>
 
             <div class="main-body">
@@ -44,7 +44,7 @@
 
         api.getProject(projectId)
             .then(project => {
-                document.getElementById('project-title').textContent = project.name + ' → Роли';
+                document.getElementById('project-title').innerHTML = escapeHtml(project.name) + ' <span style="color:var(--text-light)">→</span> <i class="fa-solid fa-user-shield"></i> Роли';
                 document.title = 'Роли - ' + project.name;
             })
             .catch(() => {});
@@ -87,7 +87,7 @@
                         <div style="font-size:40px;margin-bottom:10px;"><i class="fa-solid fa-key"></i></div>
                         <h3>Нет ролей</h3>
                         <p style="color:var(--text-light);">Создайте первую роль с нужным набором прав.</p>
-                        <button class="btn btn-primary mt-2" onclick="openRoleModal()">+ Новая роль</button>
+                        <button class="btn btn-primary mt-2" onclick="openRoleModal()"><i class="fa-solid fa-plus"></i> Новая роль</button>
                     </div>
                 `;
                 return;

@@ -100,8 +100,8 @@
 
             <div class="main-body">
                 <div class="page-header">
-                    <h1>▶ История задач</h1>
-                    <button class="btn btn-sm" onclick="loadTasks()">↺ Обновить</button>
+                    <h1><i class="fa-solid fa-clock-rotate-left"></i> История задач</h1>
+                    <button class="btn btn-sm" onclick="loadTasks()"><i class="fa-solid fa-rotate-right"></i> Обновить</button>
                 </div>
 
                 <div id="tasks-content">
@@ -123,8 +123,8 @@
                     <span id="modal-status-badge" class="status-badge"></span>
                     <button class="btn btn-sm" id="modal-confirm-btn" style="display:none; background:#276749; color:#fff;" onclick="confirmCurrentTask()"><i class="fa-solid fa-check"></i> Подтвердить</button>
                     <button class="btn btn-sm" id="modal-reject-btn" style="display:none; background:#c53030; color:#fff;" onclick="rejectCurrentTask()"><i class="fa-solid fa-xmark"></i> Отклонить</button>
-                    <button class="btn btn-sm" id="modal-stop-btn" style="display:none; color:#c53030;" onclick="stopCurrentTask()">■ Остановить</button>
-                    <button class="btn btn-sm" id="modal-rerun-btn" style="display:none;" onclick="rerunCurrentTask()" title="Повторить запуск">↺ Повторить</button>
+                    <button class="btn btn-sm" id="modal-stop-btn" style="display:none; color:#c53030;" onclick="stopCurrentTask()"><i class="fa-solid fa-stop"></i> Остановить</button>
+                    <button class="btn btn-sm" id="modal-rerun-btn" style="display:none;" onclick="rerunCurrentTask()" title="Повторить запуск"><i class="fa-solid fa-rotate-right"></i> Повторить</button>
                     <button class="btn btn-sm" onclick="downloadCurrentLog()"><i class="fa-solid fa-download"></i> Лог</button>
                     <button class="btn btn-sm" onclick="closeTaskDetailModal()">✕</button>
                 </div>
@@ -159,7 +159,7 @@
         if (!projectId) { window.location.href = 'index.html'; }
 
         api.getProject(projectId).then(p => {
-            $('#project-title').textContent = p.name + ' → Задачи';
+            $('#project-title').innerHTML = escapeHtml(p.name) + ' <span style="color:var(--text-light)">→</span> <i class="fa-solid fa-circle-play"></i> Задачи';
             document.title = 'Задачи - ' + p.name;
         }).catch(() => {});
 
@@ -180,7 +180,7 @@
                 .then(tasks => {
                     const container = $('#tasks-content');
                     if (!tasks || tasks.length === 0) {
-                        ui.showEmpty(container, '▶', 'Нет задач', 'Запустите шаблон чтобы создать задачу');
+                        ui.showEmpty(container, '<i class="fa-solid fa-play fa-2x"></i>', 'Нет задач', 'Запустите шаблон чтобы создать задачу');
                         return;
                     }
                     // Sort newest first

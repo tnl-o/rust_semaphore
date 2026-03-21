@@ -32,13 +32,13 @@
             </div>
             <div class="main-body">
                 <div class="page-header">
-                    <h1>▶ Все задачи</h1>
+                    <h1><i class="fa-solid fa-list-check"></i> Все задачи</h1>
                     <div style="display:flex; gap:8px; align-items:center;">
                         <label class="auto-refresh-toggle">
                             <input type="checkbox" id="auto-refresh" checked>
                             Авто-обновление
                         </label>
-                        <button class="btn btn-sm" onclick="loadAllTasks()">↺ Обновить</button>
+                        <button class="btn btn-sm" onclick="loadAllTasks()"><i class="fa-solid fa-rotate-right"></i> Обновить</button>
                     </div>
                 </div>
 
@@ -160,7 +160,7 @@
             const mainList = statusFilter ? filtered : filtered.filter(x => x.task.status !== 'running' && x.task.status !== 'waiting' && x.task.status !== 'waiting_confirmation');
 
             if (mainList.length === 0 && running.length === 0) {
-                ui.showEmpty(container, '▶', 'Нет задач', 'Запустите шаблон в любом проекте');
+                ui.showEmpty(container, '<i class="fa-solid fa-play fa-2x"></i>', 'Нет задач', 'Запустите шаблон в любом проекте');
                 return;
             }
 
@@ -205,7 +205,7 @@
                     <td>
                         <a href="task.html?id=${p.id}&task=${t.id}" class="btn btn-sm" onclick="event.stopPropagation();" title="Открыть"><i class="fa-solid fa-eye"></i></a>
                         ${t.status === 'running' || t.status === 'waiting'
-                            ? `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); stopTask(${p.id}, ${t.id})" title="Остановить">■</button>`
+                            ? `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); stopTask(${p.id}, ${t.id})" title="Остановить"><i class="fa-solid fa-stop"></i></button>`
                             : ''}
                     </td>
                 </tr>`;
