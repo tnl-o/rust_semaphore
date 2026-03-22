@@ -5,6 +5,26 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 этот проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-03-22
+
+### Added
+- **Ansible task_params → CLI flags**: full conversion of `template.task_params` to `ansible-playbook` CLI args — `--forks`, `--become` / `--become-method` / `--become-user`, `--connection`, `-v/-vv/-vvv/-vvvv`, `--user`, `--timeout`, `--limit`, `--tags`, `--skip-tags`, `--vault-password-file`
+- **Runtime task overrides**: `allow_override_limit`, `allow_override_tags`, `allow_override_skip_tags`, `allow_override_debug` gates — task-level params override template defaults when enabled
+- **Terraform Plan Approval (Phase 2)**: `POST /api/project/{pid}/terraform/plans/{plan_id}/approve` and `/reject` endpoints require Manager/Owner role; global admins bypass project-level role check
+- **Plan approval race prevention**: `UPDATE terraform_plan … WHERE status='pending'` atomic guard with `rows_affected()` check prevents double-execution on concurrent approvals
+- **Vault file path traversal prevention**: `vault_name` sanitized to `[a-zA-Z0-9_-]` before writing to temp filesystem
+- **Terraform remote state backend (Phase 1)**: Terraform infra for remote state in S3 + DynamoDB locking
+- **Velum branding**: renamed UI to Velum, PostgreSQL-only Docker setup, removed Vue legacy
+- **require_approval field**: added to template SQL queries (SELECT/INSERT/UPDATE)
+- **Ansible 100% parameter coverage** in frontend (forks, become, connection, verbosity, remote_user, timeout, limit, tags, skip-tags, vault)
+- **cost_estimate table**: added to `ensure_schema_postgres` migration
+
+### Fixed
+- **Verbosity flag duplication**: skip template-level `-vN` flag when `allow_override_debug=true` (task-level verbosity takes over)
+- **approve_plan bug**: replaced wrong `get_plan_by_task(plan_id as task_id)` lookup with correct `list_pending_plans().find(plan_id)` search
+- **Vault source priority**: `template.vaults` correctly takes priority over `inventory.vaults`
+- **Vault error handling**: log warning instead of silently swallowing JSON parse errors
+
 ## [2.1.0] - 2026-03-20
 
 ### 🎉 Playbook Run API, Миграция БД, Скрипт запуска сервера
