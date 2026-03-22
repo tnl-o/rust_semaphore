@@ -1,64 +1,62 @@
 # ============================================================================
-# Velum — Demo (одна команда, открыть http://localhost:8088)
+# Velum — Test (PostgreSQL + автосид тестовых данных)
 # ============================================================================
 # Запуск:
-#   docker compose -f docker-compose.demo.yml up --build -d
+#   docker compose -f docker-compose.test.yml up --build -d
 #
-# Учётные данные:  admin / admin123
-# URL:             http://localhost:8088
+# Учётные данные: admin / admin123
+# URL:            http://localhost:8089
 #
-# Сервисы:
-#   postgres       — PostgreSQL 16
-#   semaphore      — UI + API (порт 8088), включает ansible
-#   ansible-target — SSH-цель для демо плейбуков (user: demo / demo123)
+# Отличия от prod:
+#   - Пустой volume при каждом `down -v` (тестовые данные не сохраняются)
+#   - Автосид через create-test-data.sh после старта
+#   - Ansible-target для тест-плейбуков
+#   - Порт 8089 (не конфликтует с demo на 8088)
 # ============================================================================
 
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: velum-demo-postgres
+    container_name: velum-test-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: semaphore
-      POSTGRES_PASSWORD: semaphore
-      POSTGRES_DB: semaphore
+      POSTGRES_USER: velum
+      POSTGRES_PASSWORD: velumtest
+      POSTGRES_DB: velum_test
     volumes:
-      - semaphore_demo_pgdata:/var/lib/postgresql/data
+      - velum_test_pgdata:/var/lib/postgresql/data
     networks:
-      - demo-net
+      - velum-test-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U semaphore"]
+      test: ["CMD-SHELL", "pg_isready -U velum"]
       interval: 5s
       timeout: 3s
       retries: 10
 
-  semaphore:
+  velum:
     build:
       context: .
       dockerfile: Dockerfile.demo
-    container_name: velum-demo
+    container_name: velum-test-app
     restart: unless-stopped
     ports:
-      - "8088:3000"
+      - "8089:3000"
     environment:
       SEMAPHORE_DB_DIALECT: postgres
-      SEMAPHORE_DB_URL: postgres://semaphore:semaphore@postgres:5432/semaphore
+      SEMAPHORE_DB_URL: postgres://velum:velumtest@postgres:5432/velum_test
       SEMAPHORE_WEB_PATH: /app/web/public
       SEMAPHORE_ADMIN: admin
       SEMAPHORE_ADMIN_PASSWORD: admin123
       SEMAPHORE_ADMIN_NAME: Administrator
       SEMAPHORE_ADMIN_EMAIL: admin@velum.local
-      RUST_LOG: info
+      RUST_LOG: debug
     depends_on:
       postgres:
         condition: service_healthy
       ansible-target:
         condition: service_started
     networks:
-      - demo-net
-      - host-bridge
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - velum-test-net
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:3000/api/health || exit 1"]
       interval: 10s
@@ -66,9 +64,28 @@ services:
       retries: 10
       start_period: 20s
 
+  # Автосид тестовых данных — запускается один раз после старта velum
+  seed:
+    image: curlimages/curl:latest
+    container_name: velum-test-seed
+    restart: "no"
+    depends_on:
+      velum:
+        condition: service_healthy
+    networks:
+      - velum-test-net
+    volumes:
+      - ./create-test-data.sh:/seed.sh:ro
+    entrypoint: >
+      sh -c "
+        apk add --no-cache bash 2>/dev/null || true;
+        API_URL=http://velum:3000/api USERNAME=admin PASSWORD=admin123 bash /seed.sh || true
+      "
+
+  # SSH-цель для тест-плейбуков
   ansible-target:
     image: debian:12-slim
-    container_name: velum-demo-ansible-target
+    container_name: velum-test-ansible-target
     hostname: ansible-target
     command: >
       bash -c "
@@ -86,18 +103,14 @@ services:
         exec /usr/sbin/sshd -D -e
       "
     networks:
-      - demo-net
+      - velum-test-net
     expose:
       - "22"
 
 volumes:
-  semaphore_demo_pgdata:
+  velum_test_pgdata:
     driver: local
 
 networks:
-  demo-net:
+  velum-test-net:
     driver: bridge
-  host-bridge:
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.host_binding_ipv4: "0.0.0.0"

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Terraform State — Semaphore</title>
+<title>Terraform State — Velum</title>
 <link rel="stylesheet" href="/styles.css">
 <style>
 .state-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
@@ -141,7 +141,7 @@ function updateConfigSnippet(ws) {
     address        = "${host}/api/project/${projectId}/terraform/state/${ws}"
     lock_address   = "${host}/api/project/${projectId}/terraform/state/${ws}"
     unlock_address = "${host}/api/project/${projectId}/terraform/state/${ws}"
-    username       = "semaphore"
+    username       = "velum"
     password       = "<your-api-token>"
   }
 }`;

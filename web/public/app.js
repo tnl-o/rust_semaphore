@@ -692,6 +692,8 @@ const SIDEBAR_ITEMS = [
     { href: 'drift.html',        icon: 'fa-solid fa-radar',           label: 'Drift Detection' },
     { href: 'snapshots.html',    icon: 'fa-solid fa-clock-rotate-left', label: 'Rollback' },
     { href: 'marketplace.html',  icon: 'fa-solid fa-store',           label: 'Marketplace', noId: true },
+    { href: 'state.html',        icon: 'fa-solid fa-database',       label: 'TF State' },
+    { href: 'plan_approval.html', icon: 'fa-solid fa-check-to-slot', label: 'Plan Approval' },
     { href: 'costs.html',        icon: 'fa-solid fa-dollar-sign',    label: 'Стоимость TF' },
     { href: 'team.html',         icon: 'fa-solid fa-users',          label: 'Команда' },
     { href: 'runners.html',      icon: 'fa-solid fa-bolt',           label: 'Runners',    noId: true },

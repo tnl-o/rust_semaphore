@@ -1,9 +1,9 @@
 # ============================================================================
-# Dockerfile для Semaphore UI (Rust backend) — multi-stage, цель < 50 MB
+# Dockerfile для Velum (Rust backend) — multi-stage, цель < 50 MB
 # ============================================================================
 # Использование:
-#   docker build -f Dockerfile -t semaphore-backend .
-#   docker run -p 3000:3000 semaphore-backend
+#   docker build -f Dockerfile -t velum .
+#   docker compose -f docker-compose.prod.yml up -d
 # ============================================================================
 
 # ── Зависимости (кэшируются отдельно от исходников) ──────────────────────
@@ -25,7 +25,7 @@ FROM deps AS builder
 COPY rust/ ./
 
 # profile.release уже содержит: strip=true, lto=true, opt-level="z", panic=abort
-RUN cargo build --release && mkdir -p /app/data
+RUN cargo build --release
 
 # ── Финальный образ (~20 MB base + stripped binary) ───────────────────────
 # gcr.io/distroless/cc-debian12:nonroot содержит glibc + libssl + ca-certs,
@@ -39,21 +39,16 @@ COPY --from=builder /app/target/release/velum /usr/local/bin/velum
 # Vanilla JS фронтенд
 COPY --chown=65532:65532 web/public /app/web/public
 
-# Директория для SQLite БД (создаётся через пустую папку из builder)
-COPY --from=builder --chown=65532:65532 /app/data /app/data
-
 WORKDIR /app
 
 EXPOSE 3000
 
-# SQLite по умолчанию — не нужна отдельная БД для запуска
-ENV SEMAPHORE_DB_DIALECT=sqlite
-ENV SEMAPHORE_DB_PATH=/app/data/semaphore.db
+# БД: PostgreSQL (обязательно задать SEMAPHORE_DB_URL через docker-compose или env)
+ENV SEMAPHORE_DB_DIALECT=postgres
 ENV SEMAPHORE_WEB_PATH=/app/web/public
-# Демо-учётные данные — сид при первом запуске
 ENV SEMAPHORE_ADMIN=admin
 ENV SEMAPHORE_ADMIN_PASSWORD=admin123
 ENV SEMAPHORE_ADMIN_NAME=Administrator
-ENV SEMAPHORE_ADMIN_EMAIL=admin@semaphore.local
+ENV SEMAPHORE_ADMIN_EMAIL=admin@velum.local
 
 CMD ["/usr/local/bin/velum", "server", "--host", "0.0.0.0", "--port", "3000"]
