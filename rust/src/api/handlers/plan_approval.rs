@@ -53,19 +53,22 @@ pub async fn approve_plan(
 ) -> impl IntoResponse {
     let store = state.store.store();
 
-    // Require Manager or Owner role to approve plans
-    match state.store.get_project_users(project_id, RetrieveQueryParams::default()).await {
-        Ok(users) => {
-            let role = users.into_iter()
-                .find(|u| u.user_id == auth.user_id)
-                .map(|u| u.role)
-                .unwrap_or(ProjectUserRole::None);
-            match role {
-                ProjectUserRole::Owner | ProjectUserRole::Manager => {},
-                _ => return (StatusCode::FORBIDDEN, Json(json!({"error": "Manager or Owner role required"}))).into_response(),
+    // Global admins bypass project-level role check
+    if !auth.admin {
+        // Require Manager or Owner role to approve plans
+        match state.store.get_project_users(project_id, RetrieveQueryParams::default()).await {
+            Ok(users) => {
+                let role = users.into_iter()
+                    .find(|u| u.user_id == auth.user_id)
+                    .map(|u| u.role)
+                    .unwrap_or(ProjectUserRole::None);
+                match role {
+                    ProjectUserRole::Owner | ProjectUserRole::Manager => {},
+                    _ => return (StatusCode::FORBIDDEN, Json(json!({"error": "Manager or Owner role required"}))).into_response(),
+                }
             }
+            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))).into_response(),
         }
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))).into_response(),
     }
 
     // Get plan by plan_id from pending plans list
@@ -106,19 +109,22 @@ pub async fn reject_plan(
 ) -> impl IntoResponse {
     let store = state.store.store();
 
-    // Require Manager or Owner role to reject plans
-    match state.store.get_project_users(project_id, RetrieveQueryParams::default()).await {
-        Ok(users) => {
-            let role = users.into_iter()
-                .find(|u| u.user_id == auth.user_id)
-                .map(|u| u.role)
-                .unwrap_or(ProjectUserRole::None);
-            match role {
-                ProjectUserRole::Owner | ProjectUserRole::Manager => {},
-                _ => return (StatusCode::FORBIDDEN, Json(json!({"error": "Manager or Owner role required"}))).into_response(),
+    // Global admins bypass project-level role check
+    if !auth.admin {
+        // Require Manager or Owner role to reject plans
+        match state.store.get_project_users(project_id, RetrieveQueryParams::default()).await {
+            Ok(users) => {
+                let role = users.into_iter()
+                    .find(|u| u.user_id == auth.user_id)
+                    .map(|u| u.role)
+                    .unwrap_or(ProjectUserRole::None);
+                match role {
+                    ProjectUserRole::Owner | ProjectUserRole::Manager => {},
+                    _ => return (StatusCode::FORBIDDEN, Json(json!({"error": "Manager or Owner role required"}))).into_response(),
+                }
             }
+            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))).into_response(),
         }
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))).into_response(),
     }
 
     // Find the task_id from plan

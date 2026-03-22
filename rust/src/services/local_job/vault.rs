@@ -66,11 +66,19 @@ impl LocalJob {
                 }
             };
 
-            let vault_name = if vref.r#type.is_empty() {
+            // Sanitize vault_name: only allow [a-zA-Z0-9_-] to prevent path traversal
+            let raw_type = if vref.r#type.is_empty() {
                 format!("vault_{}", i)
             } else {
                 vref.r#type.clone()
             };
+            let vault_name: String = raw_type.chars()
+                .filter(|c| c.is_alphanumeric() || *c == '_' || *c == '-')
+                .collect();
+            if vault_name.is_empty() {
+                self.log(&format!("Warning: vault type '{}' contains no valid chars, skipping", raw_type));
+                continue;
+            }
 
             // Получаем пароль из ключа
             let password = key.login_password_password

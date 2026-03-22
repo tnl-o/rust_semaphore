@@ -74,10 +74,10 @@ impl PlanApprovalManager for SqlStore {
 
     async fn approve_plan(&self, id: i64, reviewed_by: i32, comment: Option<String>) -> Result<()> {
         let pool = self.get_postgres_pool()?;
-        sqlx::query(
+        let result = sqlx::query(
             "UPDATE terraform_plan
              SET status = 'approved', reviewed_at = NOW(), reviewed_by = $2, review_comment = $3
-             WHERE id = $1",
+             WHERE id = $1 AND status = 'pending'",
         )
         .bind(id)
         .bind(reviewed_by)
@@ -85,15 +85,18 @@ impl PlanApprovalManager for SqlStore {
         .execute(pool)
         .await
         .map_err(Error::Database)?;
+        if result.rows_affected() == 0 {
+            return Err(Error::NotFound(format!("Plan {} not found or already reviewed", id)));
+        }
         Ok(())
     }
 
     async fn reject_plan(&self, id: i64, reviewed_by: i32, comment: Option<String>) -> Result<()> {
         let pool = self.get_postgres_pool()?;
-        sqlx::query(
+        let result = sqlx::query(
             "UPDATE terraform_plan
              SET status = 'rejected', reviewed_at = NOW(), reviewed_by = $2, review_comment = $3
-             WHERE id = $1",
+             WHERE id = $1 AND status = 'pending'",
         )
         .bind(id)
         .bind(reviewed_by)
@@ -101,6 +104,9 @@ impl PlanApprovalManager for SqlStore {
         .execute(pool)
         .await
         .map_err(Error::Database)?;
+        if result.rows_affected() == 0 {
+            return Err(Error::NotFound(format!("Plan {} not found or already reviewed", id)));
+        }
         Ok(())
     }
 

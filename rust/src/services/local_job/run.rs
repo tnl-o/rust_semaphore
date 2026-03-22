@@ -98,9 +98,12 @@ impl LocalJob {
                             cli_args.push("--connection".to_string());
                             cli_args.push(conn.to_string());
                         }
-                        // -v / -vv / -vvv / -vvvv
-                        if let Some(v) = params.get("verbosity").and_then(|v| v.as_i64()).filter(|&v| v > 0 && v <= 4) {
-                            cli_args.push(format!("-{}", "v".repeat(v as usize)));
+                        // -v / -vv / -vvv / -vvvv (skip if allow_override_debug — task.params.verbosity takes over)
+                        let allow_debug_pre = params.get("allow_override_debug").and_then(|v| v.as_bool()).unwrap_or(false);
+                        if !allow_debug_pre {
+                            if let Some(v) = params.get("verbosity").and_then(|v| v.as_i64()).filter(|&v| v > 0 && v <= 4) {
+                                cli_args.push(format!("-{}", "v".repeat(v as usize)));
+                            }
                         }
                         // --user <remote_user>
                         if let Some(user) = params.get("remote_user").and_then(|v| v.as_str()).filter(|s| !s.is_empty()) {
