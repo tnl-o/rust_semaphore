@@ -484,6 +484,12 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/project/{project_id}/terraform/state/{workspace}/history", get(handlers::state_backend::list_state_history))
         .route("/api/project/{project_id}/terraform/state/{workspace}/lock", get(handlers::state_backend::get_lock_info))
         .route("/api/project/{project_id}/terraform/state/{workspace}/{serial}", get(handlers::state_backend::get_state_by_serial))
+
+        // Plan Approval (Phase 2)
+        .route("/api/project/{project_id}/terraform/plans", get(handlers::plan_approval::list_pending_plans))
+        .route("/api/project/{project_id}/terraform/plans/{plan_id}/approve", post(handlers::plan_approval::approve_plan))
+        .route("/api/project/{project_id}/terraform/plans/{plan_id}/reject", post(handlers::plan_approval::reject_plan))
+        .route("/api/project/{project_id}/tasks/{task_id}/plan", get(handlers::plan_approval::get_task_plan))
 }
 
 /// Создаёт маршруты для статических файлов

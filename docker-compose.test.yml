@@ -1,0 +1,116 @@
+# ============================================================================
+# Velum — Test (PostgreSQL + автосид тестовых данных)
+# ============================================================================
+# Запуск:
+#   docker compose -f docker-compose.test.yml up --build -d
+#
+# Учётные данные: admin / admin123
+# URL:            http://localhost:8089
+#
+# Отличия от prod:
+#   - Пустой volume при каждом `down -v` (тестовые данные не сохраняются)
+#   - Автосид через create-test-data.sh после старта
+#   - Ansible-target для тест-плейбуков
+#   - Порт 8089 (не конфликтует с demo на 8088)
+# ============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: velum-test-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: velum
+      POSTGRES_PASSWORD: velumtest
+      POSTGRES_DB: velum_test
+    volumes:
+      - velum_test_pgdata:/var/lib/postgresql/data
+    networks:
+      - velum-test-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U velum"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  velum:
+    build:
+      context: .
+      dockerfile: Dockerfile.demo
+    container_name: velum-test-app
+    restart: unless-stopped
+    ports:
+      - "8089:3000"
+    environment:
+      SEMAPHORE_DB_DIALECT: postgres
+      SEMAPHORE_DB_URL: postgres://velum:velumtest@postgres:5432/velum_test
+      SEMAPHORE_WEB_PATH: /app/web/public
+      SEMAPHORE_ADMIN: admin
+      SEMAPHORE_ADMIN_PASSWORD: admin123
+      SEMAPHORE_ADMIN_NAME: Administrator
+      SEMAPHORE_ADMIN_EMAIL: admin@velum.local
+      RUST_LOG: debug
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ansible-target:
+        condition: service_started
+    networks:
+      - velum-test-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # Автосид тестовых данных — запускается один раз после старта velum
+  seed:
+    image: curlimages/curl:latest
+    container_name: velum-test-seed
+    restart: "no"
+    depends_on:
+      velum:
+        condition: service_healthy
+    networks:
+      - velum-test-net
+    volumes:
+      - ./create-test-data.sh:/seed.sh:ro
+    entrypoint: >
+      sh -c "
+        apk add --no-cache bash 2>/dev/null || true;
+        API_URL=http://velum:3000/api USERNAME=admin PASSWORD=admin123 bash /seed.sh || true
+      "
+
+  # SSH-цель для тест-плейбуков
+  ansible-target:
+    image: debian:12-slim
+    container_name: velum-test-ansible-target
+    hostname: ansible-target
+    command: >
+      bash -c "
+        apt-get update -qq &&
+        apt-get install -y --no-install-recommends openssh-server python3 sudo curl &&
+        useradd -m -s /bin/bash demo &&
+        echo 'demo:demo123' | chpasswd &&
+        mkdir -p /home/demo/.ssh /run/sshd &&
+        sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config &&
+        sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config &&
+        echo 'PermitRootLogin no' >> /etc/ssh/sshd_config &&
+        echo 'AllowUsers demo' >> /etc/ssh/sshd_config &&
+        echo 'demo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers &&
+        ssh-keygen -A &&
+        exec /usr/sbin/sshd -D -e
+      "
+    networks:
+      - velum-test-net
+    expose:
+      - "22"
+
+volumes:
+  velum_test_pgdata:
+    driver: local
+
+networks:
+  velum-test-net:
+    driver: bridge

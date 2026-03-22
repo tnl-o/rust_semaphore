@@ -491,6 +491,7 @@ pub trait Store:
     + SnapshotManager
     + CostEstimateManager
     + TerraformStateManager
+    + PlanApprovalManager
 {
 }
 
@@ -559,4 +560,15 @@ pub trait TerraformStateManager: Send + Sync {
     async fn list_terraform_workspaces(&self, project_id: i32) -> Result<Vec<String>>;
     /// Purge expired locks (called by SchedulePool every 5 min).
     async fn purge_expired_terraform_locks(&self) -> Result<u64>;
+}
+
+/// Менеджер Plan Approval (Phase 2)
+#[async_trait]
+pub trait PlanApprovalManager: Send + Sync {
+    async fn create_plan(&self, plan: crate::models::TerraformPlan) -> Result<crate::models::TerraformPlan>;
+    async fn get_plan_by_task(&self, project_id: i32, task_id: i32) -> Result<Option<crate::models::TerraformPlan>>;
+    async fn list_pending_plans(&self, project_id: i32) -> Result<Vec<crate::models::TerraformPlan>>;
+    async fn approve_plan(&self, id: i64, reviewed_by: i32, comment: Option<String>) -> Result<()>;
+    async fn reject_plan(&self, id: i64, reviewed_by: i32, comment: Option<String>) -> Result<()>;
+    async fn update_plan_output(&self, task_id: i32, output: String, json: Option<String>, added: i32, changed: i32, removed: i32) -> Result<()>;
 }

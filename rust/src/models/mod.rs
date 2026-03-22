@@ -100,6 +100,8 @@ pub use snapshot::{TaskSnapshot, TaskSnapshotCreate, RollbackRequest};
 pub use cost_estimate::{CostEstimate, CostEstimateCreate, CostSummary};
 pub mod terraform_state;
 pub use terraform_state::{TerraformState, TerraformStateSummary, TerraformStateLock, LockInfo, StateDiff, StateDiffResource};
+pub mod plan_approval;
+pub use plan_approval::{TerraformPlan, PlanReviewPayload, PlanStatus};
 
 // Ре-экспорт RetrieveQueryParams из db::store
 pub use crate::db::store::RetrieveQueryParams;
