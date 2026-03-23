@@ -1,6 +1,6 @@
 # MASTER_PLAN V3 — Velum: Стать лучше AWX и Ansible Tower
 
-> **Последнее обновление:** 2026-03-23 (сессия 8 — v4.0 Multi-Tenancy API + UI завершены)
+> **Последнее обновление:** 2026-03-23 (сессия 9 — v4.1 Audit Log Export + Rate Limiting)
 > **Версия:** 4.0
 > **Статус:** ✅ v3.2 FEATURE COMPLETE | ✅ v4.0 HA CLUSTER | ✅ v4.0 MULTI-TENANCY
 
@@ -685,7 +685,7 @@ pub fn init_tracing() -> Result<()> {
 | Q1 2026 | v3.2 | ✅ Завершено | MCP встроенный, AI Analysis, 60 инструментов | ✅ Готово |
 | Q2 2026 | v4.0 | ✅ HA Cluster | Redis session store, Health checks, Graceful shutdown | ✅ Готово |
 | Q2 2026 | v4.0 | ✅ Multi-Tenancy | Организации, квоты, API + UI | ✅ Готово |
-| Q3 2026 | v4.1 | 📅 План | Audit Log, Rate Limiting | ⏳ Ожидает |
+| Q3 2026 | v4.1 | ✅ Готово | Audit Log Export (CSV/NDJSON), Rate Limiting (5/100 req/min) | ✅ Готово |
 | Q3 2026 | v4.1 | 📅 План | VS Code Extension, Terraform Provider | ⏳ Ожидает |
 | Q4 2026 | v4.2 | 📅 План | Prometheus Metrics, OpenTelemetry | ⏳ Ожидает |
 
