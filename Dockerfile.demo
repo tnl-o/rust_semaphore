@@ -1,5 +1,5 @@
 # ============================================================================
-# Dockerfile.demo — Semaphore UI с Ansible для демо-запуска
+# Dockerfile.demo — Velum с Ansible для demo/test запуска
 # Отличается от Dockerfile: debian base вместо distroless, плюс ansible/ssh
 # ============================================================================
 
@@ -50,9 +50,6 @@ COPY --from=builder /app/target/release/velum /usr/local/bin/velum
 # Vanilla JS фронтенд
 COPY web/public /app/web/public
 
-# Директория для данных
-COPY --from=builder /app/data /app/data
-
 # Демо-плейбуки (встроены в образ)
 RUN mkdir -p /app/playbooks
 COPY demo-playbooks/ /app/playbooks/
@@ -61,12 +58,12 @@ WORKDIR /app
 
 EXPOSE 3000
 
-ENV SEMAPHORE_DB_DIALECT=sqlite
-ENV SEMAPHORE_DB_PATH=/app/data/semaphore.db
+# БД: PostgreSQL (задаётся через docker-compose)
+ENV SEMAPHORE_DB_DIALECT=postgres
 ENV SEMAPHORE_WEB_PATH=/app/web/public
 ENV SEMAPHORE_ADMIN=admin
 ENV SEMAPHORE_ADMIN_PASSWORD=admin123
 ENV SEMAPHORE_ADMIN_NAME=Administrator
-ENV SEMAPHORE_ADMIN_EMAIL=admin@semaphore.local
+ENV SEMAPHORE_ADMIN_EMAIL=admin@velum.local
 
 CMD ["/usr/local/bin/velum", "server", "--host", "0.0.0.0", "--port", "3000"]

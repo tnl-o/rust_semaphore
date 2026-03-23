@@ -1,0 +1,71 @@
+# ============================================================================
+# Velum — Production
+# ============================================================================
+# Запуск:
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Обязательно задать перед запуском:
+#   export VELUM_DB_PASSWORD=<strong-password>
+#   export VELUM_ADMIN_PASSWORD=<strong-password>
+#   export VELUM_JWT_SECRET=<random-64-chars>
+#
+# URL: http://localhost:3000  (поставь реверс-прокси перед ним)
+# ============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: velum-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: velum
+      POSTGRES_PASSWORD: ${VELUM_DB_PASSWORD:?VELUM_DB_PASSWORD is required}
+      POSTGRES_DB: velum
+    volumes:
+      - velum_prod_pgdata:/var/lib/postgresql/data
+    networks:
+      - velum-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U velum"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  velum:
+    image: ghcr.io/tnl-o/velum:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: velum-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      SEMAPHORE_DB_DIALECT: postgres
+      SEMAPHORE_DB_URL: postgres://velum:${VELUM_DB_PASSWORD}@postgres:5432/velum
+      SEMAPHORE_WEB_PATH: /app/web/public
+      SEMAPHORE_ADMIN: admin
+      SEMAPHORE_ADMIN_PASSWORD: ${VELUM_ADMIN_PASSWORD:?VELUM_ADMIN_PASSWORD is required}
+      SEMAPHORE_ADMIN_NAME: Administrator
+      SEMAPHORE_ADMIN_EMAIL: ${VELUM_ADMIN_EMAIL:-admin@velum.local}
+      SEMAPHORE_JWT_SECRET: ${VELUM_JWT_SECRET:?VELUM_JWT_SECRET is required}
+      RUST_LOG: warn
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - velum-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  velum_prod_pgdata:
+    driver: local
+
+networks:
+  velum-net:
+    driver: bridge

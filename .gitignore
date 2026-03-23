@@ -94,3 +94,4 @@ web/public/app.css
 web/public/chunk-vendors.css
 web/public/chunk-vendors.js
 mcp/target/
+.gstack/

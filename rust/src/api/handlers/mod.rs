@@ -30,6 +30,7 @@ pub mod ldap_groups;
 pub mod snapshot;
 pub mod cost_estimate;
 pub mod state_backend;
+pub mod plan_approval;
 
 // Ре-экспорт всех handlers для удобства
 pub use auth::*;

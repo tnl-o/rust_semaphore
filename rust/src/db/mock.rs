@@ -963,3 +963,15 @@ impl crate::db::store::TerraformStateManager for MockStore {
     async fn list_terraform_workspaces(&self, _pid: i32) -> Result<Vec<String>> { Ok(Vec::new()) }
     async fn purge_expired_terraform_locks(&self) -> Result<u64> { Ok(0) }
 }
+
+#[async_trait]
+impl crate::db::store::PlanApprovalManager for MockStore {
+    async fn create_plan(&self, _plan: crate::models::TerraformPlan) -> Result<crate::models::TerraformPlan> {
+        Err(crate::error::Error::Other("not implemented".to_string()))
+    }
+    async fn get_plan_by_task(&self, _project_id: i32, _task_id: i32) -> Result<Option<crate::models::TerraformPlan>> { Ok(None) }
+    async fn list_pending_plans(&self, _project_id: i32) -> Result<Vec<crate::models::TerraformPlan>> { Ok(Vec::new()) }
+    async fn approve_plan(&self, _id: i64, _reviewed_by: i32, _comment: Option<String>) -> Result<()> { Ok(()) }
+    async fn reject_plan(&self, _id: i64, _reviewed_by: i32, _comment: Option<String>) -> Result<()> { Ok(()) }
+    async fn update_plan_output(&self, _task_id: i32, _output: String, _json: Option<String>, _added: i32, _changed: i32, _removed: i32) -> Result<()> { Ok(()) }
+}

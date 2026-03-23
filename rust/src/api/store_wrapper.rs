@@ -1019,4 +1019,25 @@ impl crate::db::store::TerraformStateManager for StoreWrapper {
 }
 
 #[async_trait]
+impl crate::db::store::PlanApprovalManager for StoreWrapper {
+    async fn create_plan(&self, plan: crate::models::TerraformPlan) -> crate::error::Result<crate::models::TerraformPlan> {
+        self.inner.as_ref().create_plan(plan).await
+    }
+    async fn get_plan_by_task(&self, project_id: i32, task_id: i32) -> crate::error::Result<Option<crate::models::TerraformPlan>> {
+        self.inner.as_ref().get_plan_by_task(project_id, task_id).await
+    }
+    async fn list_pending_plans(&self, project_id: i32) -> crate::error::Result<Vec<crate::models::TerraformPlan>> {
+        self.inner.as_ref().list_pending_plans(project_id).await
+    }
+    async fn approve_plan(&self, id: i64, reviewed_by: i32, comment: Option<String>) -> crate::error::Result<()> {
+        self.inner.as_ref().approve_plan(id, reviewed_by, comment).await
+    }
+    async fn reject_plan(&self, id: i64, reviewed_by: i32, comment: Option<String>) -> crate::error::Result<()> {
+        self.inner.as_ref().reject_plan(id, reviewed_by, comment).await
+    }
+    async fn update_plan_output(&self, task_id: i32, output: String, json: Option<String>, added: i32, changed: i32, removed: i32) -> crate::error::Result<()> {
+        self.inner.as_ref().update_plan_output(task_id, output, json, added, changed, removed).await
+    }
+}
+
 impl Store for StoreWrapper {}

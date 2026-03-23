@@ -13,12 +13,6 @@ impl LocalJob {
     pub async fn install_vault_key_files(&mut self) -> Result<()> {
         self.vault_file_installations = HashMap::new();
 
-        // vaults - это JSON строка со списком TemplateVaultRef [{vault_key_id, type}]
-        let vaults_json = match self.inventory.vaults.clone() {
-            Some(j) if !j.is_empty() => j,
-            _ => return Ok(()),
-        };
-
         #[derive(serde::Deserialize)]
         struct VaultRef {
             vault_key_id: i32,
@@ -26,13 +20,33 @@ impl LocalJob {
             r#type: String,
         }
 
-        let vault_refs: Vec<VaultRef> = match serde_json::from_str(&vaults_json) {
-            Ok(v) => v,
-            Err(e) => {
-                self.log(&format!("Warning: failed to parse vault refs: {}", e));
+        // Загружаем vault-ключи из шаблона (приоритет) или инвентаря
+        let vault_refs: Vec<VaultRef> = if let Some(ref vaults_val) = self.template.vaults {
+            match serde_json::from_value(vaults_val.clone()) {
+                Ok(v) => v,
+                Err(e) => {
+                    self.log(&format!("Warning: failed to parse template vault refs: {}", e));
+                    return Ok(());
+                }
+            }
+        } else if let Some(ref vaults_json) = self.inventory.vaults {
+            if vaults_json.is_empty() {
                 return Ok(());
             }
+            match serde_json::from_str(vaults_json) {
+                Ok(v) => v,
+                Err(e) => {
+                    self.log(&format!("Warning: failed to parse vault refs: {}", e));
+                    return Ok(());
+                }
+            }
+        } else {
+            return Ok(());
         };
+
+        if vault_refs.is_empty() {
+            return Ok(());
+        }
 
         let store = match self.store.as_ref() {
             Some(s) => s.clone(),
@@ -52,11 +66,19 @@ impl LocalJob {
                 }
             };
 
-            let vault_name = if vref.r#type.is_empty() {
+            // Sanitize vault_name: only allow [a-zA-Z0-9_-] to prevent path traversal
+            let raw_type = if vref.r#type.is_empty() {
                 format!("vault_{}", i)
             } else {
                 vref.r#type.clone()
             };
+            let vault_name: String = raw_type.chars()
+                .filter(|c| c.is_alphanumeric() || *c == '_' || *c == '-')
+                .collect();
+            if vault_name.is_empty() {
+                self.log(&format!("Warning: vault type '{}' contains no valid chars, skipping", raw_type));
+                continue;
+            }
 
             // Получаем пароль из ключа
             let password = key.login_password_password
