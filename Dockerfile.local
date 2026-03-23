@@ -47,7 +47,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Копируем бинарник из builder
-COPY --from=rust-builder /app/target/release/semaphore /usr/local/bin/semaphore
+COPY --from=rust-builder /app/target/release/velum /usr/local/bin/velum
 
 # Копируем web frontend
 COPY web/public /app/web/public
@@ -56,13 +56,13 @@ WORKDIR /app
 
 EXPOSE 3000
 
-ENV SEMAPHORE_DB_DIALECT=sqlite
-ENV SEMAPHORE_DB_PATH=/app/data/semaphore.db
-ENV SEMAPHORE_WEB_PATH=/app/web/public
-ENV SEMAPHORE_ADMIN=admin
-ENV SEMAPHORE_ADMIN_PASSWORD=admin123
-ENV SEMAPHORE_ADMIN_NAME=Administrator
-ENV SEMAPHORE_ADMIN_EMAIL=admin@semaphore.local
+ENV VELUM_DB_DIALECT=sqlite
+ENV VELUM_DB_PATH=/app/data/velum.db
+ENV VELUM_WEB_PATH=/app/web/public
+ENV VELUM_ADMIN=admin
+ENV VELUM_ADMIN_PASSWORD=admin123
+ENV VELUM_ADMIN_NAME=Administrator
+ENV VELUM_ADMIN_EMAIL=admin@velum.local
 ENV RUST_LOG=info
 
-CMD ["/usr/local/bin/semaphore", "server", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["/usr/local/bin/velum", "server", "--host", "0.0.0.0", "--port", "3000"]

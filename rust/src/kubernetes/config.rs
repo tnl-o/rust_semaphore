@@ -66,10 +66,10 @@ pub struct JobRunnerConfig {
 impl Default for JobRunnerConfig {
     fn default() -> Self {
         let mut annotations = HashMap::new();
-        annotations.insert("app.kubernetes.io/managed-by".to_string(), "semaphore".to_string());
+        annotations.insert("app.kubernetes.io/managed-by".to_string(), "velum".to_string());
         
         let mut labels = HashMap::new();
-        labels.insert("app.kubernetes.io/name".to_string(), "semaphore".to_string());
+        labels.insert("app.kubernetes.io/name".to_string(), "velum".to_string());
         
         Self {
             default_image: "alpine:latest".to_string(),

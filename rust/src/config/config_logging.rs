@@ -105,17 +105,17 @@ impl LoggingConfig {
 /// Загружает конфигурацию логирования из переменных окружения
 pub fn load_logging_from_env() -> LoggingConfig {
     use std::env;
-    
+
     let mut config = LoggingConfig::new();
-    
-    if let Ok(format) = env::var("SEMAPHORE_LOG_FORMAT") {
+
+    if let Ok(format) = env::var("VELUM_LOG_FORMAT") {
         config.format = match format.to_lowercase().as_str() {
             "json" => LogFormat::Json,
             _ => LogFormat::Text,
         };
     }
-    
-    if let Ok(level) = env::var("SEMAPHORE_LOG_LEVEL") {
+
+    if let Ok(level) = env::var("VELUM_LOG_LEVEL") {
         config.level = match level.to_lowercase().as_str() {
             "debug" => LogLevel::Debug,
             "info" => LogLevel::Info,
@@ -124,33 +124,33 @@ pub fn load_logging_from_env() -> LoggingConfig {
             _ => LogLevel::Info,
         };
     }
-    
-    if let Ok(file) = env::var("SEMAPHORE_LOG_FILE") {
+
+    if let Ok(file) = env::var("VELUM_LOG_FILE") {
         config.file = Some(file);
     }
-    
-    if let Ok(max_size) = env::var("SEMAPHORE_LOG_MAX_SIZE") {
+
+    if let Ok(max_size) = env::var("VELUM_LOG_MAX_SIZE") {
         if let Ok(size) = max_size.parse() {
             config.max_size = size;
         }
     }
-    
-    if let Ok(max_backups) = env::var("SEMAPHORE_LOG_MAX_BACKUPS") {
+
+    if let Ok(max_backups) = env::var("VELUM_LOG_MAX_BACKUPS") {
         if let Ok(backups) = max_backups.parse() {
             config.max_backups = backups;
         }
     }
-    
-    if let Ok(max_age) = env::var("SEMAPHORE_LOG_MAX_AGE") {
+
+    if let Ok(max_age) = env::var("VELUM_LOG_MAX_AGE") {
         if let Ok(age) = max_age.parse() {
             config.max_age = age;
         }
     }
-    
-    if let Ok(compress) = env::var("SEMAPHORE_LOG_COMPRESS") {
+
+    if let Ok(compress) = env::var("VELUM_LOG_COMPRESS") {
         config.compress = compress.to_lowercase() == "true" || compress == "1";
     }
-    
+
     config
 }
 
@@ -179,30 +179,30 @@ mod tests {
     #[test]
     fn test_logging_config_file_path() {
         let config = LoggingConfig {
-            file: Some("/var/log/semaphore.log".to_string()),
+            file: Some("/var/log/velum.log".to_string()),
             ..Default::default()
         };
         assert!(config.is_file_logging());
         assert_eq!(
             config.get_file_path().unwrap(),
-            PathBuf::from("/var/log/semaphore.log")
+            PathBuf::from("/var/log/velum.log")
         );
     }
 
     #[test]
     fn test_load_logging_from_env() {
-        env::set_var("SEMAPHORE_LOG_FORMAT", "json");
-        env::set_var("SEMAPHORE_LOG_LEVEL", "debug");
-        env::set_var("SEMAPHORE_LOG_FILE", "/tmp/test.log");
-        
+        env::set_var("VELUM_LOG_FORMAT", "json");
+        env::set_var("VELUM_LOG_LEVEL", "debug");
+        env::set_var("VELUM_LOG_FILE", "/tmp/test.log");
+
         let config = load_logging_from_env();
         assert_eq!(config.format, LogFormat::Json);
         assert_eq!(config.level, LogLevel::Debug);
         assert_eq!(config.file, Some("/tmp/test.log".to_string()));
-        
-        env::remove_var("SEMAPHORE_LOG_FORMAT");
-        env::remove_var("SEMAPHORE_LOG_LEVEL");
-        env::remove_var("SEMAPHORE_LOG_FILE");
+
+        env::remove_var("VELUM_LOG_FORMAT");
+        env::remove_var("VELUM_LOG_LEVEL");
+        env::remove_var("VELUM_LOG_FILE");
     }
 
     #[test]

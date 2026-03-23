@@ -168,7 +168,7 @@ show_status() {
     echo ""
     
     # PostgreSQL
-    if docker ps --format '{{.Names}}\t{{.Status}}' | grep -q "semaphore-db.*healthy"; then
+    if docker ps --format '{{.Names}}\t{{.Status}}' | grep -q "velum-db.*healthy"; then
         log_success "PostgreSQL: работает"
     else
         log_warning "PostgreSQL: не работает"
@@ -233,11 +233,11 @@ case "${1:-}" in
             log_warning ".env файл не найден. Создаю..."
             cat > "${ENV_FILE}" << 'EOF'
 # Velum - PostgreSQL
-SEMAPHORE_DB_DIALECT=postgres
-SEMAPHORE_DB_URL=postgres://semaphore:semaphore_pass@localhost:5432/semaphore
-SEMAPHORE_WEB_PATH=/home/alex/Документы/программирование/github/semaphore/web/public
-SEMAPHORE_TMP_PATH=/tmp/semaphore
-SEMAPHORE_TCP_ADDRESS=0.0.0.0:3000
+VELUM_DB_DIALECT=postgres
+VELUM_DB_URL=postgres://velum:velum_pass@localhost:5432/velum
+VELUM_WEB_PATH=/home/alex/Документы/программирование/github/velum/web/public
+VELUM_TMP_PATH=/tmp/velum
+VELUM_TCP_ADDRESS=0.0.0.0:3000
 RUST_LOG=info
 EOF
             log_success ".env файл создан"

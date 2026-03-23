@@ -1,6 +1,6 @@
 # DEPLOY — Руководство по развёртыванию Velum
 
-Velum — Rust/Axum переписывание [Semaphore](https://github.com/alexandervashurin/semaphore).
+Velum — Rust/Axum переписывание [Semaphore](https://github.com/semaphoreui/semaphore).
 Поддерживает SQLite (demo/dev) и PostgreSQL (prod).
 
 ---
@@ -54,9 +54,9 @@ cd deploy/dev && docker compose up -d db
 
 # Backend на хосте
 cd rust
-SEMAPHORE_DB_URL="postgres://semaphore:semaphore_dev_pass@localhost:5432/semaphore" \
-SEMAPHORE_WEB_PATH=../web/public \
-SEMAPHORE_ADMIN=admin SEMAPHORE_ADMIN_PASSWORD=admin123 \
+VELUM_DB_URL="postgres://velum:velum_dev_pass@localhost:5432/velum" \
+VELUM_WEB_PATH=../web/public \
+VELUM_ADMIN=admin VELUM_ADMIN_PASSWORD=admin123 \
 cargo run -- server
 ```
 
@@ -78,8 +78,8 @@ URL: http://localhost:80
 **Минимальный чеклист безопасности перед запуском:**
 
 - [ ] Сменить `POSTGRES_PASSWORD` (≥16 символов)
-- [ ] Сгенерировать `SEMAPHORE_JWT_SECRET`: `openssl rand -hex 32`
-- [ ] Сменить `SEMAPHORE_ADMIN_PASSWORD`
+- [ ] Сгенерировать `VELUM_JWT_SECRET`: `openssl rand -hex 32`
+- [ ] Сменить `VELUM_ADMIN_PASSWORD`
 - [ ] Настроить HTTPS (Let's Encrypt + certbot)
 - [ ] Убедиться что PostgreSQL не экспонирован на публичный порт
 
@@ -92,11 +92,11 @@ URL: http://localhost:80
 cd rust && cargo build --release
 
 # Запуск (SQLite)
-SEMAPHORE_DB_PATH=/var/lib/velum/semaphore.db \
-SEMAPHORE_WEB_PATH=/opt/velum/web \
-SEMAPHORE_ADMIN=admin \
-SEMAPHORE_ADMIN_PASSWORD=admin123 \
-./target/release/semaphore server --host 0.0.0.0 --port 3000
+VELUM_DB_PATH=/var/lib/velum/velum.db \
+VELUM_WEB_PATH=/opt/velum/web \
+VELUM_ADMIN=admin \
+VELUM_ADMIN_PASSWORD=admin123 \
+./target/release/velum server --host 0.0.0.0 --port 3000
 ```
 
 Или используй готовый скрипт:
@@ -128,17 +128,17 @@ sudo systemctl enable --now velum
 
 | Переменная | По умолчанию | Описание |
 |---|---|---|
-| `SEMAPHORE_DB_DIALECT` | `sqlite` | Диалект БД: `sqlite` / `postgres` / `mysql` |
-| `SEMAPHORE_DB_PATH` | `/tmp/semaphore.db` | Путь к SQLite-файлу |
-| `SEMAPHORE_DB_URL` | — | Строка подключения PostgreSQL/MySQL |
-| `SEMAPHORE_WEB_PATH` | `./web/public` | Путь к статическим файлам UI |
-| `SEMAPHORE_TMP_PATH` | `/tmp/semaphore` | Временная папка для задач |
-| `SEMAPHORE_JWT_SECRET` | `secret` | JWT-секрет (обязательно сменить!) |
-| `SEMAPHORE_ADMIN` | — | Логин первого администратора |
-| `SEMAPHORE_ADMIN_PASSWORD` | — | Пароль первого администратора |
-| `SEMAPHORE_ADMIN_EMAIL` | — | Email первого администратора |
-| `SEMAPHORE_LDAP_*` | — | LDAP-настройки (опционально) |
-| `SEMAPHORE_OIDC_*` | — | OIDC-настройки (опционально) |
+| `VELUM_DB_DIALECT` | `sqlite` | Диалект БД: `sqlite` / `postgres` / `mysql` |
+| `VELUM_DB_PATH` | `/tmp/velum.db` | Путь к SQLite-файлу |
+| `VELUM_DB_URL` | — | Строка подключения PostgreSQL/MySQL |
+| `VELUM_WEB_PATH` | `./web/public` | Путь к статическим файлам UI |
+| `VELUM_TMP_PATH` | `/tmp/velum` | Временная папка для задач |
+| `VELUM_JWT_SECRET` | `secret` | JWT-секрет (обязательно сменить!) |
+| `VELUM_ADMIN` | — | Логин первого администратора |
+| `VELUM_ADMIN_PASSWORD` | — | Пароль первого администратора |
+| `VELUM_ADMIN_EMAIL` | — | Email первого администратора |
+| `VELUM_LDAP_*` | — | LDAP-настройки (опционально) |
+| `VELUM_OIDC_*` | — | OIDC-настройки (опционально) |
 | `RUST_LOG` | `info` | Уровень логирования |
 
 ---

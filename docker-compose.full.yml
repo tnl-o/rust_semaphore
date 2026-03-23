@@ -9,20 +9,20 @@ services:
   # PostgreSQL - база данных
   db:
     image: postgres:15-alpine
-    container_name: semaphore-db
+    container_name: velum-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: semaphore
-      POSTGRES_USER: semaphore
-      POSTGRES_PASSWORD: semaphore_pass
+      POSTGRES_DB: velum
+      POSTGRES_USER: velum
+      POSTGRES_PASSWORD: velum_pass
     volumes:
-      - semaphore_postgres_data:/var/lib/postgresql/data
+      - velum_postgres_data:/var/lib/postgresql/data
       - ./db/postgres/init-demo.sql:/docker-entrypoint-initdb.d/init-demo.sql:ro
       - ./db/postgres/init-pghba.sh:/docker-entrypoint-initdb.d/init-pghba.sh:ro
     networks:
-      - semaphore-network
+      - velum-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U semaphore -d semaphore"]
+      test: ["CMD-SHELL", "pg_isready -U velum -d velum"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -32,31 +32,31 @@ services:
     build:
       context: ./rust
       dockerfile: Dockerfile
-    container_name: semaphore-backend
+    container_name: velum-backend
     restart: unless-stopped
     environment:
-      SEMAPHORE_DB_DIALECT: postgres
-      SEMAPHORE_DB_URL: postgres://semaphore:semaphore_pass@db:5432/semaphore
-      SEMAPHORE_WEB_PATH: /app/web/public
-      SEMAPHORE_TMP_PATH: /tmp/semaphore
-      SEMAPHORE_TCP_ADDRESS: 0.0.0.0:3000
+      VELUM_DB_DIALECT: postgres
+      VELUM_DB_URL: postgres://velum:velum_pass@db:5432/velum
+      VELUM_WEB_PATH: /app/web/public
+      VELUM_TMP_PATH: /tmp/velum
+      VELUM_TCP_ADDRESS: 0.0.0.0:3000
       RUST_LOG: info
     volumes:
       - ./web/public:/app/web/public:ro
-      - semaphore_tmp:/tmp/semaphore
+      - velum_tmp:/tmp/velum
     ports:
       - "3000:3000"
     networks:
-      - semaphore-network
+      - velum-network
     depends_on:
       db:
         condition: service_healthy
-    command: ["./semaphore", "server", "--host", "0.0.0.0", "--port", "3000"]
+    command: ["./velum", "server", "--host", "0.0.0.0", "--port", "3000"]
 
   # Frontend - Nginx для раздачи статики
   frontend:
     image: nginx:alpine
-    container_name: semaphore-frontend
+    container_name: velum-frontend
     restart: unless-stopped
     ports:
       - "80:80"
@@ -64,16 +64,16 @@ services:
       - ./web/public:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
-      - semaphore-network
+      - velum-network
     depends_on:
       - backend
 
 networks:
-  semaphore-network:
+  velum-network:
     driver: bridge
 
 volumes:
-  semaphore_postgres_data:
+  velum_postgres_data:
     driver: local
-  semaphore_tmp:
+  velum_tmp:
     driver: local

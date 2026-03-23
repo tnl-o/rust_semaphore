@@ -5,9 +5,9 @@
 use std::process::Command;
 use tracing::{info, warn};
 
-/// Находит исполняемый файл semaphore в PATH
-pub fn find_semaphore() -> Option<String> {
-    which::which("semaphore")
+/// Находит исполняемый файл velum в PATH
+pub fn find_velum() -> Option<String> {
+    which::which("velum")
         .ok()
         .and_then(|p| p.to_str().map(String::from))
 }
@@ -31,19 +31,19 @@ pub fn check_update() -> Option<String> {
     // Проверка обновлений через GitHub API
     // Используем reqwest для HTTP запросов
     // В production использовать с таймаутом и обработкой ошибок
-    
+
     use std::env;
-    
+
     // Пропускаем проверку если отключено
-    if env::var("SEMAPHORE_UPDATE_CHECK").unwrap_or_else(|_| "true".to_string()) == "false" {
+    if env::var("VELUM_UPDATE_CHECK").unwrap_or_else(|_| "true".to_string()) == "false" {
         return None;
     }
-    
+
     // В полной реализации:
-    // 1. GET https://api.github.com/repos/semaphoreui/semaphore/releases/latest
+    // 1. GET https://api.github.com/repos/tnl-o/velum/releases/latest
     // 2. Сравнить версию с CARGO_PKG_VERSION
     // 3. Вернуть новую версию если есть
-    
+
     // Пока возвращаем None (обновлений нет)
     None
 }
@@ -63,8 +63,8 @@ pub fn lookup_default_apps() {
 /// Получает публичный хост из конфигурации
 pub fn get_public_host() -> String {
     use std::env;
-    
-    env::var("SEMAPHORE_WEB_HOST")
+
+    env::var("VELUM_WEB_HOST")
         .unwrap_or_else(|_| "http://localhost:3000".to_string())
 }
 
@@ -158,20 +158,20 @@ mod tests {
 
     #[test]
     fn test_get_public_host_default() {
-        std::env::remove_var("SEMAPHORE_WEB_HOST");
+        std::env::remove_var("VELUM_WEB_HOST");
         assert_eq!(get_public_host(), "http://localhost:3000");
     }
 
     #[test]
     fn test_get_public_host_from_env() {
-        std::env::set_var("SEMAPHORE_WEB_HOST", "https://example.com");
+        std::env::set_var("VELUM_WEB_HOST", "https://example.com");
         assert_eq!(get_public_host(), "https://example.com");
-        std::env::remove_var("SEMAPHORE_WEB_HOST");
+        std::env::remove_var("VELUM_WEB_HOST");
     }
 
     #[test]
     fn test_get_public_alias_url() {
-        std::env::remove_var("SEMAPHORE_WEB_HOST");
+        std::env::remove_var("VELUM_WEB_HOST");
         let url = get_public_alias_url("test", "alias123");
         assert_eq!(url, "http://localhost:3000/api/alias123");
     }

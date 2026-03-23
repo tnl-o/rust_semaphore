@@ -16,7 +16,7 @@
 #   - Задачи (6 шт)
 # ============================================================================
 
-DB_PATH="./data/semaphore.db"
+DB_PATH="./data/velum.db"
 PASSWORD_HASH='$2b$12$pDKL.XOgDcQCXBm77saF4eO/84j.Ul1zDhnYPUM61vkqZAUnz9vwS'
 
 echo "📊 Наполнение SQLite демо-данными для Velum..."
@@ -24,7 +24,7 @@ echo "============================================"
 
 if [ ! -f "$DB_PATH" ]; then
     echo "❌ База данных не найдена: $DB_PATH"
-    echo "   Сначала выполните: ./semaphore.sh init native"
+    echo "   Сначала выполните: ./velum.sh init native"
     exit 1
 fi
 

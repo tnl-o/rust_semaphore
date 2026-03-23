@@ -1,9 +1,9 @@
 ---
 swagger: '2.0'
 info:
-  title: Semaphore API
+  title: Velum API
   description: |
-    Semaphore API provides endpoints for managing and interacting with the Velum.
+    Velum API provides endpoints for managing and interacting with the Velum.
     This documentation outlines the available operations and data models.
   version: "2.16.14"
 
@@ -43,7 +43,7 @@ definitions:
       auth:
         type: string
         description: Username/Email address
-        x-example: user@semaphoreui.com
+        x-example: user@velum.local
       password:
         type: string
         format: password

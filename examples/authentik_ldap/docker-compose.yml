@@ -70,32 +70,32 @@ services:
       AUTHENTIK_INSECURE: "false"
     env_file:
       - .env
-  semaphore:
+  velum:
     image: velum/velum:latest
     environment:
-      SEMAPHORE_DB_DIALECT: "bolt"
-      SEMAPHORE_ADMIN_PASSWORD: "changeme"
-      SEMAPHORE_ADMIN_NAME: "admin"
-      SEMAPHORE_ADMIN_EMAIL: "admin@example.org"
-      SEMAPHORE_LDAP_ACTIVATED: "yes"
-      SEMAPHORE_LDAP_SERVER: "ldap:3389"
-      SEMAPHORE_LDAP_SEARCH_DN: "ou=users,dc=ldap,dc=goauthentik,dc=io"
-      SEMAPHORE_LDAP_BIND_DN: "cn=ldapservice,ou=users,dc=ldap,dc=goauthentik,dc=io"
-      SEMAPHORE_LDAP_SEARCH_FILTER: "(&(objectClass=inetOrgPerson)(cn=%s))"
-      SEMAPHORE_NON_ADMIN_CAN_CREATE_PROJECT: "yes"
-      SEMAPHORE_LDAP_MAPPING_DN: "dn"
-      SEMAPHORE_LDAP_MAPPING_MAIL: "mail"
-      SEMAPHORE_LDAP_MAPPING_UID: "uid"
-      SEMAPHORE_LDAP_MAPPING_CN: "cn"
+      VELUM_DB_DIALECT: "bolt"
+      VELUM_ADMIN_PASSWORD: "changeme"
+      VELUM_ADMIN_NAME: "admin"
+      VELUM_ADMIN_EMAIL: "admin@example.org"
+      VELUM_LDAP_ACTIVATED: "yes"
+      VELUM_LDAP_SERVER: "ldap:3389"
+      VELUM_LDAP_SEARCH_DN: "ou=users,dc=ldap,dc=goauthentik,dc=io"
+      VELUM_LDAP_BIND_DN: "cn=ldapservice,ou=users,dc=ldap,dc=goauthentik,dc=io"
+      VELUM_LDAP_SEARCH_FILTER: "(&(objectClass=inetOrgPerson)(cn=%s))"
+      VELUM_NON_ADMIN_CAN_CREATE_PROJECT: "yes"
+      VELUM_LDAP_MAPPING_DN: "dn"
+      VELUM_LDAP_MAPPING_MAIL: "mail"
+      VELUM_LDAP_MAPPING_UID: "uid"
+      VELUM_LDAP_MAPPING_CN: "cn"
     env_file:
       - .env
     ports:
       - "3000:3000"
     volumes:
-      - semaphore_data:/var/lib/semaphore
+      - velum_data:/var/lib/velum
     depends_on:
       - ldap
 volumes:
   database:
   redis:
-  semaphore_data:
+  velum_data:

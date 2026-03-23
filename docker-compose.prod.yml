@@ -41,14 +41,14 @@ services:
     ports:
       - "3000:3000"
     environment:
-      SEMAPHORE_DB_DIALECT: postgres
-      SEMAPHORE_DB_URL: postgres://velum:${VELUM_DB_PASSWORD}@postgres:5432/velum
-      SEMAPHORE_WEB_PATH: /app/web/public
-      SEMAPHORE_ADMIN: admin
-      SEMAPHORE_ADMIN_PASSWORD: ${VELUM_ADMIN_PASSWORD:?VELUM_ADMIN_PASSWORD is required}
-      SEMAPHORE_ADMIN_NAME: Administrator
-      SEMAPHORE_ADMIN_EMAIL: ${VELUM_ADMIN_EMAIL:-admin@velum.local}
-      SEMAPHORE_JWT_SECRET: ${VELUM_JWT_SECRET:?VELUM_JWT_SECRET is required}
+      VELUM_DB_DIALECT: postgres
+      VELUM_DB_URL: postgres://velum:${VELUM_DB_PASSWORD}@postgres:5432/velum
+      VELUM_WEB_PATH: /app/web/public
+      VELUM_ADMIN: admin
+      VELUM_ADMIN_PASSWORD: ${VELUM_ADMIN_PASSWORD:?VELUM_ADMIN_PASSWORD is required}
+      VELUM_ADMIN_NAME: Administrator
+      VELUM_ADMIN_EMAIL: ${VELUM_ADMIN_EMAIL:-admin@velum.local}
+      VELUM_JWT_SECRET: ${VELUM_JWT_SECRET:?VELUM_JWT_SECRET is required}
       RUST_LOG: warn
     depends_on:
       postgres:

@@ -48,7 +48,7 @@ fn default_db_host() -> String {
 
 /// Значение по умолчанию для имени БД
 fn default_db_name() -> String {
-    "semaphore".to_string()
+    "velum".to_string()
 }
 
 /// Значение по умолчанию для TCP адреса
@@ -58,7 +58,7 @@ fn default_tcp_address() -> String {
 
 /// Значение по умолчанию для временной директории
 fn default_tmp_path() -> String {
-    "/tmp/semaphore".to_string()
+    "/tmp/velum".to_string()
 }
 
 /// Значение по умолчанию для LDAP DN
@@ -124,7 +124,7 @@ pub fn create_default_config() -> Config {
             email: None,
             all_projects: false,
         },
-        email_sender: "semaphore@localhost".to_string(),
+        email_sender: "velum@localhost".to_string(),
         telegram_bot_token: None,
         redis: None,
     }
@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn test_default_db_name() {
-        assert_eq!(default_db_name(), "semaphore");
+        assert_eq!(default_db_name(), "velum");
     }
 
     #[test]
@@ -185,27 +185,27 @@ mod tests {
 
     #[test]
     fn test_default_tmp_path() {
-        assert_eq!(default_tmp_path(), "/tmp/semaphore");
+        assert_eq!(default_tmp_path(), "/tmp/velum");
     }
 
     #[test]
     fn test_create_default_config() {
         let config = create_default_config();
         assert_eq!(config.tcp_address, "0.0.0.0:3000");
-        assert_eq!(config.tmp_path, "/tmp/semaphore");
+        assert_eq!(config.tmp_path, "/tmp/velum");
         assert_eq!(config.database.hostname, "0.0.0.0");
-        assert_eq!(config.database.db_name, "semaphore");
+        assert_eq!(config.database.db_name, "velum");
     }
 
     #[test]
     fn test_apply_defaults() {
         let mut config = Config::default();
         config.tcp_address = String::new(); // Сбросить значение
-        
+
         apply_defaults(&mut config);
-        
+
         assert_eq!(config.tcp_address, "0.0.0.0:3000");
-        assert_eq!(config.tmp_path, "/tmp/semaphore");
+        assert_eq!(config.tmp_path, "/tmp/velum");
     }
 
     #[test]
@@ -214,12 +214,12 @@ mod tests {
             tcp_address: "127.0.0.1:8080".to_string(),
             ..Default::default()
         };
-        
+
         apply_defaults(&mut config);
-        
+
         // Существующее значение должно сохраниться
         assert_eq!(config.tcp_address, "127.0.0.1:8080");
         // Пустое значение должно заполниться
-        assert_eq!(config.tmp_path, "/tmp/semaphore");
+        assert_eq!(config.tmp_path, "/tmp/velum");
     }
 }

@@ -1,9 +1,9 @@
 version: "3"
 
 vars:
-  BINARY_NAME: semaphore
-  DOCKER_ORG: semaphoreui
-  DOCKER_SERVER: semaphore-rust
+  BINARY_NAME: velum
+  DOCKER_ORG: tnl-o
+  DOCKER_SERVER: velum
 
 tasks:
   default:
@@ -112,16 +112,16 @@ tasks:
       - docker:build
     cmds:
       - docker run -p 3000:3000 \
-          -e SEMAPHORE_DB_DIALECT=sqlite \
-          -e SEMAPHORE_DB_PATH=/var/lib/semaphore/semaphore.db \
-          --name semaphore-rust \
+          -e VELUM_DB_DIALECT=sqlite \
+          -e VELUM_DB_PATH=/var/lib/velum/velum.db \
+          --name velum \
           {{.DOCKER_ORG}}/{{.DOCKER_SERVER}}:latest
 
   docker:clean:
     desc: Очистка Docker ресурсов
     cmds:
-      - docker stop semaphore-rust || true
-      - docker rm semaphore-rust || true
+      - docker stop velum || true
+      - docker rm velum || true
 
   docs:
     desc: Генерация документации

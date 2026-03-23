@@ -45,7 +45,7 @@ pub struct JobConfig {
 impl Default for JobConfig {
     fn default() -> Self {
         Self {
-            name: "semaphore-job".to_string(),
+            name: "velum-job".to_string(),
             namespace: None,
             image: "alpine:latest".to_string(),
             command: None,
@@ -106,7 +106,7 @@ metadata:
   name: {}
   namespace: {}
   labels:
-    app: semaphore
+    app: velum
     job: {}
 spec:
   ttlSecondsAfterFinished: {}
@@ -260,7 +260,7 @@ mod tests {
     #[test]
     fn test_job_config_default() {
         let config = JobConfig::default();
-        assert_eq!(config.name, "semaphore-job");
+        assert_eq!(config.name, "velum-job");
         assert_eq!(config.image, "alpine:latest");
         assert_eq!(config.restart_policy, "Never");
         assert_eq!(config.ttl_seconds, Some(300));

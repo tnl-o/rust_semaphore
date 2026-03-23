@@ -9,7 +9,7 @@
 #
 # Сервисы:
 #   postgres       — PostgreSQL 16
-#   semaphore      — UI + API (порт 8088), включает ansible
+#   velum          — UI + API (порт 8088), включает ansible
 #   ansible-target — SSH-цель для демо плейбуков (user: demo / demo123)
 # ============================================================================
 
@@ -19,20 +19,20 @@ services:
     container_name: velum-demo-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: semaphore
-      POSTGRES_PASSWORD: semaphore
-      POSTGRES_DB: semaphore
+      POSTGRES_USER: velum
+      POSTGRES_PASSWORD: velum
+      POSTGRES_DB: velum
     volumes:
-      - semaphore_demo_pgdata:/var/lib/postgresql/data
+      - velum_demo_pgdata:/var/lib/postgresql/data
     networks:
       - demo-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U semaphore"]
+      test: ["CMD-SHELL", "pg_isready -U velum"]
       interval: 5s
       timeout: 3s
       retries: 10
 
-  semaphore:
+  velum:
     build:
       context: .
       dockerfile: Dockerfile.demo
@@ -41,13 +41,13 @@ services:
     ports:
       - "8088:3000"
     environment:
-      SEMAPHORE_DB_DIALECT: postgres
-      SEMAPHORE_DB_URL: postgres://semaphore:semaphore@postgres:5432/semaphore
-      SEMAPHORE_WEB_PATH: /app/web/public
-      SEMAPHORE_ADMIN: admin
-      SEMAPHORE_ADMIN_PASSWORD: admin123
-      SEMAPHORE_ADMIN_NAME: Administrator
-      SEMAPHORE_ADMIN_EMAIL: admin@velum.local
+      VELUM_DB_DIALECT: postgres
+      VELUM_DB_URL: postgres://velum:velum@postgres:5432/velum
+      VELUM_WEB_PATH: /app/web/public
+      VELUM_ADMIN: admin
+      VELUM_ADMIN_PASSWORD: admin123
+      VELUM_ADMIN_NAME: Administrator
+      VELUM_ADMIN_EMAIL: admin@velum.local
       RUST_LOG: info
     depends_on:
       postgres:
@@ -91,7 +91,7 @@ services:
       - "22"
 
 volumes:
-  semaphore_demo_pgdata:
+  velum_demo_pgdata:
     driver: local
 
 networks:

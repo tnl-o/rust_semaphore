@@ -13,38 +13,38 @@
 version: '3.8'
 
 services:
-  semaphore:
-    image: semaphore:latest
+  velum:
+    image: velum:latest
     # Для сборки из исходников раскомментируйте:
     # build:
     #   context: .
     #   dockerfile: deployment/single/Dockerfile
-    container_name: semaphore
+    container_name: velum
     restart: unless-stopped
-    
+
     # Порты
     ports:
       - "80:80"   # Web интерфейс
       - "3000:3000" # API (опционально)
-    
+
     # Тома для сохранения данных
     volumes:
-      - semaphore_data:/app/data          # База данных SQLite
-      - semaphore_config:/app/config      # Конфигурация
-      - semaphore_logs:/app/logs          # Логи
-    
+      - velum_data:/app/data          # База данных SQLite
+      - velum_config:/app/config      # Конфигурация
+      - velum_logs:/app/logs          # Логи
+
     # Переменные окружения
     environment:
       # База данных (SQLite)
-      - SEMAPHORE_DB_URL=sqlite://data/semaphore.db
-      
+      - VELUM_DB_URL=sqlite://data/velum.db
+
       # Web интерфейс
-      - SEMAPHORE_WEB_PATH=/var/www/html
-      
+      - VELUM_WEB_PATH=/var/www/html
+
       # Сервер
-      - SEMAPHORE_HOST=0.0.0.0
-      - SEMAPHORE_PORT=3000
-      
+      - VELUM_HOST=0.0.0.0
+      - VELUM_PORT=3000
+
       # Логирование
       - RUST_LOG=info
       
@@ -69,8 +69,8 @@ services:
     
     # Сеть
     networks:
-      - semaphore-network
-    
+      - velum-network
+
     # Ресурсы (опционально)
     deploy:
       resources:
@@ -83,18 +83,18 @@ services:
 
 # Сети
 networks:
-  semaphore-network:
+  velum-network:
     driver: bridge
-    name: semaphore-network
+    name: velum-network
 
 # Тома
 volumes:
-  semaphore_data:
+  velum_data:
     driver: local
-    name: semaphore_data
-  semaphore_config:
+    name: velum_data
+  velum_config:
     driver: local
-    name: semaphore_config
-  semaphore_logs:
+    name: velum_config
+  velum_logs:
     driver: local
-    name: semaphore_logs
+    name: velum_logs

@@ -1,15 +1,15 @@
 [Unit]
-Documentation=https://github.com/semaphoreui/semaphore
-Documentation=man:semaphore --help
-Description=Semaphore UI
+Documentation=https://github.com/tnl-o/velum
+Documentation=man:velum --help
+Description=Velum UI
 Requires=network.target
 After=network.target syslog.target
 
 [Service]
-EnvironmentFile=/etc/semaphore/env
-User=semaphore
-Group=semaphore
-ExecStart=/usr/bin/semaphore server --config /home/semaphore/config.json
+EnvironmentFile=/etc/velum/env
+User=velum
+Group=velum
+ExecStart=/usr/bin/velum server --config /home/velum/config.json
 ExecStop=/bin/kill -s QUIT $MAINPID
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=always

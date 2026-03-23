@@ -25,29 +25,29 @@ services:
     depends_on:
       - ldap
 
-  semaphore:
+  velum:
     image: velum/velum:latest
-#    container_name: semaphore
+#    container_name: velum
     environment:
-      SEMAPHORE_DB_DIALECT: "bolt"
-      SEMAPHORE_ADMIN_PASSWORD: "changeme"
-      SEMAPHORE_ADMIN_NAME: "admin"
-      SEMAPHORE_ADMIN_EMAIL: "admin@example.org"
-      SEMAPHORE_LDAP_ACTIVATED: "yes"
-      SEMAPHORE_LDAP_SERVER: "ldap:389"
-      SEMAPHORE_LDAP_SEARCH_DN: "dc=example,dc=org"
-      SEMAPHORE_LDAP_BIND_DN: "cn=admin,dc=example,dc=org"
-      SEMAPHORE_LDAP_BIND_PASSWORD: "admin"
-      SEMAPHORE_LDAP_SEARCH_FILTER: "(&(objectClass=inetOrgPerson)(uid=%s))"
-      SEMAPHORE_NON_ADMIN_CAN_CREATE_PROJECT: "yes"
+      VELUM_DB_DIALECT: "bolt"
+      VELUM_ADMIN_PASSWORD: "changeme"
+      VELUM_ADMIN_NAME: "admin"
+      VELUM_ADMIN_EMAIL: "admin@example.org"
+      VELUM_LDAP_ACTIVATED: "yes"
+      VELUM_LDAP_SERVER: "ldap:389"
+      VELUM_LDAP_SEARCH_DN: "dc=example,dc=org"
+      VELUM_LDAP_BIND_DN: "cn=admin,dc=example,dc=org"
+      VELUM_LDAP_BIND_PASSWORD: "admin"
+      VELUM_LDAP_SEARCH_FILTER: "(&(objectClass=inetOrgPerson)(uid=%s))"
+      VELUM_NON_ADMIN_CAN_CREATE_PROJECT: "yes"
     ports:
       - "3000:3000"
     volumes:
-      - semaphore_data:/var/lib/semaphore
+      - velum_data:/var/lib/velum
     depends_on:
       - ldap
 
 volumes:
   ldap_data:
   ldap_config:
-  semaphore_data:
+  velum_data:

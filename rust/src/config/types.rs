@@ -50,7 +50,7 @@ fn default_db_host() -> String {
 }
 
 fn default_db_name() -> String {
-    "semaphore".to_string()
+    "velum".to_string()
 }
 
 impl Default for DbConfig {

@@ -2,14 +2,14 @@
 %global _missing_build_ids_terminate_build 0
 %global _dwz_low_mem_die_limit 0
 
-Name:           semaphore
+Name:           velum
 Version:        2.8.90
 Release:        1%{?dist}
-Summary:        Semaphore UI is a modern UI for Ansible, Terraform, OpenTofu, Bash and Pulumi. It lets you easily run Ansible playbooks, get notifications about fails, control access to deployment system.
+Summary:        Velum UI is a modern UI for Ansible, Terraform, OpenTofu, Bash and Pulumi. It lets you easily run Ansible playbooks, get notifications about fails, control access to deployment system.
 
 License:        MIT
-URL:            https://github.com/semaphoreui/semaphore
-Source:         https://github.com/semaphoreui/semaphore/archive/refs/tags/v2.8.90.zip
+URL:            https://github.com/tnl-o/velum
+Source:         https://github.com/tnl-o/velum/archive/refs/tags/v2.8.90.zip
 
 BuildRequires:  golang
 BuildRequires:  nodejs
@@ -39,18 +39,18 @@ fi
 export PATH
 go-task all
 
-cat > semaphoreui.service <<EOF
+cat > velumui.service <<EOF
 [Unit]
-Description=Semaphore Ansible
-Documentation=https://github.com/semaphoreui/semaphore
+Description=Velum Ansible
+Documentation=https://github.com/tnl-o/velum
 Wants=network-online.target
 After=network-online.target
 
 [Service]
 Type=simple
 ExecReload=/bin/kill -HUP $MAINPID
-ExecStart=%{_bindir}/semaphore service --config=/etc/semaphore/config.json
-SyslogIdentifier=semaphore
+ExecStart=%{_bindir}/velum service --config=/etc/velum/config.json
+SyslogIdentifier=velum
 Restart=always
 
 [Install]
@@ -58,26 +58,26 @@ WantedBy=multi-user.target
 
 EOF
 
-cat > semaphore-setup <<EOF
-semaphore setup --config=/etc/semaphore/config.json
+cat > velum-setup <<EOF
+velum setup --config=/etc/velum/config.json
 EOF
 
 %install
-mkdir -p %{buildroot}%{_sysconfdir}/semaphore/
+mkdir -p %{buildroot}%{_sysconfdir}/velum/
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_unitdir}
 
-install -m 755 bin/semaphore %{buildroot}%{_bindir}/semaphore
-install -m 755 semaphore-setup %{buildroot}%{_bindir}/semaphore-setup
-install -m 755 semaphoreui.service %{buildroot}%{_unitdir}/semaphoreui.service
+install -m 755 bin/velum %{buildroot}%{_bindir}/velum
+install -m 755 velum-setup %{buildroot}%{_bindir}/velum-setup
+install -m 755 velumui.service %{buildroot}%{_unitdir}/velumui.service
 
 %files
 %license LICENSE
 %doc README.md CONTRIBUTING.md
-%attr(755, root, root) %{_bindir}/semaphore
-%attr(755, root, root) %{_bindir}/semaphore-setup
-%attr(644, root,root) %{_sysconfdir}/semaphore/
-%{_unitdir}/semaphoreui.service
+%attr(755, root, root) %{_bindir}/velum
+%attr(755, root, root) %{_bindir}/velum-setup
+%attr(644, root,root) %{_sysconfdir}/velum/
+%{_unitdir}/velumui.service
 
 %changelog
 * Wed Jun 28 2023 Neftali Yagua

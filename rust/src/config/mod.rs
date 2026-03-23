@@ -24,35 +24,35 @@ pub use config_oidc::{OidcProvider, OidcEndpoint, load_oidc_from_env};
 pub use config_ha::{HAConfigFull, HARedisConfigFull, load_ha_from_env};
 pub use config_logging::{LoggingConfig, LogFormat, LogLevel, load_logging_from_env};
 pub use config_dirs::{clear_dir, ensure_dir_exists, get_project_tmp_dir, clear_project_tmp_dir, create_project_tmp_dir, get_or_create_project_tmp_dir, is_safe_path, create_unique_tmp_dir};
-pub use config_helpers::{find_semaphore, get_ansible_version, check_update, lookup_default_apps, get_public_host, generate_recovery_code, verify_recovery_code, get_public_alias_url};
+pub use config_helpers::{find_velum, get_ansible_version, check_update, lookup_default_apps, get_public_host, generate_recovery_code, verify_recovery_code, get_public_alias_url};
 
 /// Проверяет, включены ли email уведомления
 pub fn email_alert_enabled() -> bool {
     // В полной реализации нужно загружать конфиг и проверять alert.enabled
     // Пока используем переменную окружения
-    std::env::var("SEMAPHORE_ALERT_ENABLED")
+    std::env::var("VELUM_ALERT_ENABLED")
         .map(|v| v == "true" || v == "1")
         .unwrap_or(false)
 }
 
 /// Получает отправителя email
 pub fn get_email_sender() -> String {
-    std::env::var("SEMAPHORE_EMAIL_SENDER")
-        .or_else(|_| std::env::var("SEMAPHORE_MAILER_FROM"))
-        .unwrap_or_else(|_| String::from("semaphore@localhost"))
+    std::env::var("VELUM_EMAIL_SENDER")
+        .or_else(|_| std::env::var("VELUM_MAILER_FROM"))
+        .unwrap_or_else(|_| String::from("velum@localhost"))
 }
 
 /// Собирает SmtpConfig из переменных окружения
 pub fn get_smtp_config() -> crate::utils::mailer::SmtpConfig {
     crate::utils::mailer::SmtpConfig {
-        host: std::env::var("SEMAPHORE_MAILER_HOST").unwrap_or_else(|_| String::from("localhost")),
-        port: std::env::var("SEMAPHORE_MAILER_PORT").unwrap_or_else(|_| String::from("25")),
-        username: std::env::var("SEMAPHORE_MAILER_USERNAME").ok(),
-        password: std::env::var("SEMAPHORE_MAILER_PASSWORD").ok(),
-        use_tls: std::env::var("SEMAPHORE_MAILER_USE_TLS")
+        host: std::env::var("VELUM_MAILER_HOST").unwrap_or_else(|_| String::from("localhost")),
+        port: std::env::var("VELUM_MAILER_PORT").unwrap_or_else(|_| String::from("25")),
+        username: std::env::var("VELUM_MAILER_USERNAME").ok(),
+        password: std::env::var("VELUM_MAILER_PASSWORD").ok(),
+        use_tls: std::env::var("VELUM_MAILER_USE_TLS")
             .map(|v| v == "true" || v == "1")
             .unwrap_or(false),
-        secure: std::env::var("SEMAPHORE_MAILER_SECURE")
+        secure: std::env::var("VELUM_MAILER_SECURE")
             .map(|v| v == "true" || v == "1")
             .unwrap_or(false),
         from: get_email_sender(),

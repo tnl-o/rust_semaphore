@@ -1,5 +1,5 @@
-//! Semaphore Desktop - Frontend JavaScript
-//! 
+//! Velum Desktop - Frontend JavaScript
+//!
 //! Взаимодействие с Tauri backend через invoke API
 
 const { invoke } = window.__TAURI__.core;

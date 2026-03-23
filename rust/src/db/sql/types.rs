@@ -58,7 +58,7 @@ impl Default for DbConnectionConfig {
             port: 0,
             username: String::new(),
             password: String::new(),
-            db_name: "semaphore".to_string(),
+            db_name: "velum".to_string(),
             options: std::collections::HashMap::new(),
         }
     }
@@ -149,7 +149,7 @@ mod tests {
     fn test_db_connection_config_default() {
         let config = DbConnectionConfig::new();
         assert_eq!(config.host, "localhost");
-        assert_eq!(config.db_name, "semaphore");
+        assert_eq!(config.db_name, "velum");
         assert_eq!(config.port, 0);
     }
 

@@ -8,7 +8,7 @@ import re
 import os
 import sys
 
-BASE = r"C:\semaphore_ui_rust\rust_semaphore\rust\src\db\sql"
+BASE = r"C:\velum_ui_rust\rust\velum\rust\src\db\sql"
 
 
 def extract_block_from_pos(text, open_brace_pos):

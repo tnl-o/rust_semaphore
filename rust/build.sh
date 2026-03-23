@@ -25,14 +25,14 @@ if [ "$BUILD_TYPE" = "release" ]; then
     echo "🔨 Оптимизированная сборка..."
     cargo build --release
     echo "✓ Сборка завершена!"
-    echo "📦 Бинарный файл: target/release/semaphore"
-    ls -lh target/release/semaphore
+    echo "📦 Бинарный файл: target/release/velum"
+    ls -lh target/release/velum
 else
     echo "🔨 Отладочная сборка..."
     cargo build
     echo "✓ Сборка завершена!"
-    echo "📦 Бинарный файл: target/debug/semaphore"
-    ls -lh target/debug/semaphore
+    echo "📦 Бинарный файл: target/debug/velum"
+    ls -lh target/debug/velum
 fi
 
 echo ""

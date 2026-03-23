@@ -1,4 +1,4 @@
-# Dockerfile для Semaphore UI (Rust)
+# Dockerfile для Velum (Rust)
 
 FROM rust:1.75-alpine3.19 AS builder
 
@@ -41,26 +41,26 @@ RUN apk add --no-cache -U \
     && rm -rf /var/cache/apk/*
 
 # Создание пользователя
-RUN addgroup -g 1001 semaphore && \
-    adduser -D -u 1001 -G semaphore semaphore
+RUN addgroup -g 1001 velum && \
+    adduser -D -u 1001 -G velum velum
 
 # Установка Ansible
 RUN pip3 install --break-system-packages ansible
 
 # Копирование бинарного файла
-COPY --from=builder /app/target/release/semaphore /usr/local/bin/
+COPY --from=builder /app/target/release/velum /usr/local/bin/
 
 # Создание директорий
-RUN mkdir -p /var/lib/semaphore && \
-    mkdir -p /etc/semaphore && \
-    chown -R semaphore:semaphore /var/lib/semaphore && \
-    chown -R semaphore:semaphore /etc/semaphore
+RUN mkdir -p /var/lib/velum && \
+    mkdir -p /etc/velum && \
+    chown -R velum:velum /var/lib/velum && \
+    chown -R velum:velum /etc/velum
 
-WORKDIR /var/lib/semaphore
+WORKDIR /var/lib/velum
 
-USER semaphore
+USER velum
 
 EXPOSE 3000
 
-ENTRYPOINT ["/usr/local/bin/semaphore"]
+ENTRYPOINT ["/usr/local/bin/velum"]
 CMD ["server"]

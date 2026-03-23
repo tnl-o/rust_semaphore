@@ -76,11 +76,11 @@ impl GitRepository {
     pub fn get_full_path(&self) -> PathBuf {
         if let Some(ref tmp_name) = self.tmp_dir_name {
             // Временная директория проекта
-            PathBuf::from(format!("/tmp/semaphore/project_{}/{}", self.project_id, tmp_name))
+            PathBuf::from(format!("/tmp/velum/project_{}/{}", self.project_id, tmp_name))
         } else {
             // Полная директория репозитория
             PathBuf::from(format!(
-                "/tmp/semaphore/repo_{}_{}",
+                "/tmp/velum/repo_{}_{}",
                 self.repository.id,
                 self.template_id
             ))
@@ -252,7 +252,7 @@ impl CmdGitClient {
 
     /// Получает путь к временной директории проекта
     fn get_project_tmp_dir(&self, project_id: i32) -> PathBuf {
-        PathBuf::from(format!("/tmp/semaphore/project_{}", project_id))
+        PathBuf::from(format!("/tmp/velum/project_{}", project_id))
     }
 
     /// Выполняет команду
@@ -568,7 +568,7 @@ impl DbRepository {
 
     /// Получает полный путь к репозиторию
     pub fn get_full_path(&self, template_id: i32) -> PathBuf {
-        PathBuf::from(format!("/tmp/semaphore/repo_{}_{}", self.id, template_id))
+        PathBuf::from(format!("/tmp/velum/repo_{}_{}", self.id, template_id))
     }
 }
 

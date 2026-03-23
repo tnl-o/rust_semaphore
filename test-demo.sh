@@ -49,13 +49,13 @@ echo ""
 # Проверка Docker
 info "Проверка Docker сервисов..."
 
-if docker-compose ps | grep -q "semaphore-db"; then
+if docker-compose ps | grep -q "velum-db"; then
     success "PostgreSQL запущен"
 else
     warning "PostgreSQL не запущен"
 fi
 
-if docker-compose ps | grep -q "semaphore-frontend"; then
+if docker-compose ps | grep -q "velum-frontend"; then
     success "Frontend (Nginx) запущен"
 else
     warning "Frontend не запущен"
@@ -85,18 +85,18 @@ echo ""
 # Проверка БД
 info "Проверка БД..."
 
-if docker-compose exec -T db pg_isready -U semaphore -d semaphore > /dev/null 2>&1; then
+if docker-compose exec -T db pg_isready -U velum -d velum > /dev/null 2>&1; then
     success "PostgreSQL готов к работе"
-    
+
     # Проверка наличия демо-данных
-    USERS_COUNT=$(docker-compose exec -T db psql -U semaphore -d semaphore -t -c "SELECT COUNT(*) FROM \"user\";" 2>/dev/null | tr -d ' ')
+    USERS_COUNT=$(docker-compose exec -T db psql -U velum -d velum -t -c "SELECT COUNT(*) FROM \"user\";" 2>/dev/null | tr -d ' ')
     if [ -n "$USERS_COUNT" ] && [ "$USERS_COUNT" -gt 0 ]; then
         success "Демо-пользователи загружены ($USERS_COUNT)"
     else
         warning "Демо-пользователи не найдены"
     fi
-    
-    PROJECTS_COUNT=$(docker-compose exec -T db psql -U semaphore -d semaphore -t -c "SELECT COUNT(*) FROM project;" 2>/dev/null | tr -d ' ')
+
+    PROJECTS_COUNT=$(docker-compose exec -T db psql -U velum -d velum -t -c "SELECT COUNT(*) FROM project;" 2>/dev/null | tr -d ' ')
     if [ -n "$PROJECTS_COUNT" ] && [ "$PROJECTS_COUNT" -gt 0 ]; then
         success "Демо-проекты загружены ($PROJECTS_COUNT)"
     else
