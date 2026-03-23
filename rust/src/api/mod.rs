@@ -29,6 +29,7 @@ use axum::{Router, middleware as axum_middleware};
 use tower_http::cors::{CorsLayer, Any};
 use tower_http::trace::TraceLayer;
 use std::sync::Arc;
+use tracing::{info, warn};
 
 use state::AppState;
 
@@ -37,9 +38,39 @@ pub use middleware::{rate_limiter, security_headers};
 
 /// Создаёт приложение Axum
 pub fn create_app(store: Arc<dyn crate::db::Store + Send + Sync>) -> Router {
+    let config = crate::config::Config::default();
+    
+    // Инициализация Redis cache для HA режима
+    let cache = if config.ha.enable && !config.ha.redis.host.is_empty() {
+        let redis_url = config.ha.redis_url();
+        info!("HA mode enabled, connecting to Redis: {}", redis_url);
+        
+        match crate::cache::RedisCache::new(crate::cache::RedisConfig {
+            url: redis_url,
+            key_prefix: "velum:".to_string(),
+            default_ttl_secs: 300,
+            max_retries: 3,
+            connection_timeout_secs: 5,
+            enabled: true,
+        }).initialize_sync() {
+            Ok(cache) => {
+                info!("Redis cache initialized successfully");
+                Some(Arc::new(cache))
+            }
+            Err(e) => {
+                warn!("Failed to initialize Redis cache: {}. HA features may not work.", e);
+                None
+            }
+        }
+    } else {
+        info!("HA mode disabled or Redis not configured, running in single-node mode");
+        None
+    };
+
     let state = Arc::new(AppState::new(
         store,
-        crate::config::Config::default(),
+        config,
+        cache,
     ));
 
     let cors = CorsLayer::new()

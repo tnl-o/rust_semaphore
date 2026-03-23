@@ -3,6 +3,7 @@
 use crate::db::Store;
 use crate::config::Config;
 use crate::services::metrics::MetricsManager;
+use crate::cache::RedisCache;
 use std::sync::Arc;
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -23,17 +24,19 @@ pub struct AppState {
     pub ws_manager: Arc<WebSocketManager>,
     pub oidc_state: Arc<Mutex<HashMap<String, OidcState>>>,
     pub metrics: MetricsManager,
+    pub cache: Option<Arc<RedisCache>>,
 }
 
 impl AppState {
     /// Создаёт новое состояние приложения
-    pub fn new(store: Arc<dyn Store + Send + Sync>, config: Config) -> Self {
+    pub fn new(store: Arc<dyn Store + Send + Sync>, config: Config, cache: Option<Arc<RedisCache>>) -> Self {
         Self {
             store: StoreWrapper::new(store),
             config,
             ws_manager: Arc::new(WebSocketManager::new()),
             oidc_state: Arc::new(Mutex::new(HashMap::new())),
             metrics: MetricsManager::new(),
+            cache,
         }
     }
 }
