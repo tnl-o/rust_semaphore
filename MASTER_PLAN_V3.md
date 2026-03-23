@@ -1357,15 +1357,9 @@ velum_auth_failures_total{ip, reason}
 
 ---
 
-### 🎯 FI-15 — Конкурентное позиционирование
+### 🎯 FI-15 — Конкурентное позиционирование (см. БЛОК 13 ниже)
 
-| Конкурент | Преимущество Velum | Что реализовать |
-|-----------|-------------------|-----------------|
-| **AWX/Tower** | 100x меньший footprint, SaaS-ready | Container image <50MB, $0 core cost |
-| **Jenkins** | Native Terraform + GitOps, no plugins | Built-in drift detection, cost tracking |
-| **Rundeck** | Лучший UX + Rust performance | Material Design, WebSocket live-logs |
-| **Argo CD / Flux** | Hybrid (declarative + imperative) | DAG + GitOps combo, cost visibility |
-| **Ansible Semaphore** | AI analysis + cost tracking + MCP | Claude/OpenAI built-in |
+> Полная матрица конкурентов вынесена в **БЛОК 13** для удобства навигации.
 
 ---
 
@@ -1413,6 +1407,272 @@ velum_auth_failures_total{ip, reason}
 | FI-14-1..10 | Quick Wins | 10 быстрых улучшений | 🟢 Низкая | v5.0–v5.1 |
 
 **Итого: 40+ направлений** | 🔴 10 высоких | 🟠 14 средне-высоких | 🟡 16 средних/низких | 🟢 5 быстрых
+
+---
+
+## 🏟️ БЛОК 13 — Матрица конкурентов (2026)
+
+> **Velum** — Rust, MIT, ~15 MB бинарник, <1 с старт, ~80 MB RAM, 1 бинарник + SQLite, native Ansible + Terraform, AI built-in, MCP сервер.
+
+---
+
+### 13.1 — Категории инструментов
+
+| Категория | Инструменты |
+|-----------|------------|
+| **Ansible-ориентированные** | AWX/Tower, Ansible Semaphore, **Velum** |
+| **Universal CI/CD** | Jenkins, GitLab CI/CD, GitHub Actions, Harness |
+| **GitOps / K8s-native** | Argo CD, Flux CD, Spinnaker |
+| **Terraform-focused** | Terraform Cloud (HCP), Spacelift, Atlantis, Pulumi Cloud |
+| **Operations / RunOps** | Rundeck / PagerDuty Process Automation |
+| **Developer Portal** | Backstage (Spotify), Port.io |
+
+---
+
+### 13.2 — Технические характеристики
+
+| Инструмент | Язык | Лицензия | RAM (idle) | Старт | Деплой | Размер образа |
+|------------|------|----------|-----------|-------|--------|---------------|
+| **Velum** | **Rust** | **MIT** | **~80 MB** | **<1 с** | **1 бинарник** | **~50 MB** |
+| AWX | Python | GPLv3 | 500 MB–2 GB | 30–90 с | 8+ контейнеров | ~3 GB |
+| Ansible Tower | Python | Коммерческий | 1–2 GB | 60–120 с | RPM/VM | ~3 GB |
+| Ansible Semaphore | Go | MIT | ~80 MB | <1 с | 1 бинарник | ~80 MB |
+| Jenkins | Java | MIT | 512 MB–1 GB | 30–60 с | WAR / Docker | ~700 MB |
+| Rundeck | Java/Groovy | Apache 2.0 | 512 MB–1 GB | 15–30 с | WAR / Docker | ~600 MB |
+| Argo CD | Go | Apache 2.0 | 200–500 MB | 10–30 с | K8s manifests | ~300 MB |
+| Flux CD | Go | Apache 2.0 | ~200 MB | 10–20 с | K8s CRDs | ~200 MB |
+| Spinnaker | Java | Apache 2.0 | 1–2 GB | 2–5 мин | 10+ сервисов | ~4 GB |
+| Terraform Cloud | Go (SaaS) | BUSL 1.1 | SaaS | SaaS | SaaS / Enterprise | N/A |
+| Spacelift | Go (SaaS) | Коммерческий | SaaS | SaaS | SaaS | N/A |
+| Atlantis | Go | Apache 2.0 | ~50 MB | <1 с | 1 бинарник | ~60 MB |
+| Pulumi Cloud | Go (SaaS) | Apache 2.0 (SDK) | SaaS | SaaS | SaaS / Self-hosted | N/A |
+| Harness | Java (SaaS) | BSL / Коммерческий | SaaS | SaaS | SaaS / Self-hosted | ~2 GB |
+| GitLab CI | Ruby/Go | MIT (CE) / Koммерч. | ~800 MB | 15–30 с | Многосервисный | ~2 GB |
+
+---
+
+### 13.3 — Поддержка технологий автоматизации
+
+| Инструмент | Ansible | Terraform | Pulumi | Bash/Script | K8s | OpenTofu |
+|------------|---------|-----------|--------|------------|-----|---------|
+| **Velum** | ✅ **Native** | ✅ **Native** | ⏳ FI-plan | ✅ | ⏳ K8s Runner | ✅ |
+| AWX / Tower | ✅ Native | ❌ Plugin | ❌ | ✅ | ✅ | ❌ |
+| Ansible Semaphore | ✅ Native | ✅ | ❌ | ✅ | ❌ | ✅ |
+| Jenkins | ⚙️ Plugin | ⚙️ Plugin | ⚙️ Plugin | ✅ | ⚙️ Plugin | ⚙️ |
+| Rundeck | ⚙️ Plugin | ⚙️ Plugin | ❌ | ✅ | ⚙️ Plugin | ❌ |
+| Argo CD | ❌ | ❌ | ❌ | ❌ | ✅ **Native** | ❌ |
+| Flux CD | ❌ | ✅ (tf-controller) | ❌ | ❌ | ✅ **Native** | ✅ |
+| Spinnaker | ⚙️ Plugin | ⚙️ Plugin | ❌ | ❌ | ✅ | ❌ |
+| Terraform Cloud | ❌ | ✅ **Native** | ❌ | ⚙️ | ✅ | ✅ |
+| Spacelift | ✅ | ✅ **Native** | ✅ | ✅ | ✅ | ✅ |
+| Atlantis | ❌ | ✅ **Native** | ❌ | ❌ | ❌ | ✅ |
+| Pulumi Cloud | ❌ | ✅ (compatible) | ✅ **Native** | ✅ | ✅ | ❌ |
+| Harness | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| GitLab CI | ✅ (CI jobs) | ✅ (state backend) | ✅ | ✅ | ✅ (Agent) | ✅ |
+
+> Легенда: ✅ Встроено | ⚙️ Плагин/интеграция | ⏳ В плане | ❌ Нет
+
+---
+
+### 13.4 — Аутентификация и безопасность
+
+| Инструмент | LDAP | OIDC/OAuth2 | SAML | TOTP 2FA | SSO | RBAC | Audit Log |
+|------------|------|-------------|------|----------|-----|------|-----------|
+| **Velum** | ✅ | ✅ | ❌ | ✅ **Built-in** | ✅ | ✅ | ✅ |
+| AWX / Tower | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Ansible Semaphore | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Jenkins | ⚙️ | ⚙️ | ⚙️ | ⚙️ | ⚙️ | ⚙️ | ⚙️ |
+| Rundeck | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Argo CD | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Flux CD | — | K8s RBAC | — | — | K8s | ✅ | ✅ |
+| Spinnaker | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Terraform Cloud | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Spacelift | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Atlantis | — | — | — | — | ❌ | ❌ | ❌ |
+| Pulumi Cloud | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Harness | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| GitLab CI | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+---
+
+### 13.5 — Продвинутые функции
+
+| Инструмент | WebSocket логи | Approval Workflow | DAG / Пайплайны | Survey/Формы | Уведомления |
+|------------|---------------|-------------------|-----------------|-------------|-------------|
+| **Velum** | ✅ | ✅ | ✅ **DAG UI** | ✅ **Drag&Drop** | ✅ Политики |
+| AWX / Tower | ✅ | ✅ | ✅ Workflow | ✅ Survey | ✅ |
+| Ansible Semaphore | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Jenkins | ✅ | ✅ (plugin) | ✅ Pipeline | ⚙️ Plugin | ✅ (plugin) |
+| Rundeck | ✅ | ✅ | ✅ (jobs) | ✅ | ✅ |
+| Argo CD | ✅ | ✅ Sync gates | ✅ Argo WF | ❌ | ✅ |
+| Flux CD | Partial | ❌ | ❌ | ❌ | ✅ |
+| Spinnaker | ✅ | ✅ Manual judge | ✅ Pipelines | ❌ | ✅ |
+| Terraform Cloud | ✅ | ✅ | ❌ | ❌ | ✅ |
+| Spacelift | ✅ | ✅ | ✅ (stacks) | ❌ | ✅ |
+| Atlantis | PR comments | ✅ (PR-based) | ❌ | ❌ | ❌ |
+| Pulumi Cloud | ✅ | ✅ | ❌ | ❌ | ✅ |
+| Harness | ✅ | ✅ | ✅ Pipelines | ✅ | ✅ |
+| GitLab CI | ✅ | ✅ Environments | ✅ Pipelines | ❌ | ✅ |
+
+---
+
+### 13.6 — DevOps-специфичные функции
+
+| Инструмент | Drift Detection | Rollback | Cost Tracking | GitOps | Template Marketplace | Diff между запусками |
+|------------|----------------|----------|---------------|--------|---------------------|----------------------|
+| **Velum** | ✅ **Terraform** | ✅ **Snapshots** | ✅ **Infracost** | ✅ | ✅ **11 шаблонов** | ✅ **LCS engine** |
+| AWX / Tower | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Ansible Semaphore | ❌ | ❌ | ❌ | Partial | ❌ | ❌ |
+| Jenkins | ❌ | ⚙️ Plugin | ❌ | Jenkins X ✅ | ✅ 1800+ plugins | ❌ |
+| Rundeck | ❌ | ❌ | ❌ | ❌ | ✅ Plugin hub | ❌ |
+| Argo CD | ✅ **Native** | ✅ | ❌ | ✅ **Native** | ❌ | ❌ |
+| Flux CD | ✅ **Native** | ✅ | ❌ | ✅ **Native** | ❌ | ❌ |
+| Spinnaker | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Terraform Cloud | ✅ | ✅ State | ✅ (v2) | ✅ | ✅ Registry | ❌ |
+| Spacelift | ✅ | ✅ | ✅ **Infracost** | ✅ | ❌ | ❌ |
+| Atlantis | ❌ | ❌ | ✅ Infracost | ✅ **PR-based** | ❌ | ❌ |
+| Pulumi Cloud | ✅ | ✅ | ✅ | ✅ | ✅ Registry | ❌ |
+| Harness | ✅ | ✅ | ✅ **CCM module** | ✅ | ❌ | ❌ |
+| GitLab CI | ❌ | ✅ Environments | ❌ | ✅ | ❌ | ❌ |
+
+---
+
+### 13.7 — AI и современные интеграции
+
+| Инструмент | AI / LLM | MCP Server | REST API | GraphQL | Webhook | White-label |
+|------------|----------|-----------|---------|---------|---------|------------|
+| **Velum** | ✅ **Claude+OpenAI** | ✅ **60 tools** | ✅ 75+ endpoints | ⏳ | ✅ | ✅ **Branding API** |
+| AWX / Tower | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| Ansible Semaphore | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| Jenkins | ❌ | ❌ | ✅ | ❌ | ✅ | ⚙️ Plugin |
+| Rundeck | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ (Enterprise) |
+| Argo CD | ❌ | ❌ | ✅/gRPC | ❌ | ✅ | ❌ |
+| Flux CD | ❌ | ❌ | K8s API | ❌ | ✅ | ❌ |
+| Spinnaker | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| Terraform Cloud | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ (Enterprise) |
+| Spacelift | ✅ **Spacelift AI** | ❌ | ✅ | ✅ | ✅ | ❌ |
+| Atlantis | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| Pulumi Cloud | ✅ **Pulumi AI** | ✅ **MCP Server** | ✅ | ❌ | ✅ | ❌ |
+| Harness | ✅ **AIDA (AI)** | ❌ | ✅ | ✅ | ✅ | ✅ |
+| GitLab CI | ✅ **GitLab Duo** | ❌ | ✅ | ✅ | ✅ | ✅ (EE) |
+
+---
+
+### 13.8 — Ценообразование
+
+| Инструмент | Бесплатно | Коммерческий тариф | Ограничения Free tier |
+|------------|----------|-------------------|----------------------|
+| **Velum** | **∞ MIT** | — | **Нет ограничений** |
+| AWX | ✅ GPLv3 | Tower $14K–$50K/год | — |
+| Ansible Semaphore | ✅ MIT | — | Нет ограничений |
+| Jenkins | ✅ MIT | Support $5K+/год | — |
+| Rundeck | ✅ Apache | Process Auto $от $15K/год | — |
+| Argo CD | ✅ Apache | — | — |
+| Flux CD | ✅ Apache | Weave GitOps Enterprise | — |
+| Spinnaker | ✅ Apache | Support/hosted | Сложный деплой |
+| Terraform Cloud | 500 ресурсов | $20/user/мес | 500 managed resources |
+| Spacelift | ❌ | ~$200–$500/мес (min) | 5 запусков/мес trial |
+| Atlantis | ✅ Apache | — | Нет UI |
+| Pulumi Cloud | 1 пользователь | $50/user/мес | 1 user, 3 stacks |
+| Harness | Ограниченный | ~$100–300/user/мес | CI: 2000 билд-минут |
+| GitLab CI | 400 мин CI/мес | $19–99/user/мес | 400 мин/мес |
+
+---
+
+### 13.9 — Self-hosted и операционная сложность
+
+| Инструмент | Self-hosted | Сложность деплоя | Docker single-container | SQLite | PostgreSQL | MySQL |
+|------------|------------|-----------------|------------------------|--------|-----------|-------|
+| **Velum** | ✅ | ⭐ **Минимальная** | ✅ | ✅ | ✅ | ✅ |
+| AWX | ✅ | ⭐⭐⭐⭐ Высокая | ❌ (operator) | ❌ | ✅ | ❌ |
+| Ansible Semaphore | ✅ | ⭐ Минимальная | ✅ | ✅ | ✅ | ✅ |
+| Jenkins | ✅ | ⭐⭐ Низкая | ✅ | ❌ | ✅ | ✅ |
+| Rundeck | ✅ | ⭐⭐ Низкая | ✅ | ❌ | ✅ | ✅ |
+| Argo CD | ✅ | ⭐⭐⭐ Средняя (K8s) | ❌ (K8s only) | ❌ | ✅ | ❌ |
+| Flux CD | ✅ | ⭐⭐⭐ Средняя (K8s) | ❌ (K8s only) | ❌ | ❌ | ❌ |
+| Spinnaker | ✅ | ⭐⭐⭐⭐⭐ Очень высокая | ❌ (10+ сервисов) | ❌ | ✅ | ✅ |
+| Terraform Cloud | Enterprise | ⭐⭐⭐ Средняя | ❌ | ❌ | ✅ | ❌ |
+| Spacelift | Worker pools | ⭐⭐ Низкая | ❌ | ❌ | N/A | ❌ |
+| Atlantis | ✅ | ⭐ Минимальная | ✅ | ❌ | ✅ | ✅ |
+| Pulumi Cloud | ✅ (Business) | ⭐⭐ Низкая | ✅ | ❌ | ✅ | ❌ |
+| Harness | ✅ | ⭐⭐⭐⭐ Высокая | ❌ | ❌ | ✅ | ✅ |
+| GitLab CI | ✅ | ⭐⭐⭐ Средняя | ❌ (GitLab Runner ✅) | ❌ | ✅ | ✅ |
+
+---
+
+### 13.10 — Итоговая сравнительная таблица (Score Card)
+
+> Оценка от 0 до 5 по каждому критерию. **Velum выделен жирным.**
+
+| Критерий | **Velum** | AWX | Semaphore | Jenkins | Rundeck | Argo CD | TF Cloud | Spacelift | Harness |
+|----------|----------|-----|-----------|---------|---------|---------|---------|-----------|---------|
+| **Простота деплоя** | **5** | 1 | 5 | 4 | 4 | 2 | 4 | 5 | 2 |
+| **Лёгкость (RAM/CPU)** | **5** | 1 | 5 | 3 | 3 | 4 | 5 | 5 | 2 |
+| **Ansible поддержка** | **5** | 5 | 5 | 3 | 3 | 0 | 0 | 4 | 4 |
+| **Terraform поддержка** | **5** | 1 | 4 | 2 | 2 | 1 | 5 | 5 | 4 |
+| **AI интеграция** | **5** | 0 | 0 | 0 | 0 | 0 | 0 | 3 | 4 |
+| **MCP сервер** | **5** | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **Cost Tracking** | **4** | 0 | 0 | 0 | 0 | 0 | 4 | 5 | 5 |
+| **Drift Detection** | **4** | 0 | 0 | 0 | 0 | 5 | 5 | 5 | 4 |
+| **Rollback** | **5** | 0 | 0 | 2 | 2 | 5 | 4 | 4 | 5 |
+| **DAG Workflow** | **4** | 5 | 0 | 5 | 4 | 4 | 2 | 3 | 5 |
+| **Survey/Forms** | **5** | 5 | 0 | 2 | 4 | 0 | 0 | 0 | 2 |
+| **GitOps** | **3** | 1 | 2 | 3 | 1 | 5 | 5 | 5 | 5 |
+| **Marketplace** | **3** | 2 | 0 | 5 | 3 | 0 | 5 | 0 | 0 |
+| **Multi-tenancy** | **4** | 4 | 2 | 3 | 3 | 4 | 5 | 5 | 5 |
+| **RBAC + Auth** | **4** | 5 | 3 | 3 | 4 | 5 | 5 | 5 | 5 |
+| **Цена (TCO)** | **5** | 3 | 5 | 4 | 3 | 5 | 3 | 2 | 1 |
+| **White-labeling** | **5** | 0 | 0 | 1 | 3 | 0 | 3 | 0 | 3 |
+| **WebSocket логи** | **5** | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 5 |
+| **Итого (из 90)** | **82** | 38 | 41 | 49 | 48 | 51 | 61 | 66 | 61 |
+
+---
+
+### 13.11 — Позиционирование Velum по сегментам
+
+```
+Кто использует Velum?
+
+┌─────────────────────────────────────────────────────────────────┐
+│  СЕГМЕНТ               │ ПОЧЕМУ VELUM           │ VS            │
+├────────────────────────┼────────────────────────┼───────────────┤
+│ Стартапы / SMB         │ 1 бинарник, $0, SQLite  │ AWX слишком   │
+│                        │ Запуск за 5 минут       │  тяжёлый      │
+├────────────────────────┼────────────────────────┼───────────────┤
+│ Ansible-команды        │ Семафор + Enterprise фичи│ Semaphore без │
+│                        │ TOTP, AI, DAG, Survey   │  этих фич     │
+├────────────────────────┼────────────────────────┼───────────────┤
+│ Mixed Ansible+Terraform│ Оба — first-class       │ AWX нет TF,   │
+│                        │ Cost tracking built-in  │  TF Cloud нет │
+│                        │                         │  Ansible      │
+├────────────────────────┼────────────────────────┼───────────────┤
+│ Edge / Air-gapped      │ 1 бинарник, offline,    │ SaaS-решения  │
+│                        │ нет внешних зависимостей│  не работают  │
+├────────────────────────┼────────────────────────┼───────────────┤
+│ AI-первые команды      │ MCP сервер (60 tools),  │ Никто не имеет│
+│                        │ Claude/OpenAI built-in  │  MCP нативно  │
+├────────────────────────┼────────────────────────┼───────────────┤
+│ White-label SaaS       │ Branding API,           │ Большинство   │
+│                        │ организации, квоты      │  нет white-   │
+│                        │                         │  label в OSS  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 13.12 — Что реализовать, чтобы закрыть оставшиеся разрывы
+
+| Разрыв | Конкурент лидирует | Что реализовать в Velum | Версия |
+|--------|-------------------|------------------------|--------|
+| GitOps нативный | Argo CD, Flux, TF Cloud | Auto-sync Git → templates, drift alerts | v6.0 |
+| K8s Runner | AWX, Argo CD | `executor: kubernetes` pod per task | v5.1 |
+| SAML SSO | AWX, TF Cloud, Harness | `samlauth` crate или SAML proxy | v6.0 |
+| PR-based Terraform | Atlantis, Spacelift | GitHub PR webhook → plan → comment | v6.0 |
+| Visual Pipeline Builder | Jenkins, Harness | Улучшить DAG UI: условия, переменные | v5.1 |
+| Cost Management Module | Harness CCM, Spacelift | Детальный дашборд cost by project/user | v6.0 |
+| Plugin / Extension SDK | Jenkins 1800+ plugins | `velum plugin install <repo>` API | v6.1 |
+| GraphQL API | Spacelift, Harness | mutations + subscriptions | v5.1 |
+| Pulumi support | Spacelift, Harness | `TemplateApp::Pulumi` + runner | v6.0 |
 
 ---
 
