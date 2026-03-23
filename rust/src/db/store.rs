@@ -179,6 +179,8 @@ pub trait TaskManager: Send + Sync {
     async fn get_task_outputs(&self, task_id: i32) -> Result<Vec<TaskOutput>>;
     async fn create_task_output(&self, output: TaskOutput) -> Result<TaskOutput>;
     async fn update_task_status(&self, project_id: i32, task_id: i32, status: TaskStatus) -> Result<()>;
+    async fn get_running_tasks_count(&self) -> Result<usize>;
+    async fn get_waiting_tasks_count(&self) -> Result<usize>;
 }
 
 /// Менеджер расписаний
@@ -229,6 +231,8 @@ pub trait RunnerManager: Send + Sync {
     async fn create_runner(&self, runner: Runner) -> Result<Runner>;
     async fn update_runner(&self, runner: Runner) -> Result<()>;
     async fn delete_runner(&self, runner_id: i32) -> Result<()>;
+    async fn get_runners_count(&self) -> Result<usize>;
+    async fn get_active_runners_count(&self) -> Result<usize>;
 }
 
 /// Менеджер представлений

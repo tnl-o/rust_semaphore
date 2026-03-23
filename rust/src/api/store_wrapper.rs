@@ -339,6 +339,14 @@ impl TaskManager for StoreWrapper {
     async fn get_global_tasks(&self, status_filter: Option<Vec<String>>, limit: Option<i32>) -> Result<Vec<TaskWithTpl>> {
         self.inner.as_ref().get_global_tasks(status_filter, limit).await
     }
+
+    async fn get_running_tasks_count(&self) -> Result<usize> {
+        self.inner.as_ref().get_running_tasks_count().await
+    }
+
+    async fn get_waiting_tasks_count(&self) -> Result<usize> {
+        self.inner.as_ref().get_waiting_tasks_count().await
+    }
 }
 
 #[async_trait]
@@ -453,6 +461,14 @@ impl RunnerManager for StoreWrapper {
 
     async fn delete_runner(&self, runner_id: i32) -> Result<()> {
         self.inner.as_ref().delete_runner(runner_id).await
+    }
+
+    async fn get_runners_count(&self) -> Result<usize> {
+        self.inner.as_ref().get_runners_count().await
+    }
+
+    async fn get_active_runners_count(&self) -> Result<usize> {
+        self.inner.as_ref().get_active_runners_count().await
     }
 }
 

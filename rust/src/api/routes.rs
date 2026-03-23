@@ -17,6 +17,7 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/health", get(handlers::health))
         .route("/api/health/live", get(handlers::health_live))
         .route("/api/health/ready", get(handlers::health_ready))
+        .route("/api/health/full", get(handlers::health_full))
 
         // Аутентификация
         .route("/api/auth/login", post(handlers::login))
