@@ -706,6 +706,13 @@ const SIDEBAR_SECTIONS = [
         ]
     },
     {
+        label: null,
+        collapsible: false,
+        items: [
+            { href: 'marketplace.html',  icon: 'fa-solid fa-store',            label: 'Marketplace',  noId: true },
+        ]
+    },
+    {
         label: 'Terraform',
         collapsible: true,
         items: [
@@ -726,7 +733,6 @@ const SIDEBAR_SECTIONS = [
             { href: 'apps.html',             icon: 'fa-solid fa-puzzle-piece', label: 'Apps',         noId: true },
             { href: 'ldap_groups.html',      icon: 'fa-solid fa-sitemap',      label: 'LDAP Groups',  noId: true },
             { href: 'mcp.html',              icon: 'fa-solid fa-robot',        label: 'MCP / AI',     noId: true },
-            { href: 'marketplace.html',      icon: 'fa-solid fa-store',        label: 'Marketplace',  noId: true },
         ]
     },
 ];
