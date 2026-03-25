@@ -4,7 +4,7 @@
 
 use axum::{
     extract::{Path, Query, State},
-    http::StatusCode,
+    http::{StatusCode, HeaderMap},
     response::IntoResponse,
     Json,
 };
@@ -16,6 +16,7 @@ use crate::db::store::{ProjectStore, AuditLogManager};
 use crate::models::audit_log::{AuditLogFilter, AuditAction, AuditObjectType, AuditLevel, AuditLog, AuditLogResult};
 use crate::error::Error;
 use serde::Deserialize;
+use chrono::format::strftime::StrftimeItems;
 
 /// Query параметры для GET /api/audit-log
 #[derive(Debug, Deserialize)]
@@ -236,6 +237,148 @@ pub async fn delete_old_audit_logs(
         "before": before,
         "message": format!("Удалено {} записей до {}", deleted, before)
     })))
+}
+
+/// GET /api/audit-log/export - Экспорт audit log в CSV
+#[axum::debug_handler]
+pub async fn export_audit_log(
+    State(state): State<Arc<AppState>>,
+    _admin: AdminUser,
+    Query(params): Query<AuditLogQueryParams>,
+) -> impl IntoResponse {
+    // Построение фильтра (аналогично get_audit_logs)
+    let action = params.action.map(|a| match a.as_str() {
+        "login" => AuditAction::Login,
+        "logout" => AuditAction::Logout,
+        "login_failed" => AuditAction::LoginFailed,
+        "password_changed" => AuditAction::PasswordChanged,
+        "user_created" => AuditAction::UserCreated,
+        "user_updated" => AuditAction::UserUpdated,
+        "user_deleted" => AuditAction::UserDeleted,
+        "project_created" => AuditAction::ProjectCreated,
+        "project_updated" => AuditAction::ProjectUpdated,
+        "project_deleted" => AuditAction::ProjectDeleted,
+        "task_created" => AuditAction::TaskCreated,
+        "task_started" => AuditAction::TaskStarted,
+        "task_completed" => AuditAction::TaskCompleted,
+        "task_failed" => AuditAction::TaskFailed,
+        "task_deleted" => AuditAction::TaskDeleted,
+        "template_created" => AuditAction::TemplateCreated,
+        "template_updated" => AuditAction::TemplateUpdated,
+        "template_deleted" => AuditAction::TemplateDeleted,
+        "template_run" => AuditAction::TemplateRun,
+        "inventory_created" => AuditAction::InventoryCreated,
+        "inventory_updated" => AuditAction::InventoryUpdated,
+        "inventory_deleted" => AuditAction::InventoryDeleted,
+        "repository_created" => AuditAction::RepositoryCreated,
+        "repository_updated" => AuditAction::RepositoryUpdated,
+        "repository_deleted" => AuditAction::RepositoryDeleted,
+        "environment_created" => AuditAction::EnvironmentCreated,
+        "environment_updated" => AuditAction::EnvironmentUpdated,
+        "environment_deleted" => AuditAction::EnvironmentDeleted,
+        "access_key_created" => AuditAction::AccessKeyCreated,
+        "access_key_updated" => AuditAction::AccessKeyUpdated,
+        "access_key_deleted" => AuditAction::AccessKeyDeleted,
+        "integration_created" => AuditAction::IntegrationCreated,
+        "integration_updated" => AuditAction::IntegrationUpdated,
+        "integration_deleted" => AuditAction::IntegrationDeleted,
+        "webhook_triggered" => AuditAction::WebhookTriggered,
+        "schedule_created" => AuditAction::ScheduleCreated,
+        "schedule_updated" => AuditAction::ScheduleUpdated,
+        "schedule_deleted" => AuditAction::ScheduleDeleted,
+        "schedule_triggered" => AuditAction::ScheduleTriggered,
+        "runner_created" => AuditAction::RunnerCreated,
+        "runner_updated" => AuditAction::RunnerUpdated,
+        "runner_deleted" => AuditAction::RunnerDeleted,
+        "config_changed" => AuditAction::ConfigChanged,
+        "backup_created" => AuditAction::BackupCreated,
+        "migration_applied" => AuditAction::MigrationApplied,
+        _ => AuditAction::Other,
+    });
+
+    let object_type = params.object_type.map(|o| match o.as_str() {
+        "user" => AuditObjectType::User,
+        "project" => AuditObjectType::Project,
+        "task" => AuditObjectType::Task,
+        "template" => AuditObjectType::Template,
+        "inventory" => AuditObjectType::Inventory,
+        "repository" => AuditObjectType::Repository,
+        "environment" => AuditObjectType::Environment,
+        "access_key" => AuditObjectType::AccessKey,
+        "integration" => AuditObjectType::Integration,
+        "schedule" => AuditObjectType::Schedule,
+        "runner" => AuditObjectType::Runner,
+        "system" => AuditObjectType::System,
+        _ => AuditObjectType::Other,
+    });
+
+    let level = params.level.map(|l| match l.as_str() {
+        "info" => AuditLevel::Info,
+        "warning" => AuditLevel::Warning,
+        "error" => AuditLevel::Error,
+        "critical" => AuditLevel::Critical,
+        _ => AuditLevel::Info,
+    });
+
+    let filter = AuditLogFilter {
+        project_id: params.project_id,
+        user_id: params.user_id,
+        username: params.username,
+        action,
+        object_type,
+        object_id: params.object_id,
+        level,
+        search: params.search,
+        date_from: params.date_from,
+        date_to: params.date_to,
+        limit: params.limit.unwrap_or(1000),
+        offset: params.offset.unwrap_or(0),
+        sort: params.sort.unwrap_or_else(|| "created".to_string()),
+        order: params.order.unwrap_or_else(|| "desc".to_string()),
+    };
+
+    let result = match state.store.search_audit_logs(&filter).await {
+        Ok(r) => r,
+        Err(e) => return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse::new(e.to_string()))
+        ).into_response(),
+    };
+
+    // Генерация CSV
+    let mut csv = String::new();
+    csv.push_str("id,created,username,action,object_type,object_id,level,project_id,details\n");
+
+    for record in &result.records {
+        let line = format!(
+            "{},{},{},{},{},{},{},{},\"{}\"\n",
+            record.id,
+            record.created.to_rfc3339(),
+            escape_csv(&record.username.clone().unwrap_or_default()),
+            record.action,
+            record.object_type,
+            record.object_id.unwrap_or(0),
+            record.level,
+            record.project_id.unwrap_or(0),
+            escape_csv(&record.details.as_ref().map(|d| d.to_string()).unwrap_or_default())
+        );
+        csv.push_str(&line);
+    }
+
+    let mut headers = HeaderMap::new();
+    headers.insert("Content-Type", "text/csv; charset=utf-8".parse().unwrap());
+    headers.insert(
+        "Content-Disposition",
+        format!("attachment; filename=\"audit-log-{}.csv\"", chrono::Utc::now().format("%Y%m%d-%H%M%S"))
+            .parse()
+            .unwrap()
+    );
+
+    (headers, csv).into_response()
+}
+
+fn escape_csv(s: &str) -> String {
+    s.replace('"', "\"\"")
 }
 
 #[derive(Debug, Deserialize)]

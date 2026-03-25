@@ -369,6 +369,7 @@ pub fn api_routes() -> Router<Arc<AppState>> {
 
         // Audit Log - admin only
         .route("/api/audit-log", get(handlers::audit_log::get_audit_logs))
+        .route("/api/audit-log/export", get(handlers::audit_log::export_audit_log))
         .route("/api/audit-log/clear", delete(handlers::audit_log::clear_audit_log))
         .route("/api/audit-log/expiry", delete(handlers::audit_log::delete_old_audit_logs))
         .route("/api/audit-log/{id}", get(handlers::audit_log::get_audit_log))

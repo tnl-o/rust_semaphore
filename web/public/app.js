@@ -678,6 +678,7 @@ const SIDEBAR_SECTIONS = [
             { href: 'index.html',        icon: 'fa-solid fa-house',       label: 'Dashboard',  noId: true },
             { href: 'global_tasks.html', icon: 'fa-solid fa-list-check',  label: 'Все задачи', noId: true },
             { href: 'organizations.html', icon: 'fa-solid fa-building',   label: 'Организации', noId: true },
+            { href: 'audit.html',        icon: 'fa-solid fa-clipboard-list', label: 'Audit Log', noId: true },
         ]
     },
     {
