@@ -47,6 +47,19 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/users/{id}", delete(handlers::delete_user))
         .route("/api/users/{id}/password", post(handlers::update_user_password))
 
+        // Организации (Multi-Tenancy)
+        .route("/api/organizations", get(handlers::get_organizations))
+        .route("/api/organizations", post(handlers::create_organization))
+        .route("/api/organizations/{id}", get(handlers::get_organization))
+        .route("/api/organizations/{id}", put(handlers::update_organization))
+        .route("/api/organizations/{id}", delete(handlers::delete_organization))
+        .route("/api/organizations/{id}/users", get(handlers::get_organization_users))
+        .route("/api/organizations/{id}/users", post(handlers::add_user_to_organization))
+        .route("/api/organizations/{org_id}/users/{user_id}", delete(handlers::remove_user_from_organization))
+        .route("/api/organizations/{org_id}/users/{user_id}/role", put(handlers::update_user_organization_role))
+        .route("/api/users/{id}/organizations", get(handlers::get_user_organizations))
+        .route("/api/organizations/{org_id}/quota/{quota_type}", get(handlers::check_organization_quota))
+
         // Проекты
         .route("/api/projects", get(handlers::get_projects))
         .route("/api/projects", post(handlers::add_project))

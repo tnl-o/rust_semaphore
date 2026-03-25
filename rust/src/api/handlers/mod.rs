@@ -31,6 +31,7 @@ pub mod snapshot;
 pub mod cost_estimate;
 pub mod state_backend;
 pub mod plan_approval;
+pub mod organizations;
 
 // Ре-экспорт всех handlers для удобства
 pub use auth::*;
@@ -48,3 +49,4 @@ pub use mailer::*;
 pub use audit_log::*;
 pub use playbook::*;
 pub use analytics::*;
+pub use organizations::*;
