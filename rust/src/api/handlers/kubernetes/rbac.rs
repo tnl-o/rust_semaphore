@@ -185,6 +185,28 @@ pub async fn check_kubernetes_rbac(
         )
         .await?,
     );
+    resources.push(
+        check_resource(
+            &review_api,
+            "autoscaling",
+            "horizontalpodautoscalers",
+            true,
+            ns,
+        )
+        .await?,
+    );
+    resources.push(check_resource(&review_api, "", "resourcequotas", true, ns).await?);
+    resources.push(check_resource(&review_api, "", "limitranges", true, ns).await?);
+    resources.push(
+        check_resource(
+            &review_api,
+            "apiextensions.k8s.io",
+            "customresourcedefinitions",
+            false,
+            ns,
+        )
+        .await?,
+    );
 
     let secrets = resources
         .iter()

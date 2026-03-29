@@ -17,6 +17,7 @@ pub mod storage;
 pub mod storage_snapshots;
 pub mod storage_csi;
 pub mod batch;
+pub mod advanced;
 pub mod types;
 
 pub use cluster::*;
@@ -36,4 +37,5 @@ pub use storage::*;
 pub use storage_snapshots::*;
 pub use storage_csi::*;
 pub use batch::*;
+pub use advanced::*;
 pub use types::*;

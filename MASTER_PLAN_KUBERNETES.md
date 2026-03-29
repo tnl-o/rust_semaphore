@@ -495,23 +495,23 @@ flowchart LR
 **Цель:** CRD/CR, HPA/VPA, квоты; [§15 HPA](#15-hpa--vpa), [§18 CRD](#18-customresourcedefinitions), quota в [§1 Namespaces](#1-namespaces).
 
 #### 7.1 CRD и экземпляры CR
-- [ ] List/get CRD; версии, scope, колонки (опц.).
-- [ ] CRUD CR по group/version/resource; YAML обязателен; dynamic form по OpenAPI — поэтапно.
+- [x] List/get CRD; версии, scope, колонки (опц.). ✅ 2026-03-29 — `advanced.rs` + `GET /customresourcedefinitions`
+- [x] CRUD CR по group/version/resource; YAML обязателен; dynamic form по OpenAPI — поэтапно. ✅ 2026-03-29 — dynamic `DynamicObject` list/get/create/replace/delete + `POST /customobjects`
 
 #### 7.2 Operators (базово)
-- [ ] Ссылки на workload и CR по conventions; без обязательного каталога операторов.
+- [x] Ссылки на workload и CR по conventions; без обязательного каталога операторов. ✅ 2026-03-29 — в UI подсказка; каталог операторов не требуется
 
 #### 7.3 HorizontalPodAutoscaler
-- [ ] CRUD; scaleTargetRef, min/max, metrics; status; сообщение если нет metrics-server.
+- [x] CRUD; scaleTargetRef, min/max, metrics; status; сообщение если нет metrics-server. ✅ 2026-03-29 — `horizontalpodautoscalers` + `metrics_hint` из conditions
 
 #### 7.4 VerticalPodAutoscaler
-- [ ] Если CRD `autoscaling.k8s.io` есть: read-only или CRUD; иначе скрыть.
+- [x] Если CRD `autoscaling.k8s.io` есть: read-only или CRUD; иначе скрыть. ✅ 2026-03-29 — `vpa/status` + list/get read-only
 
 #### 7.5 ResourceQuota и LimitRange
-- [ ] CRUD; used/hard для quota; LimitRange defaults/limits; связка с `GET .../namespaces/{name}/quota|limits`.
+- [x] CRUD; used/hard для quota; LimitRange defaults/limits; связка с `GET .../namespaces/{name}/quota|limits`. ✅ 2026-03-29 — CRUD + summary; старые `quota`/`limits` сохранены
 
 #### 7.6 Фронт
-- [ ] **`k8s-crd.html`**; HPA в workloads; quota/limits в namespace admin.
+- [x] **`k8s-crd.html`**; HPA в workloads; quota/limits в namespace admin. ✅ 2026-03-29 — `web/public/k8s-crd.html` + сайдбар
 
 **Definition of Done:**
 - ✅ HPA показывает причину сбоя метрик; CR apply с YAML на тестовом CRD.
