@@ -23,16 +23,22 @@
 13. [Тестирование](#тестирование)
 14. [KPI и нефункциональные требования](#kpi-и-нефункциональные-требования)
 15. [Документация](#документация)
-16. [Changelog](#changelog)
-17. [Референсы](#референсы)
-18. [Следующие шаги](#следующие-шаги)
+16. [Риски и митигация](#risks-mitigation)
+17. [Инструменты разработки](#dev-tools)
+18. [Checklist перед релизом](#release-checklist)
+19. [Success Metrics](#success-metrics)
+20. [Continuous Improvement](#continuous-improvement)
+21. [Команда и коммуникация](#team-communication)
+22. [Changelog](#changelog)
+23. [Референсы](#референсы)
+24. [Следующие шаги](#следующие-шаги)
 
 ---
 
 ## 🎯 Обзор проекта
 
 ### Цель
-Создать **полнофункциональный Web UI для Kubernetes**, который покрывает 100% возможностей `kubectl` и лучших практик из:
+Создать **полнофункциональный Web UI для Kubernetes**, ориентируясь на **максимально полное покрытие** сценариев `kubectl` и хороший UX (как в шапке документа: **полный паритет с `kubectl` — долгосрочный ориентир**, не обязательный барьер для MVP). Заимствовать лучшие практики из:
 - **Headlamp** — официальный Kubernetes SIG UI
 - **Lens Desktop** — IDE для Kubernetes
 - **Octant** — визуализация зависимостей
@@ -1227,6 +1233,8 @@ cargo run -- server
 
 ---
 
+<a id="risks-mitigation"></a>
+
 ## ⚠️ Риски и митигация
 
 | Риск | Вероятность | Влияние | Митигация |
@@ -1240,6 +1248,8 @@ cargo run -- server
 | **Exec/port-forward security** | Средняя | Высокое | Явная авторизация, timeout, audit, rate limiting |
 
 ---
+
+<a id="dev-tools"></a>
 
 ## 🔧 Инструменты разработки
 
@@ -1285,6 +1295,8 @@ kubectl auth can-i get pods --as system:serviceaccount:default:velum
 ```
 
 ---
+
+<a id="release-checklist"></a>
 
 ## 📋 Checklist перед релизом
 
@@ -1345,6 +1357,8 @@ kubectl auth can-i get pods --as system:serviceaccount:default:velum
 
 ---
 
+<a id="success-metrics"></a>
+
 ## 🎯 Success Metrics
 
 ### Adoption Metrics
@@ -1364,6 +1378,8 @@ kubectl auth can-i get pods --as system:serviceaccount:default:velum
 - **Feature Requests** — цель: 10+ в месяц (активное использование)
 
 ---
+
+<a id="continuous-improvement"></a>
 
 ## 🔄 Continuous Improvement
 
@@ -1386,6 +1402,8 @@ kubectl auth can-i get pods --as system:serviceaccount:default:velum
 - **v2.0** — Крупные пересмотры UX/масштаба при необходимости
 
 ---
+
+<a id="team-communication"></a>
 
 ## 📞 Команда и коммуникация
 
