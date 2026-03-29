@@ -525,6 +525,215 @@ pub fn api_routes() -> Router<Arc<AppState>> {
             post(handlers::task_structured_output::create_task_outputs_batch))
         .route("/api/project/{project_id}/templates/{template_id}/last-outputs",
             get(handlers::task_structured_output::get_template_last_outputs))
+
+        // ── Kubernetes API ──────────────────────────────────────────────────
+        // Cluster info
+        .route("/api/kubernetes/cluster/info", get(handlers::get_cluster_info))
+        .route("/api/kubernetes/cluster/nodes", get(handlers::get_cluster_nodes))
+        .route("/api/kubernetes/cluster/summary", get(handlers::get_cluster_summary))
+
+        // Health
+        .route("/api/kubernetes/health", get(handlers::kubernetes_health))
+        .route("/api/kubernetes/health/detailed", get(handlers::kubernetes_health_detailed))
+
+        // Namespaces
+        .route("/api/kubernetes/namespaces", get(handlers::list_namespaces))
+        .route("/api/kubernetes/namespaces/{name}", get(handlers::get_namespace))
+        .route("/api/kubernetes/namespaces", post(handlers::create_namespace))
+        .route("/api/kubernetes/namespaces/{name}", put(handlers::update_namespace))
+        .route("/api/kubernetes/namespaces/{name}", delete(handlers::delete_namespace))
+        .route("/api/kubernetes/namespaces/{name}/quota", get(handlers::get_namespace_quota))
+        .route("/api/kubernetes/namespaces/{name}/limits", get(handlers::get_namespace_limits))
+
+        // Services
+        .route("/api/kubernetes/services", get(handlers::list_services))
+        .route("/api/kubernetes/namespaces/{namespace}/services", post(handlers::create_service))
+        .route("/api/kubernetes/namespaces/{namespace}/services/{name}", get(handlers::get_service))
+        .route("/api/kubernetes/namespaces/{namespace}/services/{name}", put(handlers::update_service))
+        .route("/api/kubernetes/namespaces/{namespace}/services/{name}", delete(handlers::delete_service))
+        .route("/api/kubernetes/namespaces/{namespace}/services/{name}/endpoints", get(handlers::get_service_endpoints))
+        // Ingress & IngressClass
+        .route("/api/kubernetes/ingresses", get(handlers::list_ingresses))
+        .route("/api/kubernetes/namespaces/{namespace}/ingresses", post(handlers::create_ingress))
+        .route("/api/kubernetes/namespaces/{namespace}/ingresses/{name}", get(handlers::get_ingress))
+        .route("/api/kubernetes/namespaces/{namespace}/ingresses/{name}", put(handlers::update_ingress))
+        .route("/api/kubernetes/namespaces/{namespace}/ingresses/{name}", delete(handlers::delete_ingress))
+        .route("/api/kubernetes/ingressclasses", get(handlers::list_ingress_classes))
+        .route("/api/kubernetes/ingressclasses/{name}", get(handlers::get_ingress_class))
+        // ConfigMaps
+        .route("/api/kubernetes/configmaps", get(handlers::list_configmaps))
+        .route("/api/kubernetes/namespaces/{namespace}/configmaps", post(handlers::create_configmap))
+        .route("/api/kubernetes/namespaces/{namespace}/configmaps/{name}", get(handlers::get_configmap))
+        .route("/api/kubernetes/namespaces/{namespace}/configmaps/{name}", put(handlers::update_configmap))
+        .route("/api/kubernetes/namespaces/{namespace}/configmaps/{name}", delete(handlers::delete_configmap))
+        .route("/api/kubernetes/namespaces/{namespace}/configmaps/{name}/yaml", get(handlers::get_configmap_yaml))
+        .route("/api/kubernetes/configmaps/validate", post(handlers::validate_configmap))
+        .route("/api/kubernetes/namespaces/{namespace}/configmaps/{name}/references", get(handlers::get_configmap_references))
+        // Secrets
+        .route("/api/kubernetes/secrets", get(handlers::list_secrets))
+        .route("/api/kubernetes/namespaces/{namespace}/secrets", post(handlers::create_secret))
+        .route("/api/kubernetes/namespaces/{namespace}/secrets/{name}", get(handlers::get_secret))
+        .route("/api/kubernetes/namespaces/{namespace}/secrets/{name}", put(handlers::update_secret))
+        .route("/api/kubernetes/namespaces/{namespace}/secrets/{name}", delete(handlers::delete_secret))
+        .route("/api/kubernetes/namespaces/{namespace}/secrets/{name}/reveal", get(handlers::reveal_secret))
+        // NetworkPolicy
+        .route("/api/kubernetes/networkpolicies", get(handlers::list_networkpolicies))
+        .route("/api/kubernetes/namespaces/{namespace}/networkpolicies", post(handlers::create_networkpolicy))
+        .route("/api/kubernetes/namespaces/{namespace}/networkpolicies/{name}", get(handlers::get_networkpolicy))
+        .route("/api/kubernetes/namespaces/{namespace}/networkpolicies/{name}", put(handlers::update_networkpolicy))
+        .route("/api/kubernetes/namespaces/{namespace}/networkpolicies/{name}", delete(handlers::delete_networkpolicy))
+        // Gateway API (optional, read-only)
+        .route("/api/kubernetes/gateway-api/status", get(handlers::get_gateway_api_status))
+        .route("/api/kubernetes/gateways", get(handlers::list_gateways))
+        .route("/api/kubernetes/httproutes", get(handlers::list_httproutes))
+        .route("/api/kubernetes/grpcroutes", get(handlers::list_grpcroutes))
+        // RBAC UX
+        .route("/api/kubernetes/rbac/check", post(handlers::check_kubernetes_rbac))
+        .route(
+            "/api/kubernetes/rbac/rules-review",
+            post(handlers::post_self_subject_rules_review),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{name}/pod-security",
+            get(handlers::get_namespace_pod_security),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{name}/pod-security",
+            put(handlers::put_namespace_pod_security),
+        )
+        // ServiceAccounts & RBAC objects
+        .route(
+            "/api/kubernetes/serviceaccounts",
+            get(handlers::list_service_accounts),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/serviceaccounts",
+            post(handlers::create_service_account),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/serviceaccounts/{name}",
+            get(handlers::get_service_account),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/serviceaccounts/{name}",
+            delete(handlers::delete_service_account),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/serviceaccounts/{name}/secrets",
+            get(handlers::list_service_account_secrets),
+        )
+        .route("/api/kubernetes/roles", get(handlers::list_roles))
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/roles",
+            post(handlers::create_role),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/roles/{name}",
+            get(handlers::get_role),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/roles/{name}",
+            put(handlers::update_role),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/roles/{name}",
+            delete(handlers::delete_role),
+        )
+        .route("/api/kubernetes/rolebindings", get(handlers::list_role_bindings))
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/rolebindings",
+            post(handlers::create_role_binding),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/rolebindings/{name}",
+            get(handlers::get_role_binding),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/rolebindings/{name}",
+            put(handlers::update_role_binding),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/rolebindings/{name}",
+            delete(handlers::delete_role_binding),
+        )
+        .route("/api/kubernetes/clusterroles", get(handlers::list_cluster_roles))
+        .route(
+            "/api/kubernetes/clusterroles",
+            post(handlers::create_cluster_role),
+        )
+        .route(
+            "/api/kubernetes/clusterroles/{name}",
+            get(handlers::get_cluster_role),
+        )
+        .route(
+            "/api/kubernetes/clusterroles/{name}",
+            put(handlers::update_cluster_role),
+        )
+        .route(
+            "/api/kubernetes/clusterroles/{name}",
+            delete(handlers::delete_cluster_role),
+        )
+        .route(
+            "/api/kubernetes/clusterrolebindings",
+            get(handlers::list_cluster_role_bindings),
+        )
+        .route(
+            "/api/kubernetes/clusterrolebindings",
+            post(handlers::create_cluster_role_binding),
+        )
+        .route(
+            "/api/kubernetes/clusterrolebindings/{name}",
+            get(handlers::get_cluster_role_binding),
+        )
+        .route(
+            "/api/kubernetes/clusterrolebindings/{name}",
+            put(handlers::update_cluster_role_binding),
+        )
+        .route(
+            "/api/kubernetes/clusterrolebindings/{name}",
+            delete(handlers::delete_cluster_role_binding),
+        )
+        // Storage: PV/PVC/StorageClass
+        .route("/api/kubernetes/persistentvolumes", get(handlers::list_persistent_volumes))
+        .route("/api/kubernetes/persistentvolumes", post(handlers::create_persistent_volume))
+        .route("/api/kubernetes/persistentvolumes/{name}", get(handlers::get_persistent_volume))
+        .route("/api/kubernetes/persistentvolumes/{name}", delete(handlers::delete_persistent_volume))
+        .route("/api/kubernetes/persistentvolumeclaims", get(handlers::list_persistent_volume_claims))
+        .route("/api/kubernetes/namespaces/{namespace}/persistentvolumeclaims", post(handlers::create_persistent_volume_claim))
+        .route("/api/kubernetes/namespaces/{namespace}/persistentvolumeclaims/{name}", get(handlers::get_persistent_volume_claim))
+        .route("/api/kubernetes/namespaces/{namespace}/persistentvolumeclaims/{name}", put(handlers::update_persistent_volume_claim))
+        .route("/api/kubernetes/namespaces/{namespace}/persistentvolumeclaims/{name}", delete(handlers::delete_persistent_volume_claim))
+        .route("/api/kubernetes/storageclasses", get(handlers::list_storage_classes))
+        .route("/api/kubernetes/storageclasses", post(handlers::create_storage_class))
+        .route("/api/kubernetes/storageclasses/{name}", get(handlers::get_storage_class))
+        .route("/api/kubernetes/storageclasses/{name}", delete(handlers::delete_storage_class))
+        // CSI snapshots (optional, read-only)
+        .route("/api/kubernetes/snapshots/status", get(handlers::get_snapshot_api_status))
+        .route("/api/kubernetes/volumesnapshots", get(handlers::list_volume_snapshots))
+        .route("/api/kubernetes/volumesnapshotclasses", get(handlers::list_volume_snapshot_classes))
+        // CSI details (optional, read-only)
+        .route("/api/kubernetes/csi/status", get(handlers::get_csi_api_status))
+        .route("/api/kubernetes/csidrivers", get(handlers::list_csi_drivers))
+        .route("/api/kubernetes/csinodes", get(handlers::list_csi_nodes))
+        .route("/api/kubernetes/volumeattachments", get(handlers::list_volume_attachments))
+        // Batch & scheduling
+        .route("/api/kubernetes/jobs", get(handlers::list_jobs))
+        .route("/api/kubernetes/namespaces/{namespace}/jobs", post(handlers::create_job))
+        .route("/api/kubernetes/namespaces/{namespace}/jobs/{name}", get(handlers::get_job))
+        .route("/api/kubernetes/namespaces/{namespace}/jobs/{name}", delete(handlers::delete_job))
+        .route("/api/kubernetes/namespaces/{namespace}/jobs/{name}/pods", get(handlers::list_job_pods))
+        .route("/api/kubernetes/cronjobs", get(handlers::list_cronjobs))
+        .route("/api/kubernetes/namespaces/{namespace}/cronjobs", post(handlers::create_cronjob))
+        .route("/api/kubernetes/namespaces/{namespace}/cronjobs/{name}", get(handlers::get_cronjob))
+        .route("/api/kubernetes/namespaces/{namespace}/cronjobs/{name}", delete(handlers::delete_cronjob))
+        .route("/api/kubernetes/namespaces/{namespace}/cronjobs/{name}/suspend/{suspend}", put(handlers::update_cronjob_suspend))
+        .route("/api/kubernetes/namespaces/{namespace}/cronjobs/{name}/history", get(handlers::list_cronjob_history))
+        .route("/api/kubernetes/priorityclasses", get(handlers::list_priority_classes))
+        .route("/api/kubernetes/priorityclasses", post(handlers::create_priority_class))
+        .route("/api/kubernetes/priorityclasses/{name}", delete(handlers::delete_priority_class))
+        .route("/api/kubernetes/poddisruptionbudgets", get(handlers::list_pdbs))
+        .route("/api/kubernetes/namespaces/{namespace}/poddisruptionbudgets", post(handlers::create_pdb))
+        .route("/api/kubernetes/namespaces/{namespace}/poddisruptionbudgets/{name}", delete(handlers::delete_pdb))
 }
 
 /// Создаёт маршруты для статических файлов

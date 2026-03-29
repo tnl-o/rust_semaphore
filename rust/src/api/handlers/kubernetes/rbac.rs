@@ -121,6 +121,7 @@ pub async fn check_kubernetes_rbac(
     let ns = payload.namespace.as_deref();
 
     let mut resources = Vec::new();
+    resources.push(check_resource(&review_api, "", "namespaces", false, ns).await?);
     resources.push(check_resource(&review_api, "", "services", true, ns).await?);
     resources.push(check_resource(&review_api, "", "configmaps", true, ns).await?);
     resources.push(check_resource(&review_api, "", "secrets", true, ns).await?);
@@ -138,6 +139,47 @@ pub async fn check_kubernetes_rbac(
             &review_api,
             "scheduling.k8s.io",
             "priorityclasses",
+            false,
+            ns,
+        )
+        .await?,
+    );
+    resources.push(check_resource(&review_api, "", "serviceaccounts", true, ns).await?);
+    resources.push(
+        check_resource(
+            &review_api,
+            "rbac.authorization.k8s.io",
+            "roles",
+            true,
+            ns,
+        )
+        .await?,
+    );
+    resources.push(
+        check_resource(
+            &review_api,
+            "rbac.authorization.k8s.io",
+            "rolebindings",
+            true,
+            ns,
+        )
+        .await?,
+    );
+    resources.push(
+        check_resource(
+            &review_api,
+            "rbac.authorization.k8s.io",
+            "clusterroles",
+            false,
+            ns,
+        )
+        .await?,
+    );
+    resources.push(
+        check_resource(
+            &review_api,
+            "rbac.authorization.k8s.io",
+            "clusterrolebindings",
             false,
             ns,
         )

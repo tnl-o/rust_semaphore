@@ -467,23 +467,23 @@ flowchart LR
 **Цель:** RBAC и PSA; [§14 RBAC](#14-rbac); **не PSP**.
 
 #### 6.1 ServiceAccounts
-- [ ] List/get/create/delete; связанные secrets; токены не показывать целиком по умолчанию.
+- [x] List/get/create/delete; связанные secrets; токены не показывать целиком по умолчанию. ✅ 2026-03-29 — `rbac_objects.rs` + `GET .../serviceaccounts/{name}/secrets` (имя и type только)
 
 #### 6.2 Roles и RoleBindings (namespace)
-- [ ] CRUD; rules: apiGroups, resources, resourceNames, verbs; bindings: subjects, roleRef.
-- [ ] Предупреждение при слишком широких `*`.
+- [x] CRUD; rules: apiGroups, resources, resourceNames, verbs; bindings: subjects, roleRef. ✅ 2026-03-29 — `roles` / `rolebindings` API
+- [x] Предупреждение при слишком широких `*`. ✅ 2026-03-29 — `wide_rules` / `warning` в summary
 
 #### 6.3 ClusterRoles и ClusterRoleBindings
-- [ ] CRUD; подтверждение при правке системных ролей (опционально deny-list).
+- [x] CRUD; подтверждение при правке системных ролей (опционально deny-list). ✅ 2026-03-29 — `clusterroles` / `clusterrolebindings`; предупреждение для `system:` и встроенных имён
 
 #### 6.4 SelfSubjectRulesReview
-- [ ] Экран «мои права»; матрица для выбранной роли (read-only).
+- [x] Экран «мои права»; матрица для выбранной роли (read-only). ✅ 2026-03-29 — `POST /api/kubernetes/rbac/rules-review` + вкладка в `k8s-rbac.html`
 
 #### 6.5 Pod Security Admission
-- [ ] Labels namespace: enforce/audit/warn, уровни `privileged`/`baseline`/`restricted`; редактор с подсказками.
+- [x] Labels namespace: enforce/audit/warn, уровни `privileged`/`baseline`/`restricted`; редактор с подсказками. ✅ 2026-03-29 — `GET/PUT .../namespaces/{name}/pod-security`
 
 #### 6.6 Фронт
-- [ ] **`k8s-rbac.html`**: SA, Roles, Bindings, ClusterRoles, ClusterBindings; PSA в деталях namespace.
+- [x] **`k8s-rbac.html`**: SA, Roles, Bindings, ClusterRoles, ClusterBindings; PSA в деталях namespace. ✅ 2026-03-29 — `web/public/k8s-rbac.html` + сайдбар
 
 **Definition of Done:**
 - ✅ RoleBinding создаётся без silent failure; PSA виден на namespace.
