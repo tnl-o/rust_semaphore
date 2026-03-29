@@ -199,7 +199,10 @@ async fn execute_task_background(state: Arc<AppState>, task: Task) {
     println!("[task_runner] Starting task {} (template {})", task.id, task.template_id);
     let store = &state.store;
 
-    match store.update_task_status(task.project_id, task.id, TaskStatus::Running).await {
+    let mut task = task;
+    task.status = TaskStatus::Running;
+    task.start = Some(Utc::now());
+    match store.update_task(task.clone()).await {
         Ok(()) => println!("[task_runner] task {} status → Running", task.id),
         Err(e) => println!("[task_runner] task {} failed to set Running: {e}", task.id),
     }
@@ -208,7 +211,9 @@ async fn execute_task_background(state: Arc<AppState>, task: Task) {
         Ok(t) => t,
         Err(e) => {
             eprintln!("[task_runner] task {}: failed to get template: {e}", task.id);
-            let _ = store.update_task_status(task.project_id, task.id, TaskStatus::Error).await;
+            task.status = TaskStatus::Error;
+            task.end = Some(Utc::now());
+            let _ = store.update_task(task).await;
             return;
         }
     };
@@ -243,7 +248,9 @@ async fn execute_task_background(state: Arc<AppState>, task: Task) {
 
     if let Err(e) = tokio::fs::create_dir_all(&tmp_dir).await {
         eprintln!("[task_runner] task {}: failed to create workdir: {e}", task.id);
-        let _ = store.update_task_status(task.project_id, task.id, TaskStatus::Error).await;
+        task.status = TaskStatus::Error;
+        task.end = Some(Utc::now());
+        let _ = store.update_task(task).await;
         return;
     }
 
@@ -277,14 +284,18 @@ async fn execute_task_background(state: Arc<AppState>, task: Task) {
         let _ = store.create_task_output(output).await;
     }
 
+    let task_id = task.id;
+    task.end = Some(Utc::now());
     match result {
         Ok(()) => {
-            let _ = store.update_task_status(task.project_id, task.id, TaskStatus::Success).await;
-            println!("[task_runner] task {} completed successfully", task.id);
+            task.status = TaskStatus::Success;
+            let _ = store.update_task(task).await;
+            println!("[task_runner] task {} completed successfully", task_id);
         }
         Err(e) => {
-            eprintln!("[task_runner] task {} failed: {e}", task.id);
-            let _ = store.update_task_status(task.project_id, task.id, TaskStatus::Error).await;
+            eprintln!("[task_runner] task {} failed: {e}", task_id);
+            task.status = TaskStatus::Error;
+            let _ = store.update_task(task).await;
         }
     }
 }
