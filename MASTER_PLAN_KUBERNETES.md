@@ -384,115 +384,200 @@ flowchart LR
 ---
 
 ### 🔹 Фаза 4: Storage (Неделя 8)
-**Цель:** Управление persistent storage
+**Цель:** Persistent storage и классы; API/UI по [§12 PersistentVolumes & PVC](#12-persistentvolumes--pvc).
 
-- [ ] PersistentVolumes
-- [ ] PersistentVolumeClaims
-- [ ] StorageClass
-- [ ] VolumeSnapshots
+#### 4.1 PersistentVolume (cluster-scoped)
+- [ ] List/get/create/delete (статические PV — осознанно; динамика через PVC); capacity, accessModes, reclaimPolicy, storageClassName, status, claimRef.
+- [ ] Связь **PV → PVC**: bound/Released/Failed и ссылки на объект.
+
+#### 4.2 PersistentVolumeClaim (namespace)
+- [ ] CRUD; phase, capacity, volumeName, storageClassName, accessModes; события PVC в карточке (Events API).
+- [ ] Предупреждение при delete bound PVC (данные зависят от policy и CSI).
+
+#### 4.3 StorageClass
+- [ ] List/get/create/delete; provisioner, reclaimPolicy, volumeBindingMode, **allowVolumeExpansion**; parameters при необходимости.
+- [ ] Дефолтный StorageClass (annotation `storageclass.kubernetes.io/is-default-class`) — бейдж в списке.
+
+#### 4.4 VolumeSnapshot / VolumeSnapshotClass (если CRD CSI есть)
+- [ ] Read-only или CRUD; скрывать раздел без API.
+- [ ] Опционально: **CSIDriver**, **CSINode**, **VolumeAttachment** — [§20](#20-дополнительные-ресурсы-outline).
+
+#### 4.5 RBAC-UX и фронт
+- [ ] Права на `persistentvolumes`, `persistentvolumeclaims`, `storageclasses` и snapshot groups.
+- [ ] **`k8s-storage.html`**: вкладки PV / PVC / SC / Snapshots; YAML + dry-run.
 
 **Definition of Done:**
-- ✅ PV/PVC binding visualization
-- ✅ StorageClass provisioning отображение
+- ✅ Для **bound** PVC видно PV и наоборот; для **Pending** — причина из Events.
+- ✅ StorageClass: provisioner и default-бейдж; ошибки provision отражаются в PVC.
+- ✅ Списки с пагинацией на больших кластерах.
 
 ---
 
 ### 🔹 Фаза 5: Batch & Scheduling (Неделя 9)
-**Цель:** Batch workload и scheduling
+**Цель:** Job, CronJob, приоритеты, PDB; [§13 Jobs & CronJobs](#13-jobs--cronjobs).
 
-- [ ] Jobs
-- [ ] CronJobs
-- [ ] PriorityClass
-- [ ] PodDisruptionBudget
+#### 5.1 Jobs
+- [ ] List/get/create/delete; active/succeeded/failed, completions, parallelism; **без** suspend/resume на API Job.
+- [ ] Связанные поды; логи через функционал фазы 2.
+
+#### 5.2 CronJobs
+- [ ] CRUD; расписание + human-readable подсказка; **suspend/resume** (`spec.suspend`).
+- [ ] История **Job** CronJob (`history` или list с ownerReferences).
+
+#### 5.3 PriorityClass (cluster)
+- [ ] List/get/create/delete; `globalDefault`, `value`; предупреждение при delete используемых классов.
+
+#### 5.4 PodDisruptionBudget
+- [ ] CRUD; minAvailable/maxUnavailable, selector; подсказка про drain/eviction.
+
+#### 5.5 RBAC-UX и фронт
+- [ ] Verbs на `jobs`, `cronjobs`, `priorityclasses`, `poddisruptionbudgets`.
+- [ ] **`k8s-jobs.html`**: Job / CronJob; PDB и PriorityClass (вкладка или админ).
 
 **Definition of Done:**
-- ✅ **CronJob** suspend/resume (`spec.suspend`); **Job** — без suspend/resume на уровне API (отличие от CronJob)
-- ✅ Job history timeline
-- ✅ Next schedule calculation
+- ✅ **CronJob** suspend/resume; **Job** без ожиданий suspend API.
+- ✅ Таймлайн/список запусков CronJob с ссылками на Job и поды.
+- ✅ PDB: счётчик/соответствие подов селектору.
 
 ---
 
 ### 🔹 Фаза 6: RBAC & Security (Неделя 10)
-**Цель:** Полное управление доступом
+**Цель:** RBAC и PSA; [§14 RBAC](#14-rbac); **не PSP**.
 
-- [ ] ServiceAccounts
-- [ ] Roles & RoleBindings
-- [ ] ClusterRoles & ClusterRoleBindings
-- [ ] **Pod Security Admission (PSA)** — уровни `privileged` / `baseline` / `restricted` через labels на Namespace; отображение и подсказки в UI. **PodSecurityPolicy (PSP) не использовать** — удалены из Kubernetes 1.25+
+#### 6.1 ServiceAccounts
+- [ ] List/get/create/delete; связанные secrets; токены не показывать целиком по умолчанию.
+
+#### 6.2 Roles и RoleBindings (namespace)
+- [ ] CRUD; rules: apiGroups, resources, resourceNames, verbs; bindings: subjects, roleRef.
+- [ ] Предупреждение при слишком широких `*`.
+
+#### 6.3 ClusterRoles и ClusterRoleBindings
+- [ ] CRUD; подтверждение при правке системных ролей (опционально deny-list).
+
+#### 6.4 SelfSubjectRulesReview
+- [ ] Экран «мои права»; матрица для выбранной роли (read-only).
+
+#### 6.5 Pod Security Admission
+- [ ] Labels namespace: enforce/audit/warn, уровни `privileged`/`baseline`/`restricted`; редактор с подсказками.
+
+#### 6.6 Фронт
+- [ ] **`k8s-rbac.html`**: SA, Roles, Bindings, ClusterRoles, ClusterBindings; PSA в деталях namespace.
 
 **Definition of Done:**
-- ✅ RBAC matrix visualization
-- ✅ SelfSubjectRulesReview integration
-- ✅ PSA labels editor
+- ✅ RoleBinding создаётся без silent failure; PSA виден на namespace.
+- ✅ SelfSubjectRulesReview осмыслен для пользователя Velum.
 
 ---
 
 ### 🔹 Фаза 7: Advanced (Недели 11-12)
-**Цель:** Расширенные ресурсы
+**Цель:** CRD/CR, HPA/VPA, квоты; [§15 HPA](#15-hpa--vpa), [§18 CRD](#18-customresourcedefinitions), quota в [§1 Namespaces](#1-namespaces).
 
-- [ ] CustomResourceDefinitions
-- [ ] Operators (базовая поддержка)
-- [ ] HorizontalPodAutoscaler
-- [ ] VerticalPodAutoscaler
-- [ ] LimitRange & ResourceQuota
+#### 7.1 CRD и экземпляры CR
+- [ ] List/get CRD; версии, scope, колонки (опц.).
+- [ ] CRUD CR по group/version/resource; YAML обязателен; dynamic form по OpenAPI — поэтапно.
+
+#### 7.2 Operators (базово)
+- [ ] Ссылки на workload и CR по conventions; без обязательного каталога операторов.
+
+#### 7.3 HorizontalPodAutoscaler
+- [ ] CRUD; scaleTargetRef, min/max, metrics; status; сообщение если нет metrics-server.
+
+#### 7.4 VerticalPodAutoscaler
+- [ ] Если CRD `autoscaling.k8s.io` есть: read-only или CRUD; иначе скрыть.
+
+#### 7.5 ResourceQuota и LimitRange
+- [ ] CRUD; used/hard для quota; LimitRange defaults/limits; связка с `GET .../namespaces/{name}/quota|limits`.
+
+#### 7.6 Фронт
+- [ ] **`k8s-crd.html`**; HPA в workloads; quota/limits в namespace admin.
 
 **Definition of Done:**
-- ✅ CRD dynamic form по OpenAPI schema
-- ✅ HPA metrics отображение
-- ✅ ResourceQuota usage charts
+- ✅ HPA показывает причину сбоя метрик; CR apply с YAML на тестовом CRD.
+- ✅ ResourceQuota: таблица использования с fallback-пояснением при неполном status.
 
 ---
 
 ### 🔹 Фаза 8: Observability (Недели 13-14)
-**Цель:** Наблюдаемость и мониторинг
+**Цель:** Метрики, события кластера, логи, топология; [§16 Events](#16-events), [§17 Metrics](#17-metrics), [§19 Cluster](#19-cluster-overview).
 
-- [ ] Metrics API integration
-- [ ] **Cluster-wide Events stream** и агрегированные представления (на базе событий из [фазы 2](#фазы-реализации))
-- [ ] Logs aggregation
-- [ ] Topology visualization
-- [ ] Resource usage charts
+#### 8.1 Metrics API
+- [ ] `metrics.k8s.io`: node/pod; top nodes/pods при наличии **metrics-server**; degradation без него.
+
+#### 8.2 Cluster-wide Events
+- [ ] Листинг/стрим с фильтрами; один **WebSocket** с мультиплексированием; лимиты; опора на [фазу 2](#фазы-реализации).
+
+#### 8.3 Логи
+- [ ] Навигация к логам подов из агрегированных представлений; отдельный централизованный стор (Loki и т.д.) — вне обязательного scope.
+
+#### 8.4 Топология и графики
+- [ ] Упрощённый граф Service → workload → pods; **Cytoscape.js** или аналог.
+- [ ] CPU/Memory из metrics API; **история** при интеграции с Prometheus (см. [§ Prometheus в интеграциях](#prometheus-optional)).
+
+#### 8.5 Фронт
+- [ ] Доработка **`k8s-cluster.html`**: Events, Metrics, Topology.
 
 **Definition of Done:**
-- ✅ Events WebSocket stream < 100ms latency
-- ✅ Topology map с Cytoscape.js
-- ✅ Historical metrics charts
+- ✅ С metrics-server видны актуальные использования после обычного refresh.
+- ✅ События кластера: фильтры + пагинация/временное окно при больших объёмах.
+- ✅ Топология для минимального кейса: сервис + deployment + N подов.
 
 ---
 
 ### 🔹 Фаза 9: Helm Integration (Неделя 15)
-**Цель:** Управление Helm чартами (в коде уже есть [rust/src/kubernetes/helm.rs](rust/src/kubernetes/helm.rs) — фаза про **HTTP API + UI**, а не с нуля про бизнес-логику CLI)
+**Цель:** HTTP API + UI поверх [helm.rs](rust/src/kubernetes/helm.rs) и блока [Helm в интеграциях](#helm-integration).
 
-- [ ] Helm releases
-- [ ] Chart catalog
-- [ ] Install/Upgrade/Rollback
-- [ ] Repository management
+#### 9.1 Репозитории
+- [ ] Добавление/удаление repo; валидация URL; секреты не в логах.
+
+#### 9.2 Каталог чартов
+- [ ] Список из repos; Chart.yaml, readme, default **values**; поиск.
+
+#### 9.3 Releases
+- [ ] List/get; история; upgrade; rollback; uninstall с подтверждением; опционально просмотр manifest (read-only).
+
+#### 9.4 Безопасность
+- [ ] Аудит Velum на все helm-операции; **dry-run** install/upgrade до apply где возможно.
+
+#### 9.5 Фронт
+- [ ] Мастер install; редактор values; список releases по namespace.
 
 **Definition of Done:**
-- ✅ Chart install wizard
-- ✅ Release history с rollback
-- ✅ Values editor с validation
+- ✅ Цикл install → upgrade → rollback → uninstall на тестовом чарте (kind).
+- ✅ Ошибки Helm отображаются целиком; UI не падает.
 
 ---
 
 ### 🔹 Фаза 10: Polish & Enterprise (Недели 16-18)
-**Цель:** Production-ready продукт
+**Цель:** Мульти-кластер в UI, аудит, интеграции, NFR, доводка apply.
 
-- [ ] Multi-cluster management
-- [ ] Audit logging
-- [ ] Backup/Restore
-- [ ] GitOps integration
-- [ ] AI-assistant (опционально)
-- [ ] **Server-side dry-run + diff** для всех apply операций
-- [ ] **SSA конфликты полей** с UI предупреждениями
-- [ ] **kubectl command generator** — показывать эквивалентную команду для обучения
+#### 10.1 Multi-cluster UI
+- [ ] Переключатель кластера; модель [фазы 1](#фазы-реализации); изоляция кэшей `user + clusterId`.
+
+#### 10.2 Audit (Velum)
+- [ ] Просмотр/экспорт: кто, когда, cluster, resource, verb; интеграция с audit приложения.
+
+#### 10.3 Backup / restore
+- [ ] Runbook: БД Velum, конфиги; опционально Velero — без полного UI в v1.
+
+#### 10.4 GitOps
+- [ ] Черновик: read-only или минимальный sync к [GitOps в интеграциях](#gitops-integration).
+
+#### 10.5 Apply и SSA
+- [ ] **Dry-run + diff** на всех apply из UI; предупреждения **SSA** и опция force с явным риском.
+
+#### 10.6 Генератор kubectl
+- [ ] Показ эквивалентной команды для действия в UI.
+
+#### 10.7 AI-assistant (опц.)
+- [ ] После security review; см. **v1.0.0** в [Changelog](#changelog).
+
+#### 10.8 NFR
+- [ ] Тема тёмная/светлая; mobile для чтения и критичных действий; **i18n EN/RU**; **WCAG 2.1 AA** (фокус, контраст, aria на потоках).
 
 **Definition of Done:**
-- ✅ Переключение между кластерами
-- ✅ Audit log export
-- ✅ Dark/Light theme
-- ✅ Mobile responsive
-- ✅ i18n (EN/RU)
-- ✅ Accessibility WCAG 2.1 AA
+- ✅ 2+ кластера переключаются без перелогина и смешения данных.
+- ✅ Аудит: delete, helm uninstall, rollback, факт exec-сессии.
+- ✅ Smoke a11y и переключение EN/RU на ключевых K8s-страницах.
 
 ---
 
@@ -1129,6 +1214,8 @@ const k8sWs = new KubernetesWebSocket();
 
 ## 🔌 Интеграции
 
+<a id="helm-integration"></a>
+
 ### Helm
 ```rust
 // rust/src/api/handlers/kubernetes/helm.rs
@@ -1141,6 +1228,8 @@ DELETE /api/kubernetes/helm/releases/{name}      // Uninstall release
 GET    /api/kubernetes/helm/releases             // List releases
 ```
 
+<a id="gitops-integration"></a>
+
 ### GitOps (ArgoCD/Flux)
 ```rust
 GET    /api/kubernetes/gitops/applications       // ArgoCD applications
@@ -1152,6 +1241,8 @@ POST   /api/kubernetes/gitops/sync               // Sync application
 GET    /api/kubernetes/metrics/nodes
 GET    /api/kubernetes/metrics/pods
 ```
+
+<a id="prometheus-optional"></a>
 
 ### Prometheus (опционально)
 ```rust
