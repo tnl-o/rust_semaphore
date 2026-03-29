@@ -797,9 +797,6 @@ function renderSidebar() {
             <div class="sidebar-logo-dot"><img src="/logo.png" alt=""></div>
             <h2>Velum</h2>
         </div>
-        <div class="sidebar-section">
-            <span>Проект</span>
-        </div>
         <div class="sidebar-project" data-current-page="${escapeHtml(currentPage)}">
             <select class="form-control sidebar-project-select">
                 <option value="">Загрузка проектов...</option>
