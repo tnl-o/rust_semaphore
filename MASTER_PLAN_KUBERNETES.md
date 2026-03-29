@@ -332,19 +332,54 @@ flowchart LR
 ---
 
 ### 🔹 Фаза 3: Networking & Config (Недели 6-7)
-**Цель:** Сетевые ресурсы и конфигурация
+**Цель:** Сервисы и трафик до приложений, конфигурация и секреты; API и UI согласно [§7 Services](#7-services)–[§11 NetworkPolicy](#11-networkpolicy).
 
-- [ ] Services (ClusterIP, NodePort, LoadBalancer)
-- [ ] ConfigMaps
-- [ ] Secrets (маскирование в UI; **encryption at rest** — зона etcd/KMS кластера, не отдельный «encrypt API» Velum)
-- [ ] Ingress & IngressClass (**API group:** `networking.k8s.io`, не `extensions/v1beta1`)
-- [ ] NetworkPolicy
-- [ ] (Опционально, после Ingress) **Gateway API** — `Gateway`, `HTTPRoute`, `GRPCRoute` там, где кластер использует Gateway API вместо классического Ingress
+#### 3.1 Services
+- [ ] CRUD для **Service**; типы **ClusterIP**, **NodePort**, **LoadBalancer**, **ExternalName** — отображение бейджем, портов, `clusterIP` / `externalIPs` / `loadBalancerIP` или status при облаке.
+- [ ] **Селектор** и сопоставление с подами (read-only подсчёт или ссылка на список подов по селектору).
+- [ ] **Headless** (`clusterIP: None`) — явная подсказка в UI и поведение для связанных StatefulSet.
+- [ ] `GET .../services/{name}/endpoint-slices` — основной источник backend'ов; fallback **`/endpoints`** (legacy) при отсутствии slices или для отладки.
+- [ ] Пагинация для списков; dry-run при create/update, если общий пайплайн YAML из [фазы 2](#фазы-реализации) уже есть.
+
+#### 3.2 Ingress и IngressClass
+- [ ] CRUD **Ingress** только с API **`networking.k8s.io`** (версия по целевому кластеру); не использовать `extensions/v1beta1`.
+- [ ] Список и просмотр **IngressClass** (cluster-scoped); выбор `ingressClassName` в форме создания.
+- [ ] Парсинг **rules**: host, path, backend service + port; секция **TLS** (secretName); **annotations** как ключ–значение (часто нужны для nginx/contour и т.д.).
+- [ ] UI: таблица маршрутов, опционально простая схема «host → path → service» (диаграмма или блоки).
+
+#### 3.3 ConfigMaps
+- [ ] CRUD + `GET .../yaml` (или общий YAML-путь из фазы 2); ключи `data` / `binaryData` — для binary показывать размер и предупреждение при больших значениях.
+- [ ] Редактор: пары ключ–значение и режим «сырой YAML/json» с валидацией.
+- [ ] **Referenced by** (опционально в этой фазе): ссылки на поды/workload, использующие CM по имени — хотя бы ручной поиск по шаблону или отложить на UI-polish.
+
+#### 3.4 Secrets
+- [ ] CRUD; типы **Opaque**, **kubernetes.io/dockerconfigjson**, **tls**, **basic-auth** и др. — отображение `type`, **не логировать** значения и не кэшировать в открытом виде на клиенте дольше сессии.
+- [ ] В UI по умолчанию **masked**; показ base64decoded / plaintext только по явному действию («раскрыть») с предупреждением; копирование в буфер — одноразово по клику.
+- [ ] **Encryption at rest** — только про кластер (etcd/KMS); в плане Velum отдельный «encrypt» endpoint не добавлять.
+- [ ] Опционально: ссылка на документацию **External Secrets** без обязательной интеграции в этой фазе.
+
+#### 3.5 NetworkPolicy
+- [ ] CRUD; визуализация **ingress/egress** rules (порты, namespaceSelector, podSelector, ipCIDR), **policyTypes**.
+- [ ] Подсказка, что эффект зависит от CNI (нет единого «прогнать тест» в UI без отдельного инструмента).
+
+#### 3.6 Gateway API (опционально)
+- [ ] После стабильного Ingress: если в кластере установлен **Gateway API**, read-only **Gateway**, **HTTPRoute**, **GRPCRoute** (CRUD по мере необходимости) — те же `group/kind`, что в кластере; скрывать раздел, если CRD нет.
+
+#### 3.7 RBAC-UX
+- [ ] Проверка прав на ресурсы `services`, `configmaps`, `secrets`, `ingresses`, `networkpolicies` (+ `ingressclasses` cluster) и соответствующие verbs для всех мутаций.
+- [ ] Секреты: отдельно учитывать минимальные роли (часто **get/list** без **watch** на secrets ограничивают продукты — сообщать пользователю).
+
+#### 3.8 Фронтенд ([web/public/k8s/](web/public/k8s/))
+- [ ] Страницы **`k8s-services.html`**, **`k8s-configmaps.html`**, **`k8s-secrets.html`**, **`k8s-ingress.html`**, **`k8s-networkpolicy.html`** (или единый hub «Networking» с вкладками) — согласовать с [деревом компонентов](#frontend-компоненты).
+- [ ] Namespace picker; таблицы с фильтрами; детальные экраны с YAML и dry-run.
+- [ ] Gateway API — отдельная подстраница или флаг «показать если CRD есть».
 
 **Definition of Done:**
-- ✅ Отображение backend'ов сервиса: **EndpointSlices** (предпочтительно) и/или legacy Endpoints, если включено в кластере
-- ✅ Secrets с mask/unmask values
-- ✅ Ingress routing rules diagram
+- ✅ Для типичного **ClusterIP/NodePort** сервиса отображаются порты, селектор и **EndpointSlices** (адреса подов/ready); при отсутствии endpoints — понятное «нет подов по селектору».
+- ✅ **Ingress:** таблица правил и TLS; ошибки валидации контроллера (через Events ingress) видны из связанного списка событий.
+- ✅ **Secrets:** маскирование по умолчанию; ни в Network, ни в консоль браузера значения не попадают без явного раскрытия.
+- ✅ **NetworkPolicy:** пользователь видит, Ingress или Egress или оба включены; пустой spec трактуется понятно (deny all vs allow — подсказка в UI).
+- ✅ Все мутации проходят через проверку прав; 403 с apiserver отображается явно.
 
 ---
 
