@@ -528,6 +528,42 @@ pub fn api_routes() -> Router<Arc<AppState>> {
             "/api/kubernetes/clusters/{cluster_id}/namespaces/{namespace}/deployments/{name}/restart",
             axum::routing::post(handlers::kubernetes::restart_deployment),
         )
+        // ── Kubernetes UI API (Фаза 2: daemonsets) ───────────────────────────
+        .route(
+            "/api/kubernetes/clusters/{cluster_id}/namespaces/{namespace}/daemonsets",
+            get(handlers::kubernetes::list_daemonsets),
+        )
+        .route(
+            "/api/kubernetes/clusters/{cluster_id}/namespaces/{namespace}/daemonsets/{name}",
+            get(handlers::kubernetes::get_daemonset),
+        )
+        .route(
+            "/api/kubernetes/clusters/{cluster_id}/namespaces/{namespace}/daemonsets/{name}/restart",
+            axum::routing::post(handlers::kubernetes::restart_daemonset),
+        )
+        // ── Kubernetes UI API (Фаза 2: statefulsets) ─────────────────────────
+        .route(
+            "/api/kubernetes/clusters/{cluster_id}/namespaces/{namespace}/statefulsets",
+            get(handlers::kubernetes::list_statefulsets),
+        )
+        .route(
+            "/api/kubernetes/clusters/{cluster_id}/namespaces/{namespace}/statefulsets/{name}",
+            get(handlers::kubernetes::get_statefulset),
+        )
+        .route(
+            "/api/kubernetes/clusters/{cluster_id}/namespaces/{namespace}/statefulsets/{name}/scale",
+            axum::routing::post(handlers::kubernetes::scale_statefulset),
+        )
+        // ── Kubernetes UI API (Фаза 2: replicasets) ──────────────────────────
+        .route(
+            "/api/kubernetes/clusters/{cluster_id}/namespaces/{namespace}/replicasets",
+            get(handlers::kubernetes::list_replicasets),
+        )
+        // ── Kubernetes UI API (Фаза 2: events) ───────────────────────────────
+        .route(
+            "/api/kubernetes/clusters/{cluster_id}/namespaces/{namespace}/events",
+            get(handlers::kubernetes::list_events),
+        )
 }
 
 /// Создаёт маршруты для статических файлов

@@ -719,9 +719,12 @@ const SIDEBAR_SECTIONS = [
         label: 'Kubernetes',
         collapsible: true,
         items: [
-            { href: 'k8s-cluster.html', icon: 'fa-solid fa-dharmachakra', label: 'Кластер',     noId: true },
-            { href: 'k8s-pods.html',    icon: 'fa-solid fa-box',          label: 'Pods',         noId: true },
-            { href: 'k8s-deploy.html',  icon: 'fa-solid fa-rocket',       label: 'Deployments',  noId: true },
+            { href: 'k8s-cluster.html',     icon: 'fa-solid fa-dharmachakra', label: 'Кластер',      noId: true },
+            { href: 'k8s-pods.html',        icon: 'fa-solid fa-box',          label: 'Pods',          noId: true },
+            { href: 'k8s-deploy.html',      icon: 'fa-solid fa-rocket',       label: 'Deployments',   noId: true },
+            { href: 'k8s-daemonsets.html',  icon: 'fa-solid fa-layer-group',  label: 'DaemonSets',    noId: true },
+            { href: 'k8s-statefulsets.html',icon: 'fa-solid fa-database',     label: 'StatefulSets',  noId: true },
+            { href: 'k8s-events.html',      icon: 'fa-solid fa-bell',         label: 'Events',        noId: true },
         ]
     },
     {

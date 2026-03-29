@@ -4,8 +4,8 @@
 //! Существующий [client.rs](client.rs) с kubectl subprocess остаётся для задач Job/Helm.
 
 use kube::{Client, Config, config::KubeConfigOptions};
-use k8s_openapi::api::core::v1::{Namespace, Pod};
-use k8s_openapi::api::apps::v1::Deployment;
+use k8s_openapi::api::core::v1::{Namespace, Pod, Event};
+use k8s_openapi::api::apps::v1::{Deployment, DaemonSet, StatefulSet, ReplicaSet};
 use kube::api::{Api, ListParams, LogParams, DeleteParams, Patch, PatchParams};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -386,6 +386,201 @@ impl KubernetesClusterService {
             })?;
         Ok(())
     }
+
+    // ─── DaemonSets ───────────────────────────────────────────────────────────
+
+    pub async fn list_daemonsets(
+        &self,
+        namespace: &str,
+        limit: Option<u32>,
+        continue_token: Option<String>,
+    ) -> Result<DaemonSetList> {
+        let api: Api<DaemonSet> = Api::namespaced(self.client.clone(), namespace);
+        let limit = limit.unwrap_or(100).min(500);
+        let mut lp = ListParams::default().limit(limit);
+        if let Some(ref cont) = continue_token {
+            lp = lp.continue_token(cont.as_str());
+        }
+        let list = api.list(&lp).await.map_err(|e| {
+            let msg = e.to_string();
+            if msg.contains("403") || msg.contains("Forbidden") {
+                Error::Other(format!("FORBIDDEN: {msg}"))
+            } else {
+                Error::Other(format!("Failed to list daemonsets: {msg}"))
+            }
+        })?;
+        let cont = list.metadata.continue_.filter(|s| !s.is_empty());
+        let items = list.items.into_iter().map(daemonset_to_info).collect();
+        Ok(DaemonSetList { items, continue_token: cont })
+    }
+
+    pub async fn get_daemonset(&self, namespace: &str, name: &str) -> Result<DaemonSetInfo> {
+        let api: Api<DaemonSet> = Api::namespaced(self.client.clone(), namespace);
+        let d = api.get(name).await.map_err(|e| {
+            let msg = e.to_string();
+            if msg.contains("404") || msg.contains("not found") {
+                Error::NotFound(format!("DaemonSet {name} not found"))
+            } else {
+                Error::Other(format!("Failed to get daemonset: {msg}"))
+            }
+        })?;
+        Ok(daemonset_to_info(d))
+    }
+
+    pub async fn restart_daemonset(&self, namespace: &str, name: &str) -> Result<()> {
+        let api: Api<DaemonSet> = Api::namespaced(self.client.clone(), namespace);
+        let now = chrono::Utc::now().to_rfc3339();
+        let patch = serde_json::json!({
+            "spec": { "template": { "metadata": { "annotations": {
+                "kubectl.kubernetes.io/restartedAt": now
+            }}}}
+        });
+        api.patch(name, &PatchParams::apply("velum").force(), &Patch::Merge(&patch))
+            .await.map_err(|e| {
+                let msg = e.to_string();
+                if msg.contains("403") || msg.contains("Forbidden") {
+                    Error::Other(format!("FORBIDDEN: {msg}"))
+                } else {
+                    Error::Other(format!("Failed to restart daemonset: {msg}"))
+                }
+            })?;
+        Ok(())
+    }
+
+    // ─── StatefulSets ─────────────────────────────────────────────────────────
+
+    pub async fn list_statefulsets(
+        &self,
+        namespace: &str,
+        limit: Option<u32>,
+        continue_token: Option<String>,
+    ) -> Result<StatefulSetList> {
+        let api: Api<StatefulSet> = Api::namespaced(self.client.clone(), namespace);
+        let limit = limit.unwrap_or(100).min(500);
+        let mut lp = ListParams::default().limit(limit);
+        if let Some(ref cont) = continue_token {
+            lp = lp.continue_token(cont.as_str());
+        }
+        let list = api.list(&lp).await.map_err(|e| {
+            let msg = e.to_string();
+            if msg.contains("403") || msg.contains("Forbidden") {
+                Error::Other(format!("FORBIDDEN: {msg}"))
+            } else {
+                Error::Other(format!("Failed to list statefulsets: {msg}"))
+            }
+        })?;
+        let cont = list.metadata.continue_.filter(|s| !s.is_empty());
+        let items = list.items.into_iter().map(statefulset_to_info).collect();
+        Ok(StatefulSetList { items, continue_token: cont })
+    }
+
+    pub async fn get_statefulset(&self, namespace: &str, name: &str) -> Result<StatefulSetInfo> {
+        let api: Api<StatefulSet> = Api::namespaced(self.client.clone(), namespace);
+        let s = api.get(name).await.map_err(|e| {
+            let msg = e.to_string();
+            if msg.contains("404") || msg.contains("not found") {
+                Error::NotFound(format!("StatefulSet {name} not found"))
+            } else {
+                Error::Other(format!("Failed to get statefulset: {msg}"))
+            }
+        })?;
+        Ok(statefulset_to_info(s))
+    }
+
+    pub async fn scale_statefulset(&self, namespace: &str, name: &str, replicas: i32) -> Result<()> {
+        let api: Api<StatefulSet> = Api::namespaced(self.client.clone(), namespace);
+        let patch = serde_json::json!({ "spec": { "replicas": replicas } });
+        api.patch(name, &PatchParams::apply("velum").force(), &Patch::Merge(&patch))
+            .await.map_err(|e| {
+                let msg = e.to_string();
+                if msg.contains("403") || msg.contains("Forbidden") {
+                    Error::Other(format!("FORBIDDEN: {msg}"))
+                } else {
+                    Error::Other(format!("Failed to scale statefulset: {msg}"))
+                }
+            })?;
+        Ok(())
+    }
+
+    // ─── ReplicaSets ──────────────────────────────────────────────────────────
+
+    pub async fn list_replicasets(
+        &self,
+        namespace: &str,
+        limit: Option<u32>,
+        continue_token: Option<String>,
+    ) -> Result<ReplicaSetList> {
+        let api: Api<ReplicaSet> = Api::namespaced(self.client.clone(), namespace);
+        let limit = limit.unwrap_or(100).min(500);
+        let mut lp = ListParams::default().limit(limit);
+        if let Some(ref cont) = continue_token {
+            lp = lp.continue_token(cont.as_str());
+        }
+        let list = api.list(&lp).await.map_err(|e| {
+            let msg = e.to_string();
+            if msg.contains("403") || msg.contains("Forbidden") {
+                Error::Other(format!("FORBIDDEN: {msg}"))
+            } else {
+                Error::Other(format!("Failed to list replicasets: {msg}"))
+            }
+        })?;
+        let cont = list.metadata.continue_.filter(|s| !s.is_empty());
+        let items = list.items.into_iter().map(replicaset_to_info).collect();
+        Ok(ReplicaSetList { items, continue_token: cont })
+    }
+
+    // ─── Events ───────────────────────────────────────────────────────────────
+
+    /// Список событий в namespace с опциональным фильтром по involvedObject
+    pub async fn list_events(
+        &self,
+        namespace: &str,
+        involved_object_name: Option<String>,
+        involved_object_kind: Option<String>,
+        event_type: Option<String>,   // Normal | Warning
+        limit: Option<u32>,
+    ) -> Result<EventList> {
+        let api: Api<Event> = Api::namespaced(self.client.clone(), namespace);
+        let limit = limit.unwrap_or(100).min(500);
+        let mut field_selectors: Vec<String> = vec![];
+        if let Some(ref n) = involved_object_name {
+            field_selectors.push(format!("involvedObject.name={n}"));
+        }
+        if let Some(ref k) = involved_object_kind {
+            field_selectors.push(format!("involvedObject.kind={k}"));
+        }
+        if let Some(ref t) = event_type {
+            field_selectors.push(format!("type={t}"));
+        }
+        let mut lp = ListParams::default().limit(limit);
+        if !field_selectors.is_empty() {
+            lp = lp.fields(&field_selectors.join(","));
+        }
+        let list = api.list(&lp).await.map_err(|e| {
+            let msg = e.to_string();
+            if msg.contains("403") || msg.contains("Forbidden") {
+                Error::Other(format!("FORBIDDEN: {msg}"))
+            } else {
+                Error::Other(format!("Failed to list events: {msg}"))
+            }
+        })?;
+        let items = list.items.into_iter().map(|e| {
+            let meta = &e.metadata;
+            EventInfo {
+                name: meta.name.clone().unwrap_or_default(),
+                namespace: meta.namespace.clone().unwrap_or_default(),
+                type_: e.type_.clone().unwrap_or_else(|| "Normal".to_string()),
+                reason: e.reason.clone().unwrap_or_default(),
+                message: e.message.clone().unwrap_or_default(),
+                involved_object_name: e.involved_object.name.clone().unwrap_or_default(),
+                involved_object_kind: e.involved_object.kind.clone().unwrap_or_default(),
+                count: e.count.unwrap_or(1),
+                first_time: e.first_timestamp.as_ref().map(|t| t.0.to_rfc3339()),
+                last_time: e.last_timestamp.as_ref().map(|t| t.0.to_rfc3339()),
+            }
+        }).collect();
+        Ok(EventList { items })
+    }
 }
 
 // ─── Pod DTO helpers ─────────────────────────────────────────────────────────
@@ -591,4 +786,170 @@ fn deployment_to_info(d: Deployment) -> DeploymentInfo {
         created_at,
         conditions,
     }
+}
+
+// ─── DaemonSet DTOs ───────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DaemonSetInfo {
+    pub name: String,
+    pub namespace: String,
+    pub desired: i32,
+    pub current: i32,
+    pub ready: i32,
+    pub updated: i32,
+    pub available: i32,
+    pub images: Vec<String>,
+    pub labels: BTreeMap<String, String>,
+    pub node_selector: BTreeMap<String, String>,
+    pub created_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DaemonSetList {
+    pub items: Vec<DaemonSetInfo>,
+    pub continue_token: Option<String>,
+}
+
+fn daemonset_to_info(d: DaemonSet) -> DaemonSetInfo {
+    let meta = &d.metadata;
+    let name = meta.name.clone().unwrap_or_default();
+    let namespace = meta.namespace.clone().unwrap_or_default();
+    let labels = meta.labels.clone().unwrap_or_default();
+    let created_at = meta.creation_timestamp.as_ref().map(|t| t.0.to_rfc3339());
+
+    let spec = d.spec.as_ref();
+    let images: Vec<String> = spec.map(|s| {
+        s.template.spec.as_ref().map(|ps| {
+            ps.containers.iter().filter_map(|c| c.image.clone()).collect()
+        }).unwrap_or_default()
+    }).unwrap_or_default();
+    let node_selector = spec.and_then(|s| s.template.spec.as_ref())
+        .and_then(|ps| ps.node_selector.clone())
+        .unwrap_or_default();
+
+    let status = d.status.as_ref();
+    DaemonSetInfo {
+        name, namespace, labels, images, node_selector, created_at,
+        desired:   status.map(|s| s.desired_number_scheduled).unwrap_or(0),
+        current:   status.map(|s| s.current_number_scheduled).unwrap_or(0),
+        ready:     status.map(|s| s.number_ready).unwrap_or(0),
+        updated:   status.and_then(|s| s.updated_number_scheduled).unwrap_or(0),
+        available: status.and_then(|s| s.number_available).unwrap_or(0),
+    }
+}
+
+// ─── StatefulSet DTOs ─────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StatefulSetInfo {
+    pub name: String,
+    pub namespace: String,
+    pub replicas_desired: i32,
+    pub replicas_ready: i32,
+    pub replicas_current: i32,
+    pub images: Vec<String>,
+    pub labels: BTreeMap<String, String>,
+    pub service_name: String,
+    pub created_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StatefulSetList {
+    pub items: Vec<StatefulSetInfo>,
+    pub continue_token: Option<String>,
+}
+
+fn statefulset_to_info(s: StatefulSet) -> StatefulSetInfo {
+    let meta = &s.metadata;
+    let name = meta.name.clone().unwrap_or_default();
+    let namespace = meta.namespace.clone().unwrap_or_default();
+    let labels = meta.labels.clone().unwrap_or_default();
+    let created_at = meta.creation_timestamp.as_ref().map(|t| t.0.to_rfc3339());
+
+    let spec = s.spec.as_ref();
+    let replicas_desired = spec.and_then(|sp| sp.replicas).unwrap_or(1);
+    let service_name = spec.map(|sp| sp.service_name.clone()).unwrap_or_default();
+    let images: Vec<String> = spec.map(|sp| {
+        sp.template.spec.as_ref().map(|ps| {
+            ps.containers.iter().filter_map(|c| c.image.clone()).collect()
+        }).unwrap_or_default()
+    }).unwrap_or_default();
+
+    let status = s.status.as_ref();
+    StatefulSetInfo {
+        name, namespace, labels, images, service_name, created_at,
+        replicas_desired,
+        replicas_ready:   status.and_then(|st| st.ready_replicas).unwrap_or(0),
+        replicas_current: status.and_then(|st| st.current_replicas).unwrap_or(0),
+    }
+}
+
+// ─── ReplicaSet DTOs ──────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReplicaSetInfo {
+    pub name: String,
+    pub namespace: String,
+    pub replicas_desired: i32,
+    pub replicas_ready: i32,
+    pub owner_deployment: Option<String>,
+    pub images: Vec<String>,
+    pub labels: BTreeMap<String, String>,
+    pub created_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReplicaSetList {
+    pub items: Vec<ReplicaSetInfo>,
+    pub continue_token: Option<String>,
+}
+
+fn replicaset_to_info(rs: ReplicaSet) -> ReplicaSetInfo {
+    let meta = &rs.metadata;
+    let name = meta.name.clone().unwrap_or_default();
+    let namespace = meta.namespace.clone().unwrap_or_default();
+    let labels = meta.labels.clone().unwrap_or_default();
+    let created_at = meta.creation_timestamp.as_ref().map(|t| t.0.to_rfc3339());
+
+    // Найти владельца Deployment через ownerReferences
+    let owner_deployment = meta.owner_references.as_ref()
+        .and_then(|refs| refs.iter().find(|r| r.kind == "Deployment"))
+        .map(|r| r.name.clone());
+
+    let spec = rs.spec.as_ref();
+    let replicas_desired = spec.and_then(|s| s.replicas).unwrap_or(0);
+    let images: Vec<String> = spec.and_then(|s| s.template.as_ref()).map(|t| {
+        t.spec.as_ref().map(|ps| {
+            ps.containers.iter().filter_map(|c| c.image.clone()).collect()
+        }).unwrap_or_default()
+    }).unwrap_or_default();
+
+    let status = rs.status.as_ref();
+    ReplicaSetInfo {
+        name, namespace, labels, images, owner_deployment, created_at,
+        replicas_desired,
+        replicas_ready: status.and_then(|s| s.ready_replicas).unwrap_or(0),
+    }
+}
+
+// ─── Event DTOs ───────────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EventInfo {
+    pub name: String,
+    pub namespace: String,
+    pub type_: String,
+    pub reason: String,
+    pub message: String,
+    pub involved_object_name: String,
+    pub involved_object_kind: String,
+    pub count: i32,
+    pub first_time: Option<String>,
+    pub last_time: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EventList {
+    pub items: Vec<EventInfo>,
 }
