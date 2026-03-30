@@ -671,90 +671,220 @@ function checkAuth() {
 
 // ==================== Sidebar ====================
 
+// ==================== i18n ====================
+
+const I18N = {
+    ru: {
+        // Sidebar section headers
+        'section.project':    'Проект',
+        'section.ansible':    'Ansible',
+        'section.terraform':  'Terraform',
+        'section.kubernetes': 'Kubernetes',
+        'section.settings':   'Настройки',
+        // Footer controls
+        'theme.dark':   'Тёмная тема',
+        'theme.light':  'Светлая тема',
+        // Common actions
+        'action.save':    'Сохранить',
+        'action.cancel':  'Отмена',
+        'action.delete':  'Удалить',
+        'action.create':  'Создать',
+        'action.edit':    'Редактировать',
+        'action.refresh': 'Обновить',
+        'action.search':  'Поиск',
+        'action.apply':   'Применить',
+        'action.close':   'Закрыть',
+        // Common labels
+        'label.name':        'Имя',
+        'label.namespace':   'Namespace',
+        'label.status':      'Статус',
+        'label.age':         'Возраст',
+        'label.created':     'Создан',
+        'label.actions':     'Действия',
+        'label.type':        'Тип',
+        'label.replicas':    'Реплики',
+        'label.image':       'Образ',
+        'label.node':        'Нода',
+        'label.labels':      'Метки',
+        'label.all_ns':      'Все NS',
+        'label.loading':     'Загрузка...',
+        'label.error':       'Ошибка',
+        'label.no_data':     'Нет данных',
+        // K8s specific
+        'k8s.cluster':     'Кластер',
+        'k8s.nodes':       'Ноды',
+        'k8s.namespaces':  'Неймспейсы',
+        'k8s.dry_run':     'Dry-run',
+        'k8s.diff':        'Diff',
+        'k8s.restart':     'Перезапустить',
+        'k8s.scale':       'Масштабировать',
+        'k8s.rollback':    'Откатить',
+        'k8s.logs':        'Логи',
+        'k8s.exec':        'Shell',
+        'k8s.describe':    'Описание',
+        'k8s.switch':      'Переключить',
+    },
+    en: {
+        'section.project':    'Project',
+        'section.ansible':    'Ansible',
+        'section.terraform':  'Terraform',
+        'section.kubernetes': 'Kubernetes',
+        'section.settings':   'Settings',
+        'theme.dark':   'Dark theme',
+        'theme.light':  'Light theme',
+        'action.save':    'Save',
+        'action.cancel':  'Cancel',
+        'action.delete':  'Delete',
+        'action.create':  'Create',
+        'action.edit':    'Edit',
+        'action.refresh': 'Refresh',
+        'action.search':  'Search',
+        'action.apply':   'Apply',
+        'action.close':   'Close',
+        'label.name':        'Name',
+        'label.namespace':   'Namespace',
+        'label.status':      'Status',
+        'label.age':         'Age',
+        'label.created':     'Created',
+        'label.actions':     'Actions',
+        'label.type':        'Type',
+        'label.replicas':    'Replicas',
+        'label.image':       'Image',
+        'label.node':        'Node',
+        'label.labels':      'Labels',
+        'label.all_ns':      'All NS',
+        'label.loading':     'Loading...',
+        'label.error':       'Error',
+        'label.no_data':     'No data',
+        'k8s.cluster':     'Cluster',
+        'k8s.nodes':       'Nodes',
+        'k8s.namespaces':  'Namespaces',
+        'k8s.dry_run':     'Dry-run',
+        'k8s.diff':        'Diff',
+        'k8s.restart':     'Restart',
+        'k8s.scale':       'Scale',
+        'k8s.rollback':    'Rollback',
+        'k8s.logs':        'Logs',
+        'k8s.exec':        'Shell',
+        'k8s.describe':    'Describe',
+        'k8s.switch':      'Switch',
+    }
+};
+
+/** Translate a key using current language. Falls back to key if missing. */
+function t(key) {
+    const lang = localStorage.getItem(LANG_KEY) || 'ru';
+    return (I18N[lang] && I18N[lang][key]) || (I18N.ru && I18N.ru[key]) || key;
+}
+
+/**
+ * Apply i18n to DOM elements with data-i18n attribute.
+ * <span data-i18n="action.save"></span> → translated text
+ * <input data-i18n-placeholder="label.search"> → translated placeholder
+ */
+function applyI18n(root) {
+    const el = root || document;
+    el.querySelectorAll('[data-i18n]').forEach(node => {
+        node.textContent = t(node.dataset.i18n);
+    });
+    el.querySelectorAll('[data-i18n-placeholder]').forEach(node => {
+        node.placeholder = t(node.dataset.i18nPlaceholder);
+    });
+    el.querySelectorAll('[data-i18n-title]').forEach(node => {
+        node.title = t(node.dataset.i18nTitle);
+    });
+}
+
 const SIDEBAR_SECTIONS = [
     {
         label: null,
+        labelEn: null,
         items: [
-            { href: 'index.html',        icon: 'fa-solid fa-house',       label: 'Dashboard',  noId: true },
-            { href: 'global_tasks.html', icon: 'fa-solid fa-list-check',  label: 'Все задачи', noId: true },
+            { href: 'index.html',        icon: 'fa-solid fa-house',       label: 'Dashboard',  labelEn: 'Dashboard',  noId: true },
+            { href: 'global_tasks.html', icon: 'fa-solid fa-list-check',  label: 'Все задачи', labelEn: 'All Tasks',  noId: true },
         ]
     },
     {
-        label: 'Проект',
+        label: 'Проект',     labelEn: 'Project',
+        i18nKey: 'section.project',
         collapsible: true,
         items: [
-            { href: 'project.html',   icon: 'fa-solid fa-folder-open',        label: 'Обзор' },
-            { href: 'history.html',   icon: 'fa-solid fa-clock-rotate-left',  label: 'История задач' },
-            { href: 'activity.html',  icon: 'fa-solid fa-chart-line',         label: 'Активность' },
-            { href: 'analytics.html', icon: 'fa-solid fa-chart-bar',          label: 'Аналитика' },
+            { href: 'project.html',   icon: 'fa-solid fa-folder-open',        label: 'Обзор',          labelEn: 'Overview' },
+            { href: 'history.html',   icon: 'fa-solid fa-clock-rotate-left',  label: 'История задач',  labelEn: 'Task History' },
+            { href: 'activity.html',  icon: 'fa-solid fa-chart-line',         label: 'Активность',     labelEn: 'Activity' },
+            { href: 'analytics.html', icon: 'fa-solid fa-chart-bar',          label: 'Аналитика',      labelEn: 'Analytics' },
         ]
     },
     {
-        label: 'Ansible',
+        label: 'Ansible',    labelEn: 'Ansible',
+        i18nKey: 'section.ansible',
         collapsible: true,
         items: [
-            { href: 'templates.html',    icon: 'fa-solid fa-file-code',        label: 'Шаблоны' },
-            { href: 'inventory.html',    icon: 'fa-solid fa-server',           label: 'Инвентарь' },
-            { href: 'repositories.html', icon: 'fa-brands fa-git-alt',         label: 'Репозитории' },
-            { href: 'keys.html',         icon: 'fa-solid fa-key',              label: 'Ключи' },
-            { href: 'environments.html',        icon: 'fa-solid fa-leaf',             label: 'Окружения' },
-            { href: 'deploy-environments.html', icon: 'fa-solid fa-rocket',           label: 'Deploy Envs' },
-            { href: 'playbooks.html',           icon: 'fa-solid fa-scroll',           label: 'Playbooks' },
-            { href: 'schedules.html',    icon: 'fa-solid fa-calendar-days',    label: 'Расписания' },
-            { href: 'webhooks.html',     icon: 'fa-solid fa-plug',             label: 'Webhooks' },
-            { href: 'workflow.html',     icon: 'fa-solid fa-diagram-project',  label: 'Workflows' },
-            { href: 'drift.html',        icon: 'fa-solid fa-radar',            label: 'Drift Detection' },
+            { href: 'templates.html',    icon: 'fa-solid fa-file-code',        label: 'Шаблоны',        labelEn: 'Templates' },
+            { href: 'inventory.html',    icon: 'fa-solid fa-server',           label: 'Инвентарь',      labelEn: 'Inventory' },
+            { href: 'repositories.html', icon: 'fa-brands fa-git-alt',         label: 'Репозитории',    labelEn: 'Repositories' },
+            { href: 'keys.html',         icon: 'fa-solid fa-key',              label: 'Ключи',          labelEn: 'Keys' },
+            { href: 'environments.html',        icon: 'fa-solid fa-leaf',             label: 'Окружения',   labelEn: 'Environments' },
+            { href: 'deploy-environments.html', icon: 'fa-solid fa-rocket',           label: 'Deploy Envs', labelEn: 'Deploy Envs' },
+            { href: 'playbooks.html',           icon: 'fa-solid fa-scroll',           label: 'Playbooks',   labelEn: 'Playbooks' },
+            { href: 'schedules.html',    icon: 'fa-solid fa-calendar-days',    label: 'Расписания',     labelEn: 'Schedules' },
+            { href: 'webhooks.html',     icon: 'fa-solid fa-plug',             label: 'Webhooks',       labelEn: 'Webhooks' },
+            { href: 'workflow.html',     icon: 'fa-solid fa-diagram-project',  label: 'Workflows',      labelEn: 'Workflows' },
+            { href: 'drift.html',        icon: 'fa-solid fa-radar',            label: 'Drift Detection',labelEn: 'Drift Detection' },
         ]
     },
     {
-        label: 'Terraform',
+        label: 'Terraform',  labelEn: 'Terraform',
+        i18nKey: 'section.terraform',
         collapsible: true,
         items: [
-            { href: 'state.html',         icon: 'fa-solid fa-database',       label: 'TF State' },
-            { href: 'plan_approval.html', icon: 'fa-solid fa-check-to-slot',  label: 'Plan Approval' },
-            { href: 'costs.html',         icon: 'fa-solid fa-dollar-sign',    label: 'Стоимость' },
-            { href: 'snapshots.html',     icon: 'fa-solid fa-rotate-left',    label: 'Rollback' },
+            { href: 'state.html',         icon: 'fa-solid fa-database',       label: 'TF State',     labelEn: 'TF State' },
+            { href: 'plan_approval.html', icon: 'fa-solid fa-check-to-slot',  label: 'Plan Approval',labelEn: 'Plan Approval' },
+            { href: 'costs.html',         icon: 'fa-solid fa-dollar-sign',    label: 'Стоимость',    labelEn: 'Costs' },
+            { href: 'snapshots.html',     icon: 'fa-solid fa-rotate-left',    label: 'Rollback',     labelEn: 'Rollback' },
         ]
     },
     {
-        label: 'Kubernetes',
+        label: 'Kubernetes', labelEn: 'Kubernetes',
+        i18nKey: 'section.kubernetes',
         collapsible: true,
         items: [
-            { href: 'k8s-cluster.html',       icon: 'fa-solid fa-dharmachakra',      label: 'Кластер',      noId: true },
-            { href: 'k8s-pods.html',          icon: 'fa-solid fa-box',               label: 'Pods',          noId: true },
-            { href: 'k8s-deploy.html',        icon: 'fa-solid fa-rocket',            label: 'Deployments',   noId: true },
-            { href: 'k8s-daemonsets.html',    icon: 'fa-solid fa-layer-group',       label: 'DaemonSets',    noId: true },
-            { href: 'k8s-statefulsets.html',  icon: 'fa-solid fa-database',          label: 'StatefulSets',  noId: true },
-            { href: 'k8s-events.html',        icon: 'fa-solid fa-bell',              label: 'Events',        noId: true },
-            { href: 'k8s-services.html',      icon: 'fa-solid fa-network-wired',     label: 'Services',      noId: true },
-            { href: 'k8s-ingress.html',       icon: 'fa-solid fa-route',             label: 'Ingress',       noId: true },
-            { href: 'k8s-configmaps.html',    icon: 'fa-solid fa-sliders',           label: 'ConfigMaps',    noId: true },
-            { href: 'k8s-secrets.html',       icon: 'fa-solid fa-user-secret',       label: 'Secrets',       noId: true },
-            { href: 'k8s-networkpolicy.html', icon: 'fa-solid fa-shield-halved',     label: 'NetworkPolicy', noId: true },
-            { href: 'k8s-gateway.html',       icon: 'fa-solid fa-signs-post',        label: 'Gateway API',   noId: true },
-            { href: 'k8s-storage.html',       icon: 'fa-solid fa-hard-drive',        label: 'Storage',       noId: true },
-            { href: 'k8s-jobs.html',          icon: 'fa-solid fa-clock-rotate-left', label: 'Jobs & PDB',    noId: true },
-            { href: 'k8s-rbac.html',          icon: 'fa-solid fa-user-shield',       label: 'RBAC',          noId: true },
-            { href: 'k8s-crd.html',           icon: 'fa-solid fa-gears',             label: 'CRD & HPA',     noId: true },
-            { href: 'k8s-observability.html', icon: 'fa-solid fa-chart-line',        label: 'Observability', noId: true },
-            { href: 'k8s-helm.html',          icon: 'fa-solid fa-ship',              label: 'Helm',          noId: true },
-            { href: 'k8s-clusters.html',      icon: 'fa-solid fa-circle-nodes',      label: 'Clusters',      noId: true },
-            { href: 'k8s-apply.html',         icon: 'fa-solid fa-file-import',       label: 'Apply',         noId: true },
+            { href: 'k8s-cluster.html',       icon: 'fa-solid fa-dharmachakra',      label: 'Кластер',      labelEn: 'Cluster',       noId: true },
+            { href: 'k8s-pods.html',          icon: 'fa-solid fa-box',               label: 'Pods',          labelEn: 'Pods',           noId: true },
+            { href: 'k8s-deploy.html',        icon: 'fa-solid fa-rocket',            label: 'Deployments',   labelEn: 'Deployments',    noId: true },
+            { href: 'k8s-daemonsets.html',    icon: 'fa-solid fa-layer-group',       label: 'DaemonSets',    labelEn: 'DaemonSets',     noId: true },
+            { href: 'k8s-statefulsets.html',  icon: 'fa-solid fa-database',          label: 'StatefulSets',  labelEn: 'StatefulSets',   noId: true },
+            { href: 'k8s-events.html',        icon: 'fa-solid fa-bell',              label: 'Events',        labelEn: 'Events',         noId: true },
+            { href: 'k8s-services.html',      icon: 'fa-solid fa-network-wired',     label: 'Services',      labelEn: 'Services',       noId: true },
+            { href: 'k8s-ingress.html',       icon: 'fa-solid fa-route',             label: 'Ingress',       labelEn: 'Ingress',        noId: true },
+            { href: 'k8s-configmaps.html',    icon: 'fa-solid fa-sliders',           label: 'ConfigMaps',    labelEn: 'ConfigMaps',     noId: true },
+            { href: 'k8s-secrets.html',       icon: 'fa-solid fa-user-secret',       label: 'Secrets',       labelEn: 'Secrets',        noId: true },
+            { href: 'k8s-networkpolicy.html', icon: 'fa-solid fa-shield-halved',     label: 'NetworkPolicy', labelEn: 'NetworkPolicy',  noId: true },
+            { href: 'k8s-gateway.html',       icon: 'fa-solid fa-signs-post',        label: 'Gateway API',   labelEn: 'Gateway API',    noId: true },
+            { href: 'k8s-storage.html',       icon: 'fa-solid fa-hard-drive',        label: 'Storage',       labelEn: 'Storage',        noId: true },
+            { href: 'k8s-jobs.html',          icon: 'fa-solid fa-clock-rotate-left', label: 'Jobs & PDB',    labelEn: 'Jobs & PDB',     noId: true },
+            { href: 'k8s-rbac.html',          icon: 'fa-solid fa-user-shield',       label: 'RBAC',          labelEn: 'RBAC',           noId: true },
+            { href: 'k8s-crd.html',           icon: 'fa-solid fa-gears',             label: 'CRD & HPA',     labelEn: 'CRD & HPA',     noId: true },
+            { href: 'k8s-observability.html', icon: 'fa-solid fa-chart-line',        label: 'Observability', labelEn: 'Observability',  noId: true },
+            { href: 'k8s-helm.html',          icon: 'fa-solid fa-ship',              label: 'Helm',          labelEn: 'Helm',           noId: true },
+            { href: 'k8s-clusters.html',      icon: 'fa-solid fa-circle-nodes',      label: 'Clusters',      labelEn: 'Clusters',       noId: true },
+            { href: 'k8s-apply.html',         icon: 'fa-solid fa-file-import',       label: 'Apply',         labelEn: 'Apply',          noId: true },
         ]
     },
     {
-        label: 'Настройки',
+        label: 'Настройки',  labelEn: 'Settings',
+        i18nKey: 'section.settings',
         collapsible: true,
         items: [
-            { href: 'team.html',             icon: 'fa-solid fa-users',        label: 'Команда' },
-            { href: 'notifications.html',    icon: 'fa-solid fa-bell',         label: 'Уведомления',  noId: true },
-            { href: 'credential_types.html', icon: 'fa-solid fa-id-card',      label: 'Типы ключей',  noId: true },
-            { href: 'runners.html',          icon: 'fa-solid fa-bolt',         label: 'Runners',      noId: true },
-            { href: 'apps.html',             icon: 'fa-solid fa-puzzle-piece', label: 'Apps',         noId: true },
-            { href: 'ldap_groups.html',      icon: 'fa-solid fa-sitemap',      label: 'LDAP Groups',  noId: true },
-            { href: 'organizations.html',    icon: 'fa-solid fa-building',     label: 'Организации',  noId: true },
-            { href: 'mcp.html',              icon: 'fa-solid fa-robot',        label: 'MCP / AI',     noId: true },
-            { href: 'marketplace.html',      icon: 'fa-solid fa-store',        label: 'Marketplace',  noId: true },
+            { href: 'team.html',             icon: 'fa-solid fa-users',        label: 'Команда',       labelEn: 'Team' },
+            { href: 'notifications.html',    icon: 'fa-solid fa-bell',         label: 'Уведомления',   labelEn: 'Notifications', noId: true },
+            { href: 'credential_types.html', icon: 'fa-solid fa-id-card',      label: 'Типы ключей',   labelEn: 'Cred Types',    noId: true },
+            { href: 'runners.html',          icon: 'fa-solid fa-bolt',         label: 'Runners',       labelEn: 'Runners',       noId: true },
+            { href: 'apps.html',             icon: 'fa-solid fa-puzzle-piece', label: 'Apps',          labelEn: 'Apps',          noId: true },
+            { href: 'ldap_groups.html',      icon: 'fa-solid fa-sitemap',      label: 'LDAP Groups',   labelEn: 'LDAP Groups',   noId: true },
+            { href: 'organizations.html',    icon: 'fa-solid fa-building',     label: 'Организации',   labelEn: 'Organizations', noId: true },
+            { href: 'mcp.html',              icon: 'fa-solid fa-robot',        label: 'MCP / AI',      labelEn: 'MCP / AI',      noId: true },
+            { href: 'marketplace.html',      icon: 'fa-solid fa-store',        label: 'Marketplace',   labelEn: 'Marketplace',   noId: true },
         ]
     },
 ];
@@ -795,23 +925,26 @@ function renderSidebar() {
         // Determine open state: active section always open, others from localStorage (default open)
         const isOpen = isActiveSection || (sectOpen[si] !== false);
 
+        const sectionLabel = (currentLang === 'en' && section.labelEn) ? section.labelEn : section.label;
+
         const itemsHtml = section.items.map(item => {
             const href = (item.noId || !projectIdForLinks)
                 ? item.href
                 : item.href + '?id=' + projectIdForLinks;
             const isActive = currentPage === item.href ? 'class="active"' : '';
-            return `<li><a href="${href}" ${isActive}><i class="nav-icon ${item.icon}"></i>${item.label}</a></li>`;
+            const itemLabel = (currentLang === 'en' && item.labelEn) ? item.labelEn : item.label;
+            return `<li><a href="${href}" ${isActive}><i class="nav-icon ${item.icon}"></i>${itemLabel}</a></li>`;
         }).join('');
 
-        if (!section.label) {
+        if (!sectionLabel) {
             return `<ul class="sidebar-nav sidebar-nav-flat">${itemsHtml}</ul>`;
         }
         if (!section.collapsible) {
-            return `<div class="sidebar-section"><span>${section.label}</span></div><ul class="sidebar-nav">${itemsHtml}</ul>`;
+            return `<div class="sidebar-section"><span>${sectionLabel}</span></div><ul class="sidebar-nav">${itemsHtml}</ul>`;
         }
         return `
             <div class="sidebar-section sidebar-section-toggle ${isOpen ? 'open' : ''}" data-section="${si}">
-                <span>${section.label}</span>
+                <span>${sectionLabel}</span>
                 <i class="fa-solid fa-chevron-down sidebar-chevron"></i>
             </div>
             <ul class="sidebar-nav sidebar-nav-collapsible ${isOpen ? '' : 'collapsed'}" data-section="${si}">${itemsHtml}</ul>
@@ -937,13 +1070,14 @@ function renderSidebar() {
     const langSelect = sidebar.querySelector('.sidebar-lang-select');
     if (langSelect) {
         langSelect.addEventListener('change', () => {
-            const value = langSelect.value;
-            localStorage.setItem(LANG_KEY, value);
+            localStorage.setItem(LANG_KEY, langSelect.value);
+            renderSidebar();
+            applyI18n();
         });
     }
 }
 
-document.addEventListener('DOMContentLoaded', renderSidebar);
+document.addEventListener('DOMContentLoaded', () => { renderSidebar(); applyI18n(); });
 
 // ==================== Export ====================
 
@@ -952,3 +1086,5 @@ window.ui = ui;
 window.checkAuth = checkAuth;
 window.escapeHtml = escapeHtml;
 window.formatDate = formatDate;
+window.t = t;
+window.applyI18n = applyI18n;
