@@ -6235,6 +6235,7 @@ dependencies = [
  "assert-json-diff",
  "async-graphql",
  "async-graphql-axum",
+ "async-stream",
  "async-trait",
  "axum",
  "axum-extra",
