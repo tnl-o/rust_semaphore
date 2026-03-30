@@ -1298,7 +1298,7 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         )
         .route(
             "/api/kubernetes/cluster/summary",
-            get(handlers::get_cluster_summary),
+            get(handlers::get_k8s_cluster_summary),
         )
         // Health
         .route("/api/kubernetes/health", get(handlers::kubernetes_health))
@@ -1869,6 +1869,88 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route(
             "/api/kubernetes/metrics/top/nodes",
             get(handlers::get_top_nodes),
+        )
+        .route(
+            "/api/kubernetes/topology",
+            get(handlers::get_topology),
+        )
+        // Helm
+        .route(
+            "/api/kubernetes/helm/repos",
+            get(handlers::list_helm_repos),
+        )
+        .route(
+            "/api/kubernetes/helm/repos",
+            post(handlers::add_helm_repo),
+        )
+        .route(
+            "/api/kubernetes/helm/charts",
+            get(handlers::search_helm_charts),
+        )
+        .route(
+            "/api/kubernetes/helm/charts/{repo}/{chart}",
+            get(handlers::get_helm_chart),
+        )
+        .route(
+            "/api/kubernetes/helm/releases",
+            get(handlers::list_helm_releases),
+        )
+        .route(
+            "/api/kubernetes/helm/releases",
+            post(handlers::install_helm_chart),
+        )
+        .route(
+            "/api/kubernetes/helm/releases/{namespace}/{name}",
+            get(handlers::get_helm_release_history),
+        )
+        .route(
+            "/api/kubernetes/helm/releases/{namespace}/{name}",
+            put(handlers::upgrade_helm_release),
+        )
+        .route(
+            "/api/kubernetes/helm/releases/{namespace}/{name}/rollback",
+            post(handlers::rollback_helm_release),
+        )
+        .route(
+            "/api/kubernetes/helm/releases/{namespace}/{name}",
+            delete(handlers::uninstall_helm_release),
+        )
+        .route(
+            "/api/kubernetes/helm/releases/{namespace}/{name}/values",
+            get(handlers::get_helm_release_values),
+        )
+        .route(
+            "/api/kubernetes/helm/releases/{namespace}/{name}/values",
+            put(handlers::update_helm_release_values),
+        )
+        // Multi-Cluster Management
+        .route(
+            "/api/kubernetes/clusters",
+            get(handlers::list_kubernetes_clusters),
+        )
+        .route(
+            "/api/kubernetes/clusters",
+            post(handlers::add_kubernetes_cluster),
+        )
+        .route(
+            "/api/kubernetes/clusters/{name}/switch",
+            post(handlers::switch_kubernetes_cluster),
+        )
+        .route(
+            "/api/kubernetes/clusters/{name}",
+            delete(handlers::remove_kubernetes_cluster),
+        )
+        .route(
+            "/api/kubernetes/cluster/health",
+            get(handlers::get_cluster_health),
+        )
+        .route(
+            "/api/kubernetes/cluster/summary",
+            get(handlers::get_k8s_cluster_summary),
+        )
+        .route(
+            "/api/kubernetes/cluster/aggregate",
+            get(handlers::get_aggregate_view),
         )
 }
 
