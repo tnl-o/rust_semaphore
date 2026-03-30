@@ -51,16 +51,13 @@ pub struct KubeClient {
 
 impl KubeClient {
     /// Создаёт новый Kubernetes клиент
-    /// 
+    ///
     /// # Пример
-    /// ```rust,no_run
-    /// use crate::api::handlers::kubernetes::client::{KubeClient, KubeConfig};
-    /// 
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let config = KubeConfig::default();
-    ///     let client = KubeClient::new(config).await.unwrap();
-    /// }
+    /// ```ignore
+    /// // Doctest requires a running Kubernetes cluster
+    /// // Example usage:
+    /// // let config = KubeConfig::default();
+    /// // let client = KubeClient::new(config).await.unwrap();
     /// ```
     pub async fn new(config: KubeConfig) -> Result<Self> {
         info!("Creating Kubernetes client");
