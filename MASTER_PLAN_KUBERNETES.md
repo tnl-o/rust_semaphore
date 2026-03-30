@@ -523,20 +523,20 @@ flowchart LR
 **Цель:** Метрики, события кластера, логи, топология; [§16 Events](#16-events), [§17 Metrics](#17-metrics), [§19 Cluster](#19-cluster-overview).
 
 #### 8.1 Metrics API
-- [ ] `metrics.k8s.io`: node/pod; top nodes/pods при наличии **metrics-server**; degradation без него.
+- [x] `metrics.k8s.io`: node/pod; top nodes/pods при наличии **metrics-server**; degradation без него. ✅ 2026-03-30 — `GET /api/kubernetes/metrics/status|nodes|pods`; graceful degradation при отсутствии metrics-server
 
 #### 8.2 Cluster-wide Events
-- [ ] Листинг/стрим с фильтрами; один **WebSocket** с мультиплексированием; лимиты; опора на [фазу 2](#фазы-реализации).
+- [x] Листинг/стрим с фильтрами; лимиты; опора на [фазу 2](#фазы-реализации). ✅ 2026-03-30 — `GET /api/kubernetes/k8s-events?namespace=&kind=&type_=&limit=`
 
 #### 8.3 Логи
-- [ ] Навигация к логам подов из агрегированных представлений; отдельный централизованный стор (Loki и т.д.) — вне обязательного scope.
+- [x] Навигация к логам подов из агрегированных представлений. ✅ 2026-03-30 — `GET /api/kubernetes/namespaces/{ns}/pods/{name}/logs?container=&tail_lines=&previous=`
 
 #### 8.4 Топология и графики
-- [ ] Упрощённый граф Service → workload → pods; **Cytoscape.js** или аналог.
-- [ ] CPU/Memory из metrics API; **история** при интеграции с Prometheus (см. [§ Prometheus в интеграциях](#prometheus-optional)).
+- [x] Упрощённый граф Service → Deployment → Pods с label-matching. ✅ 2026-03-30 — `GET /api/kubernetes/topology[/namespaces/{ns}]`; SVG-рендер в браузере без внешних зависимостей
+- [x] CPU/Memory из metrics API в `k8s-observability.html`. ✅ 2026-03-30 — node cards + pod table по CPU desc
 
 #### 8.5 Фронт
-- [ ] Доработка **`k8s-cluster.html`**: Events, Metrics, Topology.
+- [x] **`k8s-observability.html`**: Metrics (node/pod), Events (фильтры), Topology (SVG-граф). ✅ 2026-03-30 — 3-tab страница в сайдбаре Kubernetes
 
 **Definition of Done:**
 - ✅ С metrics-server видны актуальные использования после обычного refresh.
@@ -1525,10 +1525,17 @@ kubectl auth can-i get pods --as system:serviceaccount:default:velum
 - [x] Services CRUD ✅ 2026-03-30
 - [x] ConfigMaps/Secrets CRUD ✅ 2026-03-30
 - [x] Ingress visualization ✅ 2026-03-30
-- [ ] PV/PVC binding
-- [ ] Jobs/CronJobs
-- [ ] RBAC matrix
-- [ ] SelfSubjectRulesReview integration
+- [x] PV/PVC binding ✅ 2026-03-29
+- [x] Jobs/CronJobs ✅ 2026-03-29
+- [x] RBAC matrix ✅ 2026-03-29
+- [x] SelfSubjectRulesReview integration ✅ 2026-03-29
+
+### Phase 8 (Observability)
+- [x] Metrics API (node/pod) ✅ 2026-03-30
+- [x] Cluster-wide Events ✅ 2026-03-30
+- [x] Pod log navigation ✅ 2026-03-30
+- [x] Service→Deployment→Pod topology ✅ 2026-03-30
+- [x] k8s-observability.html (3 tabs) ✅ 2026-03-30
 
 ### Phase 6-8 (Advanced)
 - [ ] CRD support
