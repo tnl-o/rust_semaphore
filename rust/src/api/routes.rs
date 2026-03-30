@@ -1829,6 +1829,47 @@ pub fn api_routes() -> Router<Arc<AppState>> {
             "/api/kubernetes/namespaces/{namespace}/verticalpodautoscalers/{name}",
             get(handlers::get_vertical_pod_autoscaler),
         )
+        // Observability: Events & Metrics
+        .route(
+            "/api/kubernetes/events",
+            get(handlers::list_events),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/events",
+            get(handlers::list_events),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/events/{name}",
+            get(handlers::get_event),
+        )
+        .route(
+            "/api/kubernetes/metrics/pods",
+            get(handlers::list_pod_metrics),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/metrics/pods",
+            get(handlers::list_pod_metrics),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/metrics/pods/{name}",
+            get(handlers::get_pod_metrics),
+        )
+        .route(
+            "/api/kubernetes/metrics/nodes",
+            get(handlers::list_node_metrics),
+        )
+        .route(
+            "/api/kubernetes/metrics/nodes/{name}",
+            get(handlers::get_node_metrics),
+        )
+        .route(
+            "/api/kubernetes/metrics/top/pods",
+            get(handlers::get_top_pods),
+        )
+        .route(
+            "/api/kubernetes/metrics/top/nodes",
+            get(handlers::get_top_nodes),
+        )
 }
 
 /// Создаёт маршруты для статических файлов
