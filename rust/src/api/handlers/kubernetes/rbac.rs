@@ -82,7 +82,11 @@ async fn can_i(
         .await
         .map_err(|e| Error::Kubernetes(format!("RBAC SelfSubjectAccessReview failed: {e}")))?;
 
-    Ok(created.status.as_ref().map(|s| s.allowed).unwrap_or(false))
+    Ok(created
+        .status
+        .as_ref()
+        .map(|s| s.allowed)
+        .unwrap_or(false))
 }
 
 async fn check_resource(
@@ -123,29 +127,10 @@ pub async fn check_kubernetes_rbac(
     resources.push(check_resource(&review_api, "", "secrets", true, ns).await?);
     resources.push(check_resource(&review_api, "", "persistentvolumeclaims", true, ns).await?);
     resources.push(check_resource(&review_api, "", "persistentvolumes", false, ns).await?);
-    resources
-        .push(check_resource(&review_api, "storage.k8s.io", "storageclasses", false, ns).await?);
+    resources.push(check_resource(&review_api, "storage.k8s.io", "storageclasses", false, ns).await?);
     resources.push(check_resource(&review_api, "networking.k8s.io", "ingresses", true, ns).await?);
-    resources.push(
-        check_resource(
-            &review_api,
-            "networking.k8s.io",
-            "networkpolicies",
-            true,
-            ns,
-        )
-        .await?,
-    );
-    resources.push(
-        check_resource(
-            &review_api,
-            "networking.k8s.io",
-            "ingressclasses",
-            false,
-            ns,
-        )
-        .await?,
-    );
+    resources.push(check_resource(&review_api, "networking.k8s.io", "networkpolicies", true, ns).await?);
+    resources.push(check_resource(&review_api, "networking.k8s.io", "ingressclasses", false, ns).await?);
     resources.push(check_resource(&review_api, "batch", "jobs", true, ns).await?);
     resources.push(check_resource(&review_api, "batch", "cronjobs", true, ns).await?);
     resources.push(check_resource(&review_api, "policy", "poddisruptionbudgets", true, ns).await?);
@@ -160,8 +145,16 @@ pub async fn check_kubernetes_rbac(
         .await?,
     );
     resources.push(check_resource(&review_api, "", "serviceaccounts", true, ns).await?);
-    resources
-        .push(check_resource(&review_api, "rbac.authorization.k8s.io", "roles", true, ns).await?);
+    resources.push(
+        check_resource(
+            &review_api,
+            "rbac.authorization.k8s.io",
+            "roles",
+            true,
+            ns,
+        )
+        .await?,
+    );
     resources.push(
         check_resource(
             &review_api,
