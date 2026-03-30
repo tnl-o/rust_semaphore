@@ -47,10 +47,12 @@ impl AppState {
             rate_limiter_api: Arc::new(RateLimiter::new(RateLimitConfig {
                 max_requests: 100,
                 period_secs: 60,
+                burst_size: Some(20),
             })),
             rate_limiter_auth: Arc::new(RateLimiter::new(RateLimitConfig {
                 max_requests: 5,
                 period_secs: 60,
+                burst_size: None,
             })),
         }
     }
