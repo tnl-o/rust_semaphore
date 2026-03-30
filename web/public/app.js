@@ -738,6 +738,8 @@ const SIDEBAR_SECTIONS = [
             { href: 'k8s-crd.html',           icon: 'fa-solid fa-gears',             label: 'CRD & HPA',     noId: true },
             { href: 'k8s-observability.html', icon: 'fa-solid fa-chart-line',        label: 'Observability', noId: true },
             { href: 'k8s-helm.html',          icon: 'fa-solid fa-ship',              label: 'Helm',          noId: true },
+            { href: 'k8s-clusters.html',      icon: 'fa-solid fa-circle-nodes',      label: 'Clusters',      noId: true },
+            { href: 'k8s-apply.html',         icon: 'fa-solid fa-file-import',       label: 'Apply',         noId: true },
         ]
     },
     {
