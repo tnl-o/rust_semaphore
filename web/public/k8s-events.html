@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Events — Velum</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar"></aside>
+    <div class="main-content">
+        <div class="main-header">
+            <h2><i class="fa-solid fa-bell"></i> Kubernetes Events</h2>
+        </div>
+        <div class="main-body">
+            <div class="card" style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <label>Namespace: <select id="namespace" class="form-control" style="max-width:200px;"></select></label>
+                <select id="type-filter" class="form-control" style="max-width:150px;">
+                    <option value="">Все типы</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Warning">Warning</option>
+                </select>
+                <input id="filter" class="form-control" placeholder="Фильтр по имени/сообщению" style="min-width:200px;">
+                <button class="btn btn-primary" onclick="loadEvents()"><i class="fa-solid fa-rotate"></i> Обновить</button>
+                <label style="margin-left:auto;"><input type="checkbox" id="auto-refresh" checked> Автообновление</label>
+            </div>
+            <div id="content" class="card"><div class="loading"><div class="loading-spinner"></div><p>Загрузка...</p></div></div>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+checkAuth();
+let autoRefreshInterval = null;
+
+async function loadNamespaces() {
+    const ns = await api.get('/kubernetes/namespaces');
+    const select = $('#namespace');
+    select.innerHTML = '<option value="">— все —</option>';
+    ns.forEach(n => {
+        select.innerHTML += `<option value="${escapeHtml(n.name)}">${escapeHtml(n.name)}</option>`;
+    });
+}
+
+async function loadEvents() {
+    const ns = $('#namespace').value || 'default';
+    const typeFilter = $('#type-filter').value;
+    const filter = $('#filter').value.toLowerCase();
+    const content = $('#content');
+    
+    try {
+        let url = `/kubernetes/events?namespace=${ns}&limit=200`;
+        const events = await api.get(url);
+        
+        let filtered = events;
+        if (typeFilter) {
+            filtered = filtered.filter(e => e.type_ === typeFilter);
+        }
+        if (filter) {
+            filtered = filtered.filter(e => 
+                e.name.toLowerCase().includes(filter) || 
+                e.message.toLowerCase().includes(filter) ||
+                e.involved_object.name.toLowerCase().includes(filter)
+            );
+        }
+        
+        // Sort by last_seen descending
+        filtered.sort((a, b) => new Date(b.last_seen || b.first_seen) - new Date(a.last_seen || a.first_seen));
+        
+        if (filtered.length === 0) {
+            ui.showEmpty(content, '<i class="fa-solid fa-bell"></i>', 'Нет событий', 'События Kubernetes появятся здесь');
+            return;
+        }
+        
+        content.innerHTML = `
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Тип</th>
+                        <th>Reason</th>
+                        <th>Object</th>
+                        <th>Message</th>
+                        <th>Count</th>
+                        <th>Last Seen</th>
+                        <th>First Seen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${filtered.map(event => `
+                        <tr class="${event.type_ === 'Warning' ? 'row-warning' : ''}">
+                            <td>
+                                <span class="badge badge-${event.type_ === 'Warning' ? 'danger' : 'success'}">
+                                    ${event.type_ === 'Warning' ? '<i class="fa-solid fa-triangle-exclamation"></i> Warning' : '<i class="fa-solid fa-circle-check"></i> Normal'}
+                                </span>
+                            </td>
+                            <td><code>${escapeHtml(event.reason)}</code></td>
+                            <td>
+                                <strong>${escapeHtml(event.involved_object.kind)}/${escapeHtml(event.involved_object.name)}</strong>
+                            </td>
+                            <td>${escapeHtml(event.message)}</td>
+                            <td>${event.count}</td>
+                            <td>${formatDate(event.last_seen)}</td>
+                            <td>${formatDate(event.first_seen)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    } catch (e) {
+        ui.showError(content, e.message);
+    }
+}
+
+function toggleAutoRefresh() {
+    if ($('#auto-refresh').checked) {
+        autoRefreshInterval = setInterval(loadEvents, 10000); // 10 seconds
+    } else {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+            autoRefreshInterval = null;
+        }
+    }
+}
+
+$('#namespace').addEventListener('change', loadEvents);
+$('#type-filter').addEventListener('change', loadEvents);
+$('#filter').addEventListener('input', loadEvents);
+$('#auto-refresh').addEventListener('change', toggleAutoRefresh);
+
+loadNamespaces().then(() => {
+    loadEvents();
+    toggleAutoRefresh();
+});
+</script>
+</body>
+</html>
