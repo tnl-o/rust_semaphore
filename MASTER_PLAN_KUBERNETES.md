@@ -357,17 +357,17 @@ flowchart LR
 **Цель:** Сервисы и трафик до приложений, конфигурация и секреты; API и UI согласно [§7 Services](#7-services)–[§11 NetworkPolicy](#11-networkpolicy).
 
 #### 3.1 Services
-- [ ] CRUD для **Service**; типы **ClusterIP**, **NodePort**, **LoadBalancer**, **ExternalName** — отображение бейджем, портов, `clusterIP` / `externalIPs` / `loadBalancerIP` или status при облаке.
-- [ ] **Селектор** и сопоставление с подами (read-only подсчёт или ссылка на список подов по селектору).
-- [ ] **Headless** (`clusterIP: None`) — явная подсказка в UI и поведение для связанных StatefulSet.
+- [x] CRUD для **Service**; типы **ClusterIP**, **NodePort**, **LoadBalancer**, **ExternalName** — отображение бейджем, портов, `clusterIP` / `externalIPs` / `loadBalancerIP` или status при облаке. ✅ 2026-03-30 — `networking.rs` + `k8s-services.html` с type badges
+- [x] **Селектор** и сопоставление с подами (read-only подсчёт или ссылка на список подов по селектору). ✅ 2026-03-30 — selector chips в detail panel
+- [x] **Headless** (`clusterIP: None`) — явная подсказка в UI и поведение для связанных StatefulSet. ✅ 2026-03-30 — Headless badge + `headless: true` флаг в ServiceView
 - [ ] `GET .../services/{name}/endpoint-slices` — основной источник backend'ов; fallback **`/endpoints`** (legacy) при отсутствии slices или для отладки.
-- [ ] Пагинация для списков; dry-run при create/update, если общий пайплайн YAML из [фазы 2](#фазы-реализации) уже есть.
+- [x] Пагинация для списков; dry-run при create/update, если общий пайплайн YAML из [фазы 2](#фазы-реализации) уже есть. ✅ 2026-03-30 — limit/continue_token пагинация на всех list endpoints
 
 #### 3.2 Ingress и IngressClass
 - [x] CRUD **Ingress** только с API **`networking.k8s.io`** (версия по целевому кластеру); не использовать `extensions/v1beta1`. ✅ 2026-03-29 — backend routes `ingresses` добавлены (`rust/src/api/handlers/kubernetes/ingress.rs`)
 - [x] Список и просмотр **IngressClass** (cluster-scoped); выбор `ingressClassName` в форме создания. ✅ 2026-03-29 — backend list/get `ingressclasses`
 - [x] Парсинг **rules**: host, path, backend service + port; секция **TLS** (secretName); **annotations** как ключ–значение (часто нужны для nginx/contour и т.д.). ✅ 2026-03-29 — `IngressView` в `rust/src/api/handlers/kubernetes/ingress.rs`
-- [ ] UI: таблица маршрутов, опционально простая схема «host → path → service» (диаграмма или блоки).
+- [x] UI: таблица маршрутов, опционально простая схема «host → path → service» (диаграмма или блоки). ✅ 2026-03-30 — `k8s-ingress.html` с rule-block дизайном host→path→service
 
 #### 3.3 ConfigMaps
 - [x] CRUD + `GET .../yaml` (или общий YAML-путь из фазы 2); ключи `data` / `binaryData` — для binary показывать размер и предупреждение при больших значениях. ✅ 2026-03-29 — backend `configmaps.rs` + routes
@@ -1522,9 +1522,9 @@ kubectl auth can-i get pods --as system:serviceaccount:default:velum
 - [ ] Basic auth integration
 
 ### Phase 3-5 (Core Features)
-- [ ] Services CRUD
-- [ ] ConfigMaps/Secrets CRUD
-- [ ] Ingress visualization
+- [x] Services CRUD ✅ 2026-03-30
+- [x] ConfigMaps/Secrets CRUD ✅ 2026-03-30
+- [x] Ingress visualization ✅ 2026-03-30
 - [ ] PV/PVC binding
 - [ ] Jobs/CronJobs
 - [ ] RBAC matrix
