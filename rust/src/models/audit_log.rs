@@ -18,7 +18,7 @@ pub enum AuditAction {
     PasswordResetRequested,
     TwoFactorEnabled,
     TwoFactorDisabled,
-    
+
     // Пользователи
     UserCreated,
     UserUpdated,
@@ -26,12 +26,12 @@ pub enum AuditAction {
     UserJoinedProject,
     UserLeftProject,
     UserRoleChanged,
-    
+
     // Проекты
     ProjectCreated,
     ProjectUpdated,
     ProjectDeleted,
-    
+
     // Задачи (Tasks)
     TaskCreated,
     TaskStarted,
@@ -39,58 +39,58 @@ pub enum AuditAction {
     TaskFailed,
     TaskStopped,
     TaskDeleted,
-    
+
     // Шаблоны (Templates)
     TemplateCreated,
     TemplateUpdated,
     TemplateDeleted,
     TemplateRun,
-    
+
     // Инвентарь
     InventoryCreated,
     InventoryUpdated,
     InventoryDeleted,
-    
+
     // Репозитории
     RepositoryCreated,
     RepositoryUpdated,
     RepositoryDeleted,
-    
+
     // Окружения (Environments)
     EnvironmentCreated,
     EnvironmentUpdated,
     EnvironmentDeleted,
-    
+
     // Ключи доступа (Access Keys)
     AccessKeyCreated,
     AccessKeyUpdated,
     AccessKeyDeleted,
-    
+
     // Интеграции
     IntegrationCreated,
     IntegrationUpdated,
     IntegrationDeleted,
     WebhookTriggered,
-    
+
     // Расписания (Schedules)
     ScheduleCreated,
     ScheduleUpdated,
     ScheduleDeleted,
     ScheduleTriggered,
-    
+
     // Раннеры
     RunnerCreated,
     RunnerUpdated,
     RunnerDeleted,
     RunnerConnected,
     RunnerDisconnected,
-    
+
     // Системные
     ConfigChanged,
     BackupCreated,
     RestorePerformed,
     MigrationApplied,
-    
+
     // Другое
     Other,
 }
@@ -120,10 +120,10 @@ pub enum AuditObjectType {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "lowercase")]
 pub enum AuditLevel {
-    Info,      // Информационное
-    Warning,   // Предупреждение
-    Error,     // Ошибка
-    Critical,  // Критическое
+    Info,     // Информационное
+    Warning,  // Предупреждение
+    Error,    // Ошибка
+    Critical, // Критическое
 }
 
 /// Детали действия audit log
@@ -146,51 +146,51 @@ pub struct AuditDetails {
 pub struct AuditLog {
     /// Уникальный ID записи
     pub id: i64,
-    
+
     /// ID проекта (если применимо)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub project_id: Option<i64>,
-    
+
     /// ID пользователя, выполнившего действие
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user_id: Option<i64>,
-    
+
     /// Имя пользователя (денормализация для быстрого поиска)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub username: Option<String>,
-    
+
     /// Тип действия
     pub action: AuditAction,
-    
+
     /// Тип объекта, над которым выполнено действие
     pub object_type: AuditObjectType,
-    
+
     /// ID объекта (если применимо)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub object_id: Option<i64>,
-    
+
     /// Название объекта (денормализация)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub object_name: Option<String>,
-    
+
     /// Описание действия
     pub description: String,
-    
+
     /// Уровень важности
     pub level: AuditLevel,
-    
+
     /// IP адрес
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ip_address: Option<String>,
-    
+
     /// User agent
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user_agent: Option<String>,
-    
+
     /// Дополнительные данные в JSON формате
     #[serde(skip_serializing_if = "Option::is_none")]
     pub details: Option<serde_json::Value>,
-    
+
     /// Время создания записи
     pub created: DateTime<Utc>,
 }
@@ -201,63 +201,69 @@ pub struct AuditLogFilter {
     /// Фильтр по project_id
     #[serde(skip_serializing_if = "Option::is_none")]
     pub project_id: Option<i64>,
-    
+
     /// Фильтр по user_id
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user_id: Option<i64>,
-    
+
     /// Фильтр по username
     #[serde(skip_serializing_if = "Option::is_none")]
     pub username: Option<String>,
-    
+
     /// Фильтр по действию
     #[serde(skip_serializing_if = "Option::is_none")]
     pub action: Option<AuditAction>,
-    
+
     /// Фильтр по типу объекта
     #[serde(skip_serializing_if = "Option::is_none")]
     pub object_type: Option<AuditObjectType>,
-    
+
     /// Фильтр по object_id
     #[serde(skip_serializing_if = "Option::is_none")]
     pub object_id: Option<i64>,
-    
+
     /// Фильтр по уровню важности
     #[serde(skip_serializing_if = "Option::is_none")]
     pub level: Option<AuditLevel>,
-    
+
     /// Поиск по описанию (LIKE)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub search: Option<String>,
-    
+
     /// Дата начала периода
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date_from: Option<DateTime<Utc>>,
-    
+
     /// Дата окончания периода
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date_to: Option<DateTime<Utc>>,
-    
+
     /// Лимит записей
     #[serde(default = "default_limit")]
     pub limit: i64,
-    
+
     /// Смещение
     #[serde(default)]
     pub offset: i64,
-    
+
     /// Сортировка по полю
     #[serde(default = "default_sort")]
     pub sort: String,
-    
+
     /// Порядок сортировки (asc/desc)
     #[serde(default = "default_order")]
     pub order: String,
 }
 
-fn default_limit() -> i64 { 50 }
-fn default_sort() -> String { "created".to_string() }
-fn default_order() -> String { "desc".to_string() }
+fn default_limit() -> i64 {
+    50
+}
+fn default_sort() -> String {
+    "created".to_string()
+}
+fn default_order() -> String {
+    "desc".to_string()
+}
 
 /// Результат поиска с пагинацией
 #[derive(Debug, Clone, Serialize, Deserialize)]

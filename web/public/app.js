@@ -677,6 +677,8 @@ const SIDEBAR_SECTIONS = [
         items: [
             { href: 'index.html',        icon: 'fa-solid fa-house',       label: 'Dashboard',  noId: true },
             { href: 'global_tasks.html', icon: 'fa-solid fa-list-check',  label: 'Все задачи', noId: true },
+            { href: 'organizations.html', icon: 'fa-solid fa-building',   label: 'Организации', noId: true },
+            { href: 'audit.html',        icon: 'fa-solid fa-clipboard-list', label: 'Audit Log', noId: true },
         ]
     },
     {
@@ -704,6 +706,13 @@ const SIDEBAR_SECTIONS = [
             { href: 'webhooks.html',     icon: 'fa-solid fa-plug',             label: 'Webhooks' },
             { href: 'workflow.html',     icon: 'fa-solid fa-diagram-project',  label: 'Workflows' },
             { href: 'drift.html',        icon: 'fa-solid fa-radar',            label: 'Drift Detection' },
+        ]
+    },
+    {
+        label: null,
+        collapsible: false,
+        items: [
+            { href: 'marketplace.html',  icon: 'fa-solid fa-store',            label: 'Marketplace',  noId: true },
         ]
     },
     {
@@ -744,7 +753,6 @@ const SIDEBAR_SECTIONS = [
             { href: 'ldap_groups.html',      icon: 'fa-solid fa-sitemap',      label: 'LDAP Groups',  noId: true },
             { href: 'organizations.html',    icon: 'fa-solid fa-building',     label: 'Организации',  noId: true },
             { href: 'mcp.html',              icon: 'fa-solid fa-robot',        label: 'MCP / AI',     noId: true },
-            { href: 'marketplace.html',      icon: 'fa-solid fa-store',        label: 'Marketplace',  noId: true },
         ]
     },
 ];
