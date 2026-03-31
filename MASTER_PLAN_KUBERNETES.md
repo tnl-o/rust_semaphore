@@ -360,7 +360,7 @@ flowchart LR
 - [x] CRUD для **Service**; типы **ClusterIP**, **NodePort**, **LoadBalancer**, **ExternalName** — отображение бейджем, портов, `clusterIP` / `externalIPs` / `loadBalancerIP` или status при облаке. ✅ 2026-03-30 — `networking.rs` + `k8s-services.html` с type badges
 - [x] **Селектор** и сопоставление с подами (read-only подсчёт или ссылка на список подов по селектору). ✅ 2026-03-30 — selector chips в detail panel
 - [x] **Headless** (`clusterIP: None`) — явная подсказка в UI и поведение для связанных StatefulSet. ✅ 2026-03-30 — Headless badge + `headless: true` флаг в ServiceView
-- [ ] `GET .../services/{name}/endpoint-slices` — основной источник backend'ов; fallback **`/endpoints`** (legacy) при отсутствии slices или для отладки.
+- [x] `GET .../services/{name}/endpoint-slices` — основной источник backend'ов; fallback **`/endpoints`** (legacy) при отсутствии slices или для отладки. ✅ 2026-03-31 — `get_service_endpoint_slices()` + legacy `get_service_endpoints()` + кнопка в `k8s-services.html`
 - [x] Пагинация для списков; dry-run при create/update, если общий пайплайн YAML из [фазы 2](#фазы-реализации) уже есть. ✅ 2026-03-30 — limit/continue_token пагинация на всех list endpoints
 
 #### 3.2 Ingress и IngressClass

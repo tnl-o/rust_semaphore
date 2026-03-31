@@ -81,6 +81,10 @@ pub fn kubernetes_routes() -> Router<Arc<AppState>> {
             "/api/kubernetes/namespaces/{namespace}/services/{name}/endpoints",
             get(handlers::get_service_endpoints),
         )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/services/{name}/endpoint-slices",
+            get(handlers::get_service_endpoint_slices),
+        )
         // Ingress & IngressClass
         .route("/api/kubernetes/ingresses", get(handlers::list_ingresses))
         .route(

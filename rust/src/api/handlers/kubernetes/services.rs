@@ -73,6 +73,13 @@ pub struct ServiceSummary {
     pub load_balancer_ip: Option<String>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct ServiceBackendsResponse {
+    pub source: String,
+    pub fallback_used: bool,
+    pub items: Vec<serde_json::Value>,
+}
+
 /// Список Services
 /// GET /api/kubernetes/services
 pub async fn list_services(
@@ -347,29 +354,74 @@ pub async fn delete_service(
     })))
 }
 
-/// Получить EndpointSlice для Service
-/// GET /api/kubernetes/namespaces/{namespace}/services/{name}/endpoints
-pub async fn get_service_endpoints(
+/// Основной endpoint для backend'ов сервиса:
+/// EndpointSlice + fallback на legacy Endpoints.
+/// GET /api/kubernetes/namespaces/{namespace}/services/{name}/endpoint-slices
+pub async fn get_service_endpoint_slices(
     State(state): State<Arc<AppState>>,
     Path((namespace, name)): Path<(String, String)>,
-) -> Result<Json<Vec<serde_json::Value>>> {
+) -> Result<Json<ServiceBackendsResponse>> {
     use k8s_openapi::api::discovery::v1::EndpointSlice;
+    use k8s_openapi::api::core::v1::Endpoints;
 
     let client = state.kubernetes_client()?;
-    let api: Api<EndpointSlice> = client.api(Some(&namespace));
+    let slices_api: Api<EndpointSlice> = client.api(Some(&namespace));
 
     let list_params = ListParams::default().labels(&format!("kubernetes.io/service-name={}", name));
 
-    let slices = api
+    let slices = slices_api
         .list(&list_params)
         .await
         .map_err(|e| Error::Kubernetes(e.to_string()))?;
 
-    let endpoints = slices
+    let items = slices
         .items
         .iter()
         .map(|slice| serde_json::to_value(slice).map_err(|e| Error::Kubernetes(e.to_string())))
         .collect::<Result<Vec<_>>>()?;
 
-    Ok(Json(endpoints))
+    if !items.is_empty() {
+        return Ok(Json(ServiceBackendsResponse {
+            source: "endpointslices".to_string(),
+            fallback_used: false,
+            items,
+        }));
+    }
+
+    let endpoints_api: Api<Endpoints> = client.api(Some(&namespace));
+    let legacy = endpoints_api
+        .get_opt(&name)
+        .await
+        .map_err(|e| Error::Kubernetes(e.to_string()))?;
+    let mut fallback_items = Vec::new();
+    if let Some(ep) = legacy {
+        fallback_items.push(
+            serde_json::to_value(ep).map_err(|e| Error::Kubernetes(e.to_string()))?,
+        );
+    }
+    Ok(Json(ServiceBackendsResponse {
+        source: "endpoints".to_string(),
+        fallback_used: true,
+        items: fallback_items,
+    }))
+}
+
+/// Legacy endpoints endpoint для отладки/обратной совместимости.
+/// GET /api/kubernetes/namespaces/{namespace}/services/{name}/endpoints
+pub async fn get_service_endpoints(
+    State(state): State<Arc<AppState>>,
+    Path((namespace, name)): Path<(String, String)>,
+) -> Result<Json<Vec<serde_json::Value>>> {
+    use k8s_openapi::api::core::v1::Endpoints;
+    let client = state.kubernetes_client()?;
+    let api: Api<Endpoints> = client.api(Some(&namespace));
+    let mut out = Vec::new();
+    if let Some(ep) = api
+        .get_opt(&name)
+        .await
+        .map_err(|e| Error::Kubernetes(e.to_string()))?
+    {
+        out.push(serde_json::to_value(ep).map_err(|e| Error::Kubernetes(e.to_string()))?);
+    }
+    Ok(Json(out))
 }

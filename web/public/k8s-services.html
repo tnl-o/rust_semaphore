@@ -51,7 +51,10 @@ async function loadServices() {
                     <td><span class="badge badge-info">${escapeHtml(s.type || 'ClusterIP')}</span></td>
                     <td>${escapeHtml(s.cluster_ip || '—')}</td>
                     <td>${escapeHtml((s.ports || []).join(', ') || '—')}</td>
-                    <td><button class="btn btn-sm" onclick="showYaml('${encodeURIComponent(s.name)}')"><i class="fa-solid fa-eye"></i></button></td>
+                    <td>
+                        <button class="btn btn-sm" onclick="showYaml('${encodeURIComponent(s.name)}')" title="Service details"><i class="fa-solid fa-eye"></i></button>
+                        <button class="btn btn-sm" onclick="showBackends('${encodeURIComponent(s.name)}')" title="EndpointSlices/backends"><i class="fa-solid fa-diagram-project"></i></button>
+                    </td>
                 </tr>`).join('')}
             </tbody>
         </table>`;
@@ -61,6 +64,15 @@ async function showYaml(nameEnc) {
     const ns = $('#namespace').value || 'default';
     const data = await api.get(`/kubernetes/namespaces/${encodeURIComponent(ns)}/services/${nameEnc}`);
     ui.showModal('Service details', `<pre style="white-space: pre-wrap;">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`);
+}
+
+async function showBackends(nameEnc) {
+    const ns = $('#namespace').value || 'default';
+    const data = await api.get(`/kubernetes/namespaces/${encodeURIComponent(ns)}/services/${nameEnc}/endpoint-slices`);
+    const title = data.fallback_used
+      ? `Service backends (fallback: ${data.source})`
+      : `Service backends (${data.source})`;
+    ui.showModal(title, `<pre style="white-space: pre-wrap;">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`);
 }
 
 $('#filter').addEventListener('input', () => loadServices());
