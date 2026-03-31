@@ -218,6 +218,9 @@ function renderPods(pods) {
                             <button class="btn btn-secondary" onclick="showLogs('${escapeJs(pod.name)}', '${escapeJs(pod.namespace)}')" title="View Logs">
                                 <i class="fa-solid fa-file-lines"></i>
                             </button>
+                            <button class="btn btn-info" onclick="showPodEvents('${escapeJs(pod.name)}', '${escapeJs(pod.namespace)}')" title="Recent Events">
+                                <i class="fa-solid fa-bell"></i>
+                            </button>
                             <button class="btn btn-secondary" onclick="showDetails('${escapeJs(pod.name)}', '${escapeJs(pod.namespace)}')" title="View Details">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
@@ -233,6 +236,18 @@ function renderPods(pods) {
             </tbody>
         </table>
     `;
+}
+
+async function showPodEvents(podName, namespace) {
+    const params = new URLSearchParams();
+    params.set('namespace', namespace);
+    params.set('limit', '50');
+    params.set('field_selector', `involvedObject.kind=Pod,involvedObject.name=${podName}`);
+    const rows = await api.get(`/kubernetes/events?${params.toString()}`);
+    ui.showModal(
+        `Pod events: ${namespace}/${podName}`,
+        `<pre style="white-space: pre-wrap;">${escapeHtml(JSON.stringify(rows || [], null, 2))}</pre>`,
+    );
 }
 
 // Фильтрация

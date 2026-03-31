@@ -217,6 +217,9 @@ function renderDeployments(deploys) {
                             <button class="btn btn-sm btn-secondary" onclick="showDetails('${escapeHtml(deploy.name)}', '${escapeHtml(deploy.namespace)}')" title="Details">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
+                            <button class="btn btn-sm btn-info" onclick="showDeploymentEvents('${escapeHtml(deploy.name)}', '${escapeHtml(deploy.namespace)}')" title="Recent Events">
+                                <i class="fa-solid fa-bell"></i>
+                            </button>
                             <button class="btn btn-sm btn-warning" onclick="restartDeployment('${escapeHtml(deploy.name)}', '${escapeHtml(deploy.namespace)}')" title="Restart">
                                 <i class="fa-solid fa-rotate"></i>
                             </button>
@@ -237,6 +240,18 @@ function renderDeployments(deploys) {
 // Фильтр
 function filterDeployments() {
     renderDeployments(deploymentsData);
+}
+
+async function showDeploymentEvents(name, namespace) {
+    const params = new URLSearchParams();
+    params.set('namespace', namespace);
+    params.set('limit', '50');
+    params.set('field_selector', `involvedObject.kind=Deployment,involvedObject.name=${name}`);
+    const rows = await api.get(`/kubernetes/events?${params.toString()}`);
+    ui.showModal(
+        `Deployment events: ${namespace}/${name}`,
+        `<pre style="white-space: pre-wrap;">${escapeHtml(JSON.stringify(rows || [], null, 2))}</pre>`,
+    );
 }
 
 // Scale
