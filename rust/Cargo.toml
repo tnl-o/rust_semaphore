@@ -13,6 +13,11 @@ name = "api_integration"
 path = "tests/api_integration.rs"
 required-features = ["integration-api-tests"]
 
+[[test]]
+name = "kubernetes_integration"
+path = "tests/kubernetes_integration.rs"
+required-features = ["integration-api-tests"]
+
 [lib]
 name = "velum_ffi"
 crate-type = ["cdylib", "staticlib", "rlib"]

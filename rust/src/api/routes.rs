@@ -1842,6 +1842,72 @@ pub fn api_routes() -> Router<Arc<AppState>> {
             "/api/kubernetes/namespaces/{namespace}/events/{name}",
             get(handlers::get_event),
         )
+        // Events WebSocket Streaming
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/events/stream",
+            get(handlers::events_websocket),
+        )
+        // Troubleshooting Dashboard
+        .route(
+            "/api/kubernetes/troubleshoot",
+            get(handlers::get_troubleshooting_report),
+        )
+        // Kubernetes Runbook Integration
+        .route(
+            "/api/kubernetes/runbooks",
+            get(handlers::get_available_runbooks),
+        )
+        .route(
+            "/api/kubernetes/runbooks/execute",
+            post(handlers::execute_runbook),
+        )
+        .route(
+            "/api/kubernetes/runbooks/{task_id}/status",
+            get(handlers::get_runbook_status),
+        )
+        // Prometheus Metrics Integration
+        .route(
+            "/api/kubernetes/prometheus/metrics",
+            get(handlers::get_prometheus_metrics),
+        )
+        .route(
+            "/api/kubernetes/prometheus/health",
+            get(handlers::check_prometheus_health),
+        )
+        // Kubernetes Inventory Sync
+        .route(
+            "/api/kubernetes/inventory/sync/preview",
+            get(handlers::get_inventory_sync_preview),
+        )
+        .route(
+            "/api/kubernetes/inventory/sync",
+            post(handlers::execute_inventory_sync),
+        )
+        // Kubernetes Pods
+        .route(
+            "/api/kubernetes/pods",
+            get(handlers::list_pods),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/pods",
+            get(handlers::list_pods),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/pods/{name}",
+            get(handlers::get_pod),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/pods/{name}",
+            delete(handlers::delete_pod),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/pods/{name}/restart",
+            post(handlers::restart_pod),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/pods/{name}/logs",
+            get(handlers::get_pod_logs),
+        )
         .route(
             "/api/kubernetes/metrics/pods",
             get(handlers::list_pod_metrics),
