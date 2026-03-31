@@ -336,6 +336,8 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .route("/api/project/{project_id}/runner_tags", get(runners::get_project_runner_tags))
         .route("/api/internal/runners", post(runners::register_runner))
         .route("/api/internal/runners/{id}", post(runners::runner_heartbeat))
+        .route("/api/internal/runners/{id}/task", get(runners::runner_get_task))
+        .route("/api/internal/tasks/{task_id}/log", post(runners::runner_submit_log))
 
         // Кэш (Cache) - admin only
         .route("/api/cache", delete(cache::clear_cache))

@@ -64,7 +64,7 @@ impl SubscriptionRoot {
     ) -> Result<impl Stream<Item = TaskStatusEvent>> {
         let stream = recv_broadcast(TASK_STATUS_TX.subscribe())
             .filter(move |ev| {
-                let pass = project_id.map_or(true, |pid| ev.project_id == pid);
+                let pass = project_id.is_none_or(|pid| ev.project_id == pid);
                 async move { pass }
             });
         Ok(stream)
