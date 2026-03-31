@@ -1549,8 +1549,8 @@ kubectl auth can-i get pods --as system:serviceaccount:default:velum
 ### Phase 9-10 (Enterprise)
 - [x] Helm integration ✅ 2026-03-30
 - [x] Multi-cluster switcher ✅ 2026-03-30
-- [ ] K8s Audit logging (10.2 — backlog)
-- [ ] Backup/Restore (10.3 — backlog)
+- [x] K8s Audit logging (10.2) ✅ 2026-03-31
+- [x] Backup/Restore (10.3) ✅ 2026-03-31
 - [x] Dark/Light theme ✅ (in styles.css + sidebar toggle)
 - [x] i18n EN/RU ✅ 2026-03-30
 - [ ] Full mobile responsiveness + WCAG 2.1 AA — backlog v2
