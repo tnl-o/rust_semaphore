@@ -313,3 +313,312 @@ async fn test_kubernetes_api_endpoints_exist() {
         );
     }
 }
+
+// ── Kubernetes Workloads API Tests ─────────────────────────────────────────
+
+#[tokio::test]
+async fn test_kubernetes_pods_api_endpoints() {
+    let app = test_app().await;
+    
+    // Test that pod endpoints exist (may return 401/403/500 but not 404)
+    let endpoints = [
+        ("GET", "/api/kubernetes/pods"),
+        ("GET", "/api/kubernetes/namespaces/default/pods"),
+        ("GET", "/api/kubernetes/namespaces/default/pods/test-pod"),
+        ("DELETE", "/api/kubernetes/namespaces/default/pods/test-pod"),
+        ("POST", "/api/kubernetes/namespaces/default/pods/test-pod/restart"),
+        ("POST", "/api/kubernetes/namespaces/default/pods/test-pod/evict"),
+        ("GET", "/api/kubernetes/namespaces/default/pods/test-pod/logs"),
+        ("GET", "/api/kubernetes/namespaces/default/pods/test-pod/logs/stream"),
+        ("GET", "/api/kubernetes/namespaces/default/pods/test-pod/exec"),
+        ("GET", "/api/kubernetes/metrics/pods"),
+        ("GET", "/api/kubernetes/namespaces/default/metrics/pods/test-pod"),
+    ];
+
+    for (_method, path) in &endpoints {
+        let (status, _) = get_json(app.clone(), path).await;
+        
+        // Should not return 404 for route not found
+        assert!(
+            status != StatusCode::NOT_FOUND,
+            "Endpoint {} should exist (got {})",
+            path,
+            status
+        );
+    }
+}
+
+#[tokio::test]
+async fn test_kubernetes_deployments_api_endpoints() {
+    let app = test_app().await;
+    
+    let endpoints = [
+        ("GET", "/api/kubernetes/deployments"),
+        ("GET", "/api/kubernetes/namespaces/default/deployments"),
+        ("GET", "/api/kubernetes/namespaces/default/deployments/test-deploy"),
+        ("POST", "/api/kubernetes/deployments"),
+        ("PUT", "/api/kubernetes/namespaces/default/deployments/test-deploy"),
+        ("DELETE", "/api/kubernetes/namespaces/default/deployments/test-deploy"),
+        ("POST", "/api/kubernetes/namespaces/default/deployments/test-deploy/scale"),
+        ("POST", "/api/kubernetes/namespaces/default/deployments/test-deploy/restart"),
+        ("POST", "/api/kubernetes/namespaces/default/deployments/test-deploy/rollback"),
+        ("GET", "/api/kubernetes/namespaces/default/deployments/test-deploy/history"),
+    ];
+
+    for (method, path) in &endpoints {
+        let (status, _) = match method {
+            &"GET" => get_json(app.clone(), path).await,
+            &"POST" | &"PUT" => post_json(app.clone(), path, json!({})).await,
+            &"DELETE" => {
+                let request = Request::builder()
+                    .method("DELETE")
+                    .uri(path)
+                    .body(Body::empty())
+                    .unwrap();
+                let response = app.clone().oneshot(request).await.expect("oneshot");
+                let status = response.status();
+                let bytes = response.into_body().collect().await.unwrap().to_bytes();
+                let json: Value = serde_json::from_slice(&bytes).unwrap_or(Value::Null);
+                (status, json)
+            }
+            _ => continue,
+        };
+        
+        assert!(
+            status != StatusCode::NOT_FOUND,
+            "Endpoint {} {} should exist (got {})",
+            method,
+            path,
+            status
+        );
+    }
+}
+
+#[tokio::test]
+async fn test_kubernetes_replicasets_api_endpoints() {
+    let app = test_app().await;
+    
+    let endpoints = [
+        ("GET", "/api/kubernetes/replicasets"),
+        ("GET", "/api/kubernetes/namespaces/default/replicasets"),
+        ("GET", "/api/kubernetes/namespaces/default/replicasets/test-rs"),
+        ("DELETE", "/api/kubernetes/namespaces/default/replicasets/test-rs"),
+        ("GET", "/api/kubernetes/namespaces/default/replicasets/test-rs/pods"),
+    ];
+
+    for (_method, path) in &endpoints {
+        let (status, _) = get_json(app.clone(), path).await;
+        
+        assert!(
+            status != StatusCode::NOT_FOUND,
+            "Endpoint {} should exist (got {})",
+            path,
+            status
+        );
+    }
+}
+
+#[tokio::test]
+async fn test_kubernetes_daemonsets_api_endpoints() {
+    let app = test_app().await;
+    
+    let endpoints = [
+        ("GET", "/api/kubernetes/daemonsets"),
+        ("GET", "/api/kubernetes/namespaces/default/daemonsets"),
+        ("GET", "/api/kubernetes/namespaces/default/daemonsets/test-ds"),
+        ("DELETE", "/api/kubernetes/namespaces/default/daemonsets/test-ds"),
+        ("GET", "/api/kubernetes/namespaces/default/daemonsets/test-ds/pods"),
+    ];
+
+    for (_method, path) in &endpoints {
+        let (status, _) = get_json(app.clone(), path).await;
+        
+        assert!(
+            status != StatusCode::NOT_FOUND,
+            "Endpoint {} should exist (got {})",
+            path,
+            status
+        );
+    }
+}
+
+#[tokio::test]
+async fn test_kubernetes_statefulsets_api_endpoints() {
+    let app = test_app().await;
+    
+    let endpoints = [
+        ("GET", "/api/kubernetes/statefulsets"),
+        ("GET", "/api/kubernetes/namespaces/default/statefulsets"),
+        ("GET", "/api/kubernetes/namespaces/default/statefulsets/test-sts"),
+        ("DELETE", "/api/kubernetes/namespaces/default/statefulsets/test-sts"),
+        ("POST", "/api/kubernetes/namespaces/default/statefulsets/test-sts/scale"),
+        ("GET", "/api/kubernetes/namespaces/default/statefulsets/test-sts/pods"),
+    ];
+
+    for (method, path) in &endpoints {
+        let (status, _) = match method {
+            &"GET" => get_json(app.clone(), path).await,
+            &"POST" => post_json(app.clone(), path, json!({})).await,
+            &"DELETE" => {
+                let request = Request::builder()
+                    .method("DELETE")
+                    .uri(path)
+                    .body(Body::empty())
+                    .unwrap();
+                let response = app.clone().oneshot(request).await.expect("oneshot");
+                let status = response.status();
+                let bytes = response.into_body().collect().await.unwrap().to_bytes();
+                let json: Value = serde_json::from_slice(&bytes).unwrap_or(Value::Null);
+                (status, json)
+            }
+            _ => continue,
+        };
+        
+        assert!(
+            status != StatusCode::NOT_FOUND,
+            "Endpoint {} {} should exist (got {})",
+            method,
+            path,
+            status
+        );
+    }
+}
+
+#[tokio::test]
+async fn test_kubernetes_configmaps_api_endpoints() {
+    let app = test_app().await;
+    
+    let endpoints = [
+        ("GET", "/api/kubernetes/configmaps"),
+        ("GET", "/api/kubernetes/namespaces/default/configmaps"),
+        ("GET", "/api/kubernetes/namespaces/default/configmaps/test-cm"),
+        ("POST", "/api/kubernetes/configmaps"),
+        ("PUT", "/api/kubernetes/namespaces/default/configmaps/test-cm"),
+        ("DELETE", "/api/kubernetes/namespaces/default/configmaps/test-cm"),
+        ("GET", "/api/kubernetes/namespaces/default/configmaps/test-cm/yaml"),
+        ("POST", "/api/kubernetes/configmaps/validate"),
+        ("GET", "/api/kubernetes/namespaces/default/configmaps/test-cm/references"),
+    ];
+
+    for (method, path) in &endpoints {
+        let (status, _) = match method {
+            &"GET" => get_json(app.clone(), path).await,
+            &"POST" | &"PUT" => post_json(app.clone(), path, json!({})).await,
+            &"DELETE" => {
+                let request = Request::builder()
+                    .method("DELETE")
+                    .uri(path)
+                    .body(Body::empty())
+                    .unwrap();
+                let response = app.clone().oneshot(request).await.expect("oneshot");
+                let status = response.status();
+                let bytes = response.into_body().collect().await.unwrap().to_bytes();
+                let json: Value = serde_json::from_slice(&bytes).unwrap_or(Value::Null);
+                (status, json)
+            }
+            _ => continue,
+        };
+        
+        assert!(
+            status != StatusCode::NOT_FOUND,
+            "Endpoint {} {} should exist (got {})",
+            method,
+            path,
+            status
+        );
+    }
+}
+
+#[tokio::test]
+async fn test_kubernetes_secrets_api_endpoints() {
+    let app = test_app().await;
+    
+    let endpoints = [
+        ("GET", "/api/kubernetes/secrets"),
+        ("GET", "/api/kubernetes/namespaces/default/secrets"),
+        ("GET", "/api/kubernetes/namespaces/default/secrets/test-secret"),
+        ("POST", "/api/kubernetes/secrets"),
+        ("PUT", "/api/kubernetes/namespaces/default/secrets/test-secret"),
+        ("DELETE", "/api/kubernetes/namespaces/default/secrets/test-secret"),
+        ("GET", "/api/kubernetes/namespaces/default/secrets/test-secret/reveal"),
+    ];
+
+    for (method, path) in &endpoints {
+        let (status, _) = match method {
+            &"GET" => get_json(app.clone(), path).await,
+            &"POST" | &"PUT" => post_json(app.clone(), path, json!({})).await,
+            &"DELETE" => {
+                let request = Request::builder()
+                    .method("DELETE")
+                    .uri(path)
+                    .body(Body::empty())
+                    .unwrap();
+                let response = app.clone().oneshot(request).await.expect("oneshot");
+                let status = response.status();
+                let bytes = response.into_body().collect().await.unwrap().to_bytes();
+                let json: Value = serde_json::from_slice(&bytes).unwrap_or(Value::Null);
+                (status, json)
+            }
+            _ => continue,
+        };
+        
+        assert!(
+            status != StatusCode::NOT_FOUND,
+            "Endpoint {} {} should exist (got {})",
+            method,
+            path,
+            status
+        );
+    }
+}
+
+#[tokio::test]
+async fn test_kubernetes_jobs_cronjobs_api_endpoints() {
+    let app = test_app().await;
+    
+    let endpoints = [
+        ("GET", "/api/kubernetes/jobs"),
+        ("GET", "/api/kubernetes/namespaces/default/jobs"),
+        ("GET", "/api/kubernetes/namespaces/default/jobs/test-job"),
+        ("POST", "/api/kubernetes/jobs"),
+        ("DELETE", "/api/kubernetes/namespaces/default/jobs/test-job"),
+        ("GET", "/api/kubernetes/namespaces/default/jobs/test-job/pods"),
+        ("POST", "/api/kubernetes/namespaces/default/jobs/test-job/retry"),
+        ("GET", "/api/kubernetes/cronjobs"),
+        ("GET", "/api/kubernetes/namespaces/default/cronjobs"),
+        ("GET", "/api/kubernetes/namespaces/default/cronjobs/test-cronjob"),
+        ("POST", "/api/kubernetes/cronjobs"),
+        ("DELETE", "/api/kubernetes/namespaces/default/cronjobs/test-cronjob"),
+        ("PUT", "/api/kubernetes/namespaces/default/cronjobs/test-cronjob/suspend"),
+        ("POST", "/api/kubernetes/namespaces/default/cronjobs/test-cronjob/run"),
+        ("GET", "/api/kubernetes/namespaces/default/cronjobs/test-cronjob/history"),
+    ];
+
+    for (method, path) in &endpoints {
+        let (status, _) = match method {
+            &"GET" => get_json(app.clone(), path).await,
+            &"POST" | &"PUT" => post_json(app.clone(), path, json!({})).await,
+            &"DELETE" => {
+                let request = Request::builder()
+                    .method("DELETE")
+                    .uri(path)
+                    .body(Body::empty())
+                    .unwrap();
+                let response = app.clone().oneshot(request).await.expect("oneshot");
+                let status = response.status();
+                let bytes = response.into_body().collect().await.unwrap().to_bytes();
+                let json: Value = serde_json::from_slice(&bytes).unwrap_or(Value::Null);
+                (status, json)
+            }
+            _ => continue,
+        };
+        
+        assert!(
+            status != StatusCode::NOT_FOUND,
+            "Endpoint {} {} should exist (got {})",
+            method,
+            path,
+            status
+        );
+    }
+}
