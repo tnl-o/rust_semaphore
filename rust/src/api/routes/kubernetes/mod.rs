@@ -720,6 +720,73 @@ pub fn kubernetes_routes() -> Router<Arc<AppState>> {
             "/api/kubernetes/namespaces/{namespace}/deployments/{name}/history",
             get(handlers::get_deployment_history),
         )
+        // Kubernetes ReplicaSets
+        .route(
+            "/api/kubernetes/replicasets",
+            get(handlers::list_replicasets),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/replicasets",
+            get(handlers::list_replicasets),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/replicasets/{name}",
+            get(handlers::get_replicaset),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/replicasets/{name}",
+            delete(handlers::delete_replicaset),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/replicasets/{name}/pods",
+            get(handlers::list_replicaset_pods),
+        )
+        // Kubernetes DaemonSets
+        .route(
+            "/api/kubernetes/daemonsets",
+            get(handlers::list_daemonsets),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/daemonsets",
+            get(handlers::list_daemonsets),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/daemonsets/{name}",
+            get(handlers::get_daemonset),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/daemonsets/{name}",
+            delete(handlers::delete_daemonset),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/daemonsets/{name}/pods",
+            get(handlers::list_daemonset_pods),
+        )
+        // Kubernetes StatefulSets
+        .route(
+            "/api/kubernetes/statefulsets",
+            get(handlers::list_statefulsets),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/statefulsets",
+            get(handlers::list_statefulsets),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/statefulsets/{name}",
+            get(handlers::get_statefulset),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/statefulsets/{name}",
+            delete(handlers::delete_statefulset),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/statefulsets/{name}/scale",
+            post(handlers::scale_statefulset),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/statefulsets/{name}/pods",
+            get(handlers::list_statefulset_pods),
+        )
         // Helm
         .route(
             "/api/kubernetes/helm/repos",
