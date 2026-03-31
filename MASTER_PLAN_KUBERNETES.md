@@ -579,7 +579,7 @@ flowchart LR
 - [x] Просмотр/экспорт: кто, когда, cluster, resource, verb; интеграция с audit приложения. ✅ 2026-03-31 — `GET /api/kubernetes/audit` + `GET /api/kubernetes/audit/export?format=csv|json` + `web/public/k8s-audit.html`
 
 #### 10.3 Backup / restore
-- [ ] Runbook: БД Velum, конфиги; опционально Velero — без полного UI в v1.
+- [x] Runbook: БД Velum, конфиги; опционально Velero — без полного UI в v1. ✅ 2026-03-31 — `GET /api/kubernetes/backup/runbook` + Velero read-only (`.../backup/velero/status|backups`) + UI `k8s-backup.html`
 
 #### 10.4 GitOps
 - [x] Черновик: read-only или минимальный sync к [GitOps в интеграциях](#gitops-integration). ✅ 2026-03-31 — read-only ArgoCD/Flux detect + list APIs (`/api/kubernetes/gitops/*`) и UI `k8s-gitops.html`

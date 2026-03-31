@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Backup/Restore - Velum</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar"></aside>
+    <div class="main-content">
+        <div class="main-header"><h2><i class="fa-solid fa-floppy-disk"></i> Kubernetes Backup/Restore</h2></div>
+        <div class="main-body">
+            <div id="runbook" class="card" style="margin-bottom:12px;"><div class="loading"><div class="loading-spinner"></div><p>Загрузка runbook...</p></div></div>
+            <div class="card" style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <input id="namespace" class="form-control" placeholder="namespace для Velero (optional)" style="max-width:260px;">
+                <button class="btn btn-primary" onclick="loadVelero()"><i class="fa-solid fa-rotate"></i> Проверить Velero</button>
+            </div>
+            <div id="velero-status" class="card" style="margin-bottom:12px;"></div>
+            <div id="velero-backups" class="card"></div>
+        </div>
+    </div>
+</div>
+<script src="app.js"></script>
+<script>
+checkAuth();
+
+function listHtml(items) {
+    return `<ul>${(items || []).map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`;
+}
+
+async function loadRunbook() {
+    const data = await api.get('/kubernetes/backup/runbook');
+    $('#runbook').innerHTML = `
+      <h3>${escapeHtml(data.title || 'Runbook')}</h3>
+      <h4>DB backup</h4>${listHtml(data.db_steps)}
+      <h4>Config backup</h4>${listHtml(data.config_steps)}
+      <h4>Restore flow</h4>${listHtml(data.restore_steps)}
+      <h4>Notes</h4>${listHtml(data.notes)}
+    `;
+}
+
+async function loadVelero() {
+    const ns = ($('#namespace').value || '').trim();
+    const qp = new URLSearchParams();
+    if (ns) qp.set('namespace', ns);
+    qp.set('limit', '100');
+
+    const st = await api.get('/kubernetes/backup/velero/status');
+    $('#velero-status').innerHTML = `
+      <p><strong>Velero installed:</strong> ${st.installed ? 'yes' : 'no'}</p>
+      <p>backups API: ${st.backups_api ? 'yes' : 'no'} · restores API: ${st.restores_api ? 'yes' : 'no'}</p>
+    `;
+
+    if (!st.backups_api) {
+        $('#velero-backups').innerHTML = '<p>Velero Backup API не обнаружен.</p>';
+        return;
+    }
+    const rows = await api.get('/kubernetes/backup/velero/backups?' + qp.toString());
+    $('#velero-backups').innerHTML = `
+      <table class="table">
+        <thead><tr><th>Name</th><th>Namespace</th><th>Phase</th><th>Started</th><th>Completed</th><th></th></tr></thead>
+        <tbody>
+        ${(rows || []).map(x => {
+            const name = x?.metadata?.name || '—';
+            const nsVal = x?.metadata?.namespace || '—';
+            const phase = x?.status?.phase || '—';
+            const started = x?.status?.startTimestamp || '—';
+            const completed = x?.status?.completionTimestamp || '—';
+            const payload = encodeURIComponent(JSON.stringify(x, null, 2));
+            return `<tr>
+                <td>${escapeHtml(name)}</td>
+                <td>${escapeHtml(nsVal)}</td>
+                <td>${escapeHtml(phase)}</td>
+                <td>${escapeHtml(started)}</td>
+                <td>${escapeHtml(completed)}</td>
+                <td><button class="btn btn-sm" onclick="showRaw('${payload}')"><i class="fa-solid fa-eye"></i></button></td>
+            </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    `;
+}
+
+function showRaw(payload) {
+    ui.showModal('Velero Backup object', `<pre style="white-space:pre-wrap;">${escapeHtml(decodeURIComponent(payload))}</pre>`);
+}
+
+(async function init() {
+    await loadRunbook();
+    await loadVelero();
+})();
+</script>
+</body>
+</html>

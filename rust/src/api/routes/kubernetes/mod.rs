@@ -547,6 +547,19 @@ pub fn kubernetes_routes() -> Router<Arc<AppState>> {
             "/api/kubernetes/cluster/customobjects/{plural}",
             post(handlers::create_custom_object_cluster),
         )
+        // Backup/restore runbook + optional Velero read-only
+        .route(
+            "/api/kubernetes/backup/runbook",
+            get(handlers::get_backup_restore_runbook),
+        )
+        .route(
+            "/api/kubernetes/backup/velero/status",
+            get(handlers::get_velero_status),
+        )
+        .route(
+            "/api/kubernetes/backup/velero/backups",
+            get(handlers::list_velero_backups),
+        )
         // GitOps draft (read-only ArgoCD/Flux)
         .route("/api/kubernetes/gitops/status", get(handlers::get_gitops_status))
         .route(

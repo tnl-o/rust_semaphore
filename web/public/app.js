@@ -871,6 +871,7 @@ const SIDEBAR_SECTIONS = [
             { href: 'k8s-crd.html',          icon: 'fa-solid fa-gears',               label: 'CRD & HPA' },
             { href: 'k8s-audit.html',        icon: 'fa-solid fa-clipboard-list',      label: 'K8s Audit' },
             { href: 'k8s-gitops.html',       icon: 'fa-solid fa-code-branch',         label: 'GitOps' },
+            { href: 'k8s-backup.html',       icon: 'fa-solid fa-floppy-disk',         label: 'Backup/Restore' },
         ]
     },
     {

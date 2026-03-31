@@ -3,6 +3,7 @@
 pub mod advanced;
 pub mod audit;
 pub mod batch;
+pub mod backup_restore;
 pub mod client;
 pub mod cluster;
 pub mod cluster_management;
@@ -43,6 +44,7 @@ pub mod apply;
 pub use advanced::*;
 pub use audit::*;
 pub use batch::*;
+pub use backup_restore::*;
 pub use client::*;
 pub use cluster::*;
 #[allow(ambiguous_glob_reexports)]
