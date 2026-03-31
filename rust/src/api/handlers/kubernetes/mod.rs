@@ -7,6 +7,7 @@ pub mod client;
 pub mod cluster;
 pub mod cluster_management;
 pub mod configmaps;
+pub mod deployments;
 pub mod error;
 pub mod events;
 pub mod events_ws;
@@ -39,6 +40,7 @@ pub use cluster::*;
 #[allow(ambiguous_glob_reexports)]
 pub use cluster_management::*;
 pub use configmaps::*;
+pub use deployments::*;
 pub use error::*;
 pub use events::*;
 pub use events_ws::*;

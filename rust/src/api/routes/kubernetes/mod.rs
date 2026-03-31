@@ -679,6 +679,47 @@ pub fn kubernetes_routes() -> Router<Arc<AppState>> {
             "/api/kubernetes/topology",
             get(handlers::get_topology),
         )
+        // Kubernetes Deployments
+        .route(
+            "/api/kubernetes/deployments",
+            get(handlers::list_deployments),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/deployments",
+            get(handlers::list_deployments),
+        )
+        .route(
+            "/api/kubernetes/deployments",
+            post(handlers::create_deployment),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/deployments/{name}",
+            get(handlers::get_deployment),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/deployments/{name}",
+            put(handlers::update_deployment),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/deployments/{name}",
+            delete(handlers::delete_deployment),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/deployments/{name}/scale",
+            post(handlers::scale_deployment),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/deployments/{name}/restart",
+            post(handlers::restart_deployment),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/deployments/{name}/rollback",
+            post(handlers::rollback_deployment),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/deployments/{name}/history",
+            get(handlers::get_deployment_history),
+        )
         // Helm
         .route(
             "/api/kubernetes/helm/repos",
