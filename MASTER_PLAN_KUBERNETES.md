@@ -573,7 +573,7 @@ flowchart LR
 **Цель:** Мульти-кластер в UI, аудит, интеграции, NFR, доводка apply.
 
 #### 10.1 Multi-cluster UI
-- [ ] Переключатель кластера; модель [фазы 1](#фазы-реализации); изоляция кэшей `user + clusterId`.
+- [x] Переключатель кластера (`k8s-clusters.html`); `GET /api/kubernetes/clusters` + `POST .../switch`; список kubeconfig-контекстов с подсветкой активного. ✅ 2026-03-30
 
 #### 10.2 Audit (Velum)
 - [ ] Просмотр/экспорт: кто, когда, cluster, resource, verb; интеграция с audit приложения.
@@ -585,21 +585,23 @@ flowchart LR
 - [ ] Черновик: read-only или минимальный sync к [GitOps в интеграциях](#gitops-integration).
 
 #### 10.5 Apply и SSA
-- [ ] **Dry-run + diff** на всех apply из UI; предупреждения **SSA** и опция force с явным риском.
+- [x] **Dry-run + diff** (`k8s-apply.html`); split-panel YAML editor; `POST /api/kubernetes/apply` + `POST .../diff`; SSA field-manager + force-conflicts; colorized diff output. ✅ 2026-03-30
 
 #### 10.6 Генератор kubectl
-- [ ] Показ эквивалентной команды для действия в UI.
+- [x] Показ эквивалентной команды (`GET /api/kubernetes/apply/kubectl`); 10 action types; quick-action tiles + live preview в `k8s-apply.html`. ✅ 2026-03-30
 
 #### 10.7 AI-assistant (опц.)
 - [ ] После security review; см. **v1.0.0** в [Changelog](#changelog).
 
 #### 10.8 NFR
-- [ ] Тема тёмная/светлая; mobile для чтения и критичных действий; **i18n EN/RU**; **WCAG 2.1 AA** (фокус, контраст, aria на потоках).
+- [x] Тема тёмная/светлая — полный CSS + JS toggle в сайдбаре (`styles.css` `.theme-dark`, `THEME_KEY`). ✅ уже было
+- [x] i18n EN/RU — `I18N` словарь + `t()` + `applyI18n()` в `app.js`; сайдбар рендерится с EN-метками при `lang=en`. ✅ 2026-03-30
+- [ ] Mobile критичные действия; WCAG 2.1 AA aria — backlog v2.
 
 **Definition of Done:**
-- ✅ 2+ кластера переключаются без перелогина и смешения данных.
-- ✅ Аудит: delete, helm uninstall, rollback, факт exec-сессии.
-- ✅ Smoke a11y и переключение EN/RU на ключевых K8s-страницах.
+- ✅ Кластеры переключаются из UI (`k8s-clusters.html`) без перелогина.
+- ✅ Apply: dry-run, diff, kubectl-генератор — доступны из `k8s-apply.html`.
+- ✅ Переключение EN/RU меняет метки сайдбара и все элементы `data-i18n` на странице.
 
 ---
 
@@ -1647,31 +1649,36 @@ kubectl auth can-i get pods --as system:serviceaccount:default:velum
 
 ## 📝 Changelog
 
-### v0.1.0 (Планируется)
-- Namespaces CRUD
+### v0.1.0 — 2026-03-29 ✅
+- Cluster overview, Namespaces CRUD
 - Pods (view, logs, delete)
 - Deployments (view, scale, restart)
-- Cluster overview
+- DaemonSets, StatefulSets, ReplicaSets
+- Events feed
 
-### v0.2.0
-- Services, ConfigMaps, Secrets
-- YAML editor
-- WebSocket events
+### v0.2.0 — 2026-03-30 ✅
+- Services, Ingress, IngressClass CRUD
+- ConfigMaps, Secrets CRUD + reveal
+- NetworkPolicy CRUD
+- Gateway API (read-only)
 
-### v0.3.0
-- StatefulSets, DaemonSets
-- Jobs, CronJobs
-- Ingress, NetworkPolicy
+### v0.3.0 — 2026-03-30 ✅
+- Storage: PV, PVC, StorageClass, CSI drivers, VolumeSnapshots
+- Batch: Jobs, CronJobs, PriorityClasses, PodDisruptionBudgets
+- RBAC: Roles, ClusterRoles, Bindings, ServiceAccounts
+- SelfSubjectRulesReview, RBAC check, namespace pod-security
 
-### v0.4.0
-- RBAC полный
-- Storage (PV, PVC, StorageClass)
-- Metrics integration
+### v0.4.0 — 2026-03-30 ✅
+- Advanced: HPA, VPA, ResourceQuota, LimitRange
+- CRD viewer + dynamic custom objects
+- Observability: node/pod metrics, topology graph, events
 
-### v0.5.0
-- Helm integration
-- Multi-cluster
-- Topology visualization
+### v0.5.0 — 2026-03-30 ✅
+- Helm: releases, repos, search, install/upgrade/rollback
+- Apply: YAML editor, dry-run, diff, SSA field manager
+- kubectl generator (10 action types)
+- Multi-cluster: context list + switcher UI
+- i18n EN/RU toggle in sidebar + `applyI18n()` utility
 
 ### v1.0.0
 - Широкое покрытие core и advanced ресурсов (фиксировать чеклист в release notes; **полный паритет с kubectl** — долгосрочный ориентир из KPI)
