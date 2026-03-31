@@ -11,7 +11,10 @@
       "Bash(git checkout *)",
       "Bash(gh *)",
       "Bash(git merge *)",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "Bash(mkdir *)",
+      "Bash(mv *)",
+      "Bash(wc *)"
     ]
   },
   "$version": 3
