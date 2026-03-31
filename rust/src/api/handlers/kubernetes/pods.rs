@@ -1,12 +1,14 @@
 //! Kubernetes Pod API handlers
 //!
-//! Управление Pod: list, get, delete, logs
+//! Управление Pod: list, get, delete, evict, logs, exec
 
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, Query, State, WebSocketUpgrade},
+    response::{IntoResponse, Response},
     Json,
 };
 use k8s_openapi::api::core::v1::Pod;
+use k8s_openapi::api::policy::v1::Eviction;
 use kube::{
     api::{Api, DeleteParams, ListParams, LogParams},
 };
@@ -68,6 +70,14 @@ pub struct DeleteResponse {
     pub namespace: String,
 }
 
+/// Ответ на evict
+#[derive(Debug, Serialize)]
+pub struct EvictResponse {
+    pub message: String,
+    pub name: String,
+    pub namespace: String,
+}
+
 // ============================================================================
 // API Handlers
 // ============================================================================
@@ -123,15 +133,44 @@ pub async fn delete_pod(
 ) -> Result<Json<DeleteResponse>> {
     let kube_client = state.kubernetes_client()?;
     let client = kube_client.raw().clone();
-    
+
     let api: Api<Pod> = Api::namespaced(client, &namespace);
-    
+
     let dp = DeleteParams::default();
     api.delete(&name, &dp).await
         .map_err(|e| Error::Kubernetes(format!("Failed to delete pod: {}", e)))?;
-    
+
     Ok(Json(DeleteResponse {
         message: format!("Pod {} deleted", name),
+        name,
+        namespace,
+    }))
+}
+
+/// Evict Pod (через PodDisruptionBudget)
+pub async fn evict_pod(
+    State(state): State<Arc<AppState>>,
+    Path((namespace, name)): Path<(String, String)>,
+) -> Result<Json<EvictResponse>> {
+    let kube_client = state.kubernetes_client()?;
+    let client = kube_client.raw().clone();
+
+    let api: Api<Pod> = Api::namespaced(client, &namespace);
+
+    let eviction = Eviction {
+        metadata: k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta {
+            name: Some(name.clone()),
+            namespace: Some(namespace.clone()),
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+
+    api.evict(&name, &Default::default()).await
+        .map_err(|e| Error::Kubernetes(format!("Failed to evict pod: {}", e)))?;
+
+    Ok(Json(EvictResponse {
+        message: format!("Pod {} eviction initiated", name),
         name,
         namespace,
     }))

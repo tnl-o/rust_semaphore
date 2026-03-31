@@ -636,6 +636,18 @@ pub fn kubernetes_routes() -> Router<Arc<AppState>> {
             get(handlers::get_pod_logs),
         )
         .route(
+            "/api/kubernetes/namespaces/{namespace}/pods/{name}/evict",
+            post(handlers::evict_pod),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/pods/{name}/logs/stream",
+            get(handlers::pod_logs_ws),
+        )
+        .route(
+            "/api/kubernetes/namespaces/{namespace}/pods/{name}/exec",
+            get(handlers::pod_exec_ws),
+        )
+        .route(
             "/api/kubernetes/metrics/pods",
             get(handlers::list_pod_metrics),
         )
