@@ -308,7 +308,7 @@ flowchart LR
 
 #### 2.1 Events (минимум для workloads)
 - [x] `GET` список **Event** в namespace с фильтрами (`fieldSelector` по `involvedObject.kind/name`, `type` Normal/Warning). ✅ 2026-03-29 — `k8s-events.html`, endpoint `GET .../events?object_name=&object_kind=&event_type=`
-- [ ] В карточках Pod / Deployment / ReplicaSet отображать **последние события** — *(Phase 3 backlog, частично: Pod/Deployment UI добавлены 2026-03-31; остался ReplicaSet)*
+- [x] В карточках Pod / Deployment / ReplicaSet отображать **последние события** — ✅ 2026-03-31 (Pod/Deployment events + `k8s-replicasets.html` с фильтром событий ReplicaSet)
 - [ ] Полноценный cluster-wide стрим — [фаза 8](#фазы-реализации).
 
 #### 2.2 Pods: API и поведение

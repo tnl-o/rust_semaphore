@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes ReplicaSets - Velum</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar"></aside>
+    <div class="main-content">
+        <div class="main-header"><h2><i class="fa-solid fa-code-branch"></i> Kubernetes ReplicaSets</h2></div>
+        <div class="main-body">
+            <div class="card" style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <select id="namespace" class="form-control" style="max-width:260px;"></select>
+                <input id="filter" class="form-control" placeholder="Фильтр по имени">
+                <button class="btn btn-primary" onclick="loadReplicaSets()"><i class="fa-solid fa-rotate"></i> Обновить</button>
+            </div>
+            <div id="content" class="card"><div class="loading"><div class="loading-spinner"></div><p>Загрузка...</p></div></div>
+        </div>
+    </div>
+</div>
+<script src="app.js"></script>
+<script>
+checkAuth();
+const KEY = 'k8s_namespace';
+let rsData = [];
+
+async function loadNamespaces() {
+    const data = await api.get('/kubernetes/namespaces');
+    const names = (data || []).map(n => n.name).filter(Boolean);
+    const current = localStorage.getItem(KEY) || names[0] || 'default';
+    const sel = $('#namespace');
+    sel.innerHTML = names.map(n => `<option value="${escapeHtml(n)}"${n===current?' selected':''}>${escapeHtml(n)}</option>`).join('');
+    sel.addEventListener('change', () => {
+        localStorage.setItem(KEY, sel.value);
+        loadReplicaSets();
+    });
+}
+
+function render(rows) {
+    const f = ($('#filter').value || '').toLowerCase();
+    const filtered = (rows || []).filter(x => (x.name || '').toLowerCase().includes(f));
+    $('#content').innerHTML = `
+      <table class="table">
+        <thead><tr><th>Name</th><th>Namespace</th><th>Desired</th><th>Ready</th><th>Current</th><th>Age</th><th></th></tr></thead>
+        <tbody>
+        ${filtered.map(x => {
+            const ne = encodeURIComponent(x.name || '');
+            return `<tr>
+              <td>${escapeHtml(x.name || '—')}</td>
+              <td>${escapeHtml(x.namespace || '—')}</td>
+              <td>${escapeHtml(String(x.desired_replicas ?? '—'))}</td>
+              <td>${escapeHtml(String(x.ready_replicas ?? '—'))}</td>
+              <td>${escapeHtml(String(x.current_replicas ?? '—'))}</td>
+              <td>${escapeHtml(x.age || '—')}</td>
+              <td style="white-space:nowrap;">
+                <button class="btn btn-sm" onclick="showReplicaSet('${ne}')"><i class="fa-solid fa-eye"></i></button>
+                <button class="btn btn-sm btn-info" onclick="showReplicaSetEvents('${ne}')"><i class="fa-solid fa-bell"></i></button>
+              </td>
+            </tr>`;
+        }).join('')}
+        </tbody>
+      </table>`;
+}
+
+async function loadReplicaSets() {
+    const ns = $('#namespace').value || localStorage.getItem(KEY) || 'default';
+    rsData = await api.get(`/kubernetes/namespaces/${encodeURIComponent(ns)}/replicasets`);
+    render(rsData);
+}
+
+async function showReplicaSet(nameEnc) {
+    const ns = $('#namespace').value || 'default';
+    const name = decodeURIComponent(nameEnc);
+    const data = await api.get(`/kubernetes/namespaces/${encodeURIComponent(ns)}/replicasets/${encodeURIComponent(name)}`);
+    ui.showModal('ReplicaSet details', `<pre style="white-space:pre-wrap;">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`);
+}
+
+async function showReplicaSetEvents(nameEnc) {
+    const ns = $('#namespace').value || 'default';
+    const name = decodeURIComponent(nameEnc);
+    const params = new URLSearchParams();
+    params.set('namespace', ns);
+    params.set('limit', '50');
+    params.set('field_selector', `involvedObject.kind=ReplicaSet,involvedObject.name=${name}`);
+    const rows = await api.get(`/kubernetes/events?${params.toString()}`);
+    ui.showModal(
+      `ReplicaSet events: ${ns}/${name}`,
+      `<pre style="white-space:pre-wrap;">${escapeHtml(JSON.stringify(rows || [], null, 2))}</pre>`
+    );
+}
+
+$('#filter').addEventListener('input', () => render(rsData));
+(async function init(){ await loadNamespaces(); await loadReplicaSets(); })();
+</script>
+</body>
+</html>
