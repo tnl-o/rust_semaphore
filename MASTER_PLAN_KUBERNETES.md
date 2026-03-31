@@ -378,7 +378,7 @@ flowchart LR
 - [x] CRUD; типы **Opaque**, **kubernetes.io/dockerconfigjson**, **tls**, **basic-auth** и др. — отображение `type`, **не логировать** значения и не кэшировать в открытом виде на клиенте дольше сессии. ✅ 2026-03-29 — backend `secrets.rs` + routes (`type` в summary)
 - [x] В UI по умолчанию **masked**; показ base64decoded / plaintext только по явному действию («раскрыть») с предупреждением; копирование в буфер — одноразово по клику. ✅ 2026-03-29 — `GET .../secrets/{name}` (masked) + `GET .../secrets/{name}/reveal`
 - [x] **Encryption at rest** — только про кластер (etcd/KMS); в плане Velum отдельный «encrypt» endpoint не добавлять. ✅ 2026-03-29 — отдельный encrypt endpoint не добавлялся
-- [ ] Опционально: ссылка на документацию **External Secrets** без обязательной интеграции в этой фазе.
+- [x] Опционально: ссылка на документацию **External Secrets** без обязательной интеграции в этой фазе. ✅ 2026-03-31 — добавлен инфо-блок со ссылкой в `k8s-secrets.html`
 
 #### 3.5 NetworkPolicy
 - [x] CRUD; визуализация **ingress/egress** rules (порты, namespaceSelector, podSelector, ipCIDR), **policyTypes**. ✅ 2026-03-29 — backend CRUD + `NetworkPolicyView` (`networkpolicies.rs`)
