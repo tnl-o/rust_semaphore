@@ -1847,6 +1847,11 @@ pub fn api_routes() -> Router<Arc<AppState>> {
             "/api/kubernetes/namespaces/{namespace}/events/stream",
             get(handlers::events_websocket),
         )
+        // Troubleshooting Dashboard
+        .route(
+            "/api/kubernetes/troubleshoot",
+            get(handlers::get_troubleshooting_report),
+        )
         .route(
             "/api/kubernetes/metrics/pods",
             get(handlers::list_pod_metrics),

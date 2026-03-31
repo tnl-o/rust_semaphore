@@ -23,6 +23,7 @@ pub mod services;
 pub mod storage;
 pub mod storage_csi;
 pub mod storage_snapshots;
+pub mod troubleshooting;
 pub mod types;
 
 pub use advanced::*;
@@ -48,4 +49,5 @@ pub use services::*;
 pub use storage::*;
 pub use storage_csi::*;
 pub use storage_snapshots::*;
+pub use troubleshooting::*;
 pub use types::*;
