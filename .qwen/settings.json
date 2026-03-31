@@ -10,7 +10,9 @@
       "Bash(rm *)",
       "Bash(mkdir *)",
       "Bash(mv *)",
-      "Bash(wc *)"
+      "Bash(wc *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)"
     ]
   },
   "$version": 3
