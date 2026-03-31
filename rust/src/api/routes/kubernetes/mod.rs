@@ -547,6 +547,20 @@ pub fn kubernetes_routes() -> Router<Arc<AppState>> {
             "/api/kubernetes/cluster/customobjects/{plural}",
             post(handlers::create_custom_object_cluster),
         )
+        // GitOps draft (read-only ArgoCD/Flux)
+        .route("/api/kubernetes/gitops/status", get(handlers::get_gitops_status))
+        .route(
+            "/api/kubernetes/gitops/argocd/applications",
+            get(handlers::list_argocd_applications),
+        )
+        .route(
+            "/api/kubernetes/gitops/flux/kustomizations",
+            get(handlers::list_flux_kustomizations),
+        )
+        .route(
+            "/api/kubernetes/gitops/flux/helmreleases",
+            get(handlers::list_flux_helm_releases),
+        )
         // Kubernetes audit view/export
         .route(
             "/api/kubernetes/audit",

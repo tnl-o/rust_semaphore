@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes GitOps - Velum</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar"></aside>
+    <div class="main-content">
+        <div class="main-header"><h2><i class="fa-solid fa-code-branch"></i> Kubernetes GitOps (draft)</h2></div>
+        <div class="main-body">
+            <div class="card" style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <select id="provider" class="form-control" style="max-width:220px;">
+                    <option value="argocd">ArgoCD Applications</option>
+                    <option value="flux-kustomizations">Flux Kustomizations</option>
+                    <option value="flux-helmreleases">Flux HelmReleases</option>
+                </select>
+                <input id="namespace" class="form-control" placeholder="namespace (optional)" style="max-width:220px;">
+                <input id="filter" class="form-control" placeholder="Фильтр по имени">
+                <button class="btn btn-primary" onclick="loadData()"><i class="fa-solid fa-rotate"></i> Обновить</button>
+            </div>
+            <div id="status" class="card" style="margin-bottom:12px;"></div>
+            <div id="content" class="card"><div class="loading"><div class="loading-spinner"></div><p>Загрузка...</p></div></div>
+        </div>
+    </div>
+</div>
+<script src="app.js"></script>
+<script>
+checkAuth();
+
+async function loadStatus() {
+    const st = await api.get('/kubernetes/gitops/status');
+    const details = (st.details || []).map(x => `<li>${escapeHtml(x)}</li>`).join('');
+    $('#status').innerHTML = `
+      <p><strong>Installed:</strong> ${st.installed ? 'yes' : 'no'}</p>
+      <p><strong>ArgoCD:</strong> ${st.argo_installed ? 'yes' : 'no'} · <strong>Flux:</strong> ${st.flux_installed ? 'yes' : 'no'}</p>
+      <ul>${details || '<li>CRD не обнаружены</li>'}</ul>
+    `;
+}
+
+function endpointByProvider(provider) {
+    if (provider === 'argocd') return '/kubernetes/gitops/argocd/applications';
+    if (provider === 'flux-kustomizations') return '/kubernetes/gitops/flux/kustomizations';
+    return '/kubernetes/gitops/flux/helmreleases';
+}
+
+async function loadData() {
+    const provider = $('#provider').value;
+    const ns = ($('#namespace').value || '').trim();
+    const f = ($('#filter').value || '').toLowerCase();
+    const p = new URLSearchParams();
+    if (ns) p.set('namespace', ns);
+    p.set('limit', '200');
+    const rows = await api.get(endpointByProvider(provider) + '?' + p.toString());
+
+    const filtered = (rows || []).filter(x => {
+        const name = x?.metadata?.name || '';
+        return name.toLowerCase().includes(f);
+    });
+
+    $('#content').innerHTML = `
+      <table class="table">
+        <thead><tr><th>Name</th><th>Namespace</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${filtered.map(x => {
+            const name = x?.metadata?.name || '—';
+            const nsVal = x?.metadata?.namespace || '—';
+            const phase = x?.status?.sync?.status || x?.status?.conditions?.[0]?.type || x?.status?.phase || '—';
+            const payload = encodeURIComponent(JSON.stringify(x, null, 2));
+            return `<tr>
+              <td>${escapeHtml(name)}</td>
+              <td>${escapeHtml(nsVal)}</td>
+              <td>${escapeHtml(String(phase))}</td>
+              <td><button class="btn btn-sm" onclick="showRaw('${payload}')"><i class="fa-solid fa-eye"></i></button></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+}
+
+function showRaw(payload) {
+    ui.showModal('GitOps object', `<pre style="white-space:pre-wrap;">${escapeHtml(decodeURIComponent(payload))}</pre>`);
+}
+
+$('#provider').addEventListener('change', loadData);
+$('#filter').addEventListener('input', loadData);
+(async function init(){ await loadStatus(); await loadData(); })();
+</script>
+</body>
+</html>

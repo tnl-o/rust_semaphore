@@ -582,7 +582,7 @@ flowchart LR
 - [ ] Runbook: БД Velum, конфиги; опционально Velero — без полного UI в v1.
 
 #### 10.4 GitOps
-- [ ] Черновик: read-only или минимальный sync к [GitOps в интеграциях](#gitops-integration).
+- [x] Черновик: read-only или минимальный sync к [GitOps в интеграциях](#gitops-integration). ✅ 2026-03-31 — read-only ArgoCD/Flux detect + list APIs (`/api/kubernetes/gitops/*`) и UI `k8s-gitops.html`
 
 #### 10.5 Apply и SSA
 - [x] **Dry-run + diff** (`k8s-apply.html`); split-panel YAML editor; `POST /api/kubernetes/apply` + `POST .../diff`; SSA field-manager + force-conflicts; colorized diff output. ✅ 2026-03-30
