@@ -869,6 +869,7 @@ const SIDEBAR_SECTIONS = [
             { href: 'k8s-jobs.html',         icon: 'fa-solid fa-clock-rotate-left', label: 'Jobs & PDB' },
             { href: 'k8s-rbac.html',         icon: 'fa-solid fa-user-shield',       label: 'RBAC' },
             { href: 'k8s-crd.html',          icon: 'fa-solid fa-gears',               label: 'CRD & HPA' },
+            { href: 'k8s-audit.html',        icon: 'fa-solid fa-clipboard-list',      label: 'K8s Audit' },
         ]
     },
     {

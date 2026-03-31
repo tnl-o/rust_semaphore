@@ -576,7 +576,7 @@ flowchart LR
 - [x] Переключатель кластера (`k8s-clusters.html`); `GET /api/kubernetes/clusters` + `POST .../switch`; список kubeconfig-контекстов с подсветкой активного. ✅ 2026-03-30
 
 #### 10.2 Audit (Velum)
-- [ ] Просмотр/экспорт: кто, когда, cluster, resource, verb; интеграция с audit приложения.
+- [x] Просмотр/экспорт: кто, когда, cluster, resource, verb; интеграция с audit приложения. ✅ 2026-03-31 — `GET /api/kubernetes/audit` + `GET /api/kubernetes/audit/export?format=csv|json` + `web/public/k8s-audit.html`
 
 #### 10.3 Backup / restore
 - [ ] Runbook: БД Velum, конфиги; опционально Velero — без полного UI в v1.

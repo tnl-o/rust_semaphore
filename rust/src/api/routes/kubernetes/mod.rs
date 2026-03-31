@@ -547,6 +547,15 @@ pub fn kubernetes_routes() -> Router<Arc<AppState>> {
             "/api/kubernetes/cluster/customobjects/{plural}",
             post(handlers::create_custom_object_cluster),
         )
+        // Kubernetes audit view/export
+        .route(
+            "/api/kubernetes/audit",
+            get(handlers::list_kubernetes_audit),
+        )
+        .route(
+            "/api/kubernetes/audit/export",
+            get(handlers::export_kubernetes_audit),
+        )
         .route("/api/kubernetes/vpa/status", get(handlers::get_vpa_status))
         .route(
             "/api/kubernetes/verticalpodautoscalers",

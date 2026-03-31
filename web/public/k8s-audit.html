@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Audit - Velum</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar"></aside>
+    <div class="main-content">
+        <div class="main-header"><h2><i class="fa-solid fa-clipboard-list"></i> Kubernetes Audit</h2></div>
+        <div class="main-body">
+            <div class="card" style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <input id="resource" class="form-control" placeholder="resource (Pod, Deployment, ...)" style="max-width:220px;">
+                <select id="verb" class="form-control" style="max-width:150px;">
+                    <option value="">verb: all</option>
+                    <option value="create">create</option>
+                    <option value="update">update</option>
+                    <option value="delete">delete</option>
+                </select>
+                <input id="namespace" class="form-control" placeholder="namespace" style="max-width:180px;">
+                <input id="search" class="form-control" placeholder="Поиск по описанию/пользователю" style="min-width:260px;">
+                <button class="btn btn-primary" onclick="loadRows()"><i class="fa-solid fa-rotate"></i> Обновить</button>
+                <button class="btn" onclick="exportAudit('json')"><i class="fa-solid fa-download"></i> Export JSON</button>
+                <button class="btn" onclick="exportAudit('csv')"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+            </div>
+            <div id="content" class="card"><div class="loading"><div class="loading-spinner"></div><p>Загрузка...</p></div></div>
+        </div>
+    </div>
+</div>
+<script src="app.js"></script>
+<script>
+checkAuth();
+
+function q() {
+    const p = new URLSearchParams();
+    const resource = $('#resource').value.trim();
+    const verb = $('#verb').value.trim();
+    const namespace = $('#namespace').value.trim();
+    const search = $('#search').value.trim();
+    if (resource) p.set('resource', resource);
+    if (verb) p.set('verb', verb);
+    if (namespace) p.set('namespace', namespace);
+    if (search) p.set('search', search);
+    p.set('limit', '300');
+    return p.toString();
+}
+
+async function loadRows() {
+    const rows = await api.get('/kubernetes/audit?' + q());
+    const html = `
+      <table class="table">
+        <thead><tr><th>When</th><th>User</th><th>Cluster</th><th>Namespace</th><th>Resource</th><th>Name</th><th>Verb</th><th>Action</th><th>Level</th><th>Description</th></tr></thead>
+        <tbody>
+        ${(rows || []).map(r => `<tr>
+          <td>${escapeHtml(formatDate(r.created))}</td>
+          <td>${escapeHtml(r.username || '—')}</td>
+          <td>${escapeHtml(r.cluster || '—')}</td>
+          <td>${escapeHtml(r.namespace || '—')}</td>
+          <td>${escapeHtml(r.resource || '—')}</td>
+          <td>${escapeHtml(r.resource_name || '—')}</td>
+          <td>${escapeHtml(r.verb || '—')}</td>
+          <td>${escapeHtml(r.action || '—')}</td>
+          <td>${escapeHtml(r.level || '—')}</td>
+          <td>${escapeHtml(r.description || '—')}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>`;
+    $('#content').innerHTML = html;
+}
+
+function downloadBlob(filename, type, data) {
+    const blob = new Blob([data], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
+async function exportAudit(format) {
+    const url = '/api/kubernetes/audit/export?format=' + encodeURIComponent(format) + '&' + q();
+    const token = localStorage.getItem('velum_token');
+    const resp = await fetch(url, {
+        headers: token ? { Authorization: 'Bearer ' + token } : {}
+    });
+    if (!resp.ok) throw new Error('Export failed');
+    const text = await resp.text();
+    if (format === 'csv') downloadBlob('k8s-audit.csv', 'text/csv;charset=utf-8', text);
+    else downloadBlob('k8s-audit.json', 'application/json;charset=utf-8', text);
+}
+
+$('#search').addEventListener('keydown', (e) => { if (e.key === 'Enter') loadRows(); });
+(async function init(){ await loadRows(); })();
+</script>
+</body>
+</html>
