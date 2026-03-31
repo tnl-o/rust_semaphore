@@ -9,6 +9,7 @@ Manages and runs Ansible, Terraform, OpenTofu, Terragrunt, Bash, and PowerShell 
 
 > **Database:** PostgreSQL only (SQLite/MySQL removed in v2.2).
 > **Tests:** 710 passing.
+> **Kubernetes:** Full integration — 20 UI pages, 60+ API endpoints, WebSocket streaming.
 
 ---
 
@@ -89,6 +90,34 @@ Full reference: [`docs/technical/CONFIG.md`](docs/technical/CONFIG.md).
 
 ## Features
 
+### ☸️ Kubernetes Integration (v2.4+)
+
+**20 UI pages for complete cluster management:**
+
+- **Pods** — List, view, delete, evict, restart + **WebSocket log streaming** + **exec terminal**
+- **Deployments** — Full CRUD + **scale** (+/- replicas), **restart**, **rollback** to previous revision
+- **ConfigMaps** — CRUD with JSON editor, data preview
+- **Secrets** — CRUD with base64 encode/decode, reveal values
+- **Jobs & CronJobs** — CRUD + retry, suspend/resume, run now
+- **ReplicaSets, DaemonSets, StatefulSets** — List, view, delete, scale
+- **Services, Ingress, NetworkPolicy** — Full management
+- **Gateway API, Storage, RBAC** — Advanced cluster features
+- **Metrics, Events, Topology** — Monitoring and troubleshooting
+- **Helm** — Chart management and releases
+- **Troubleshoot Dashboard** — Diagnostics and runbooks
+
+**Backend API (~2500 lines Rust):**
+- 60+ REST endpoints for all workloads
+- WebSocket streaming for real-time logs
+- Full CRUD operations with validation
+- 8 integration tests
+
+**Frontend (~2000 lines JS/HTML):**
+- Modern vanilla JS with auto-refresh
+- Modal dialogs for all operations
+- Namespace selector and filters
+- Status badges and live updates
+
 ### Core automation
 
 - Run Ansible playbooks, Terraform/OpenTofu plans, Bash, PowerShell, Terragrunt
@@ -158,6 +187,7 @@ Full reference: [`docs/technical/CONFIG.md`](docs/technical/CONFIG.md).
 | **Runtime** | Rust stable, Tokio 1 |
 | **Web framework** | Axum 0.8 (with WebSocket) |
 | **Database** | SQLx 0.8, PostgreSQL |
+| **Kubernetes** | kube 0.98, k8s-openapi 0.24 |
 | **Frontend** | Vanilla JS, Material Design, Roboto |
 | **Auth** | JWT (jsonwebtoken 9), bcrypt, HMAC-SHA1 TOTP, ldap3, OIDC |
 | **Encryption** | AES-256-GCM (aes-gcm 0.10) |
@@ -182,14 +212,23 @@ cargo run -- version             # print version
 ## Repository structure
 
 ```
-├── rust/                   Backend — Rust / Axum / SQLx
+├── rust/                   Backend — Rust / Axum / SQLx / Kubernetes
 │   └── src/
-│       ├── api/            HTTP handlers and routing (197 handler functions)
+│       ├── api/            HTTP handlers and routing (200+ handler functions)
+│       │   └── handlers/
+│       │       └── kubernetes/  K8s API: pods, deployments, workloads
 │       ├── models/         Data models
 │       ├── db/             Database layer (PostgreSQL)
 │       ├── services/       Business logic (task runner, scheduler, backup, …)
+│       ├── kubernetes/     K8s client, Helm, Jobs
 │       └── config/         Configuration loading
-├── web/public/             Frontend — 28 HTML pages, Vanilla JS
+├── web/public/             Frontend — 48 HTML pages, Vanilla JS
+│   ├── k8s-pods.html       Kubernetes Pods UI with WebSocket logs
+│   ├── k8s-deployments.html Deployments UI with scale/restart/rollback
+│   ├── k8s-configmaps.html ConfigMaps CRUD with JSON editor
+│   ├── k8s-secrets.html    Secrets CRUD with base64 decode
+│   ├── k8s-jobs.html       Jobs, CronJobs, PDB management
+│   └── ...                 20+ Kubernetes pages total
 ├── mcp/                    Embedded MCP server (Rust)
 ├── db/postgres/            PostgreSQL migration scripts
 ├── deploy/
