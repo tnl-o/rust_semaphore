@@ -6,13 +6,14 @@ use axum::{
     extract::{Path, Query, State},
     Json,
 };
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, Duration};
 use k8s_openapi::api::core::v1::Event;
 use kube::{api::{Api, ListParams, ResourceExt}};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 use crate::api::state::AppState;
+use crate::db::store::AuditLogManager;
 use crate::error::{Error, Result};
 use super::client::KubeClient;
 
@@ -309,9 +310,57 @@ async fn get_audit_records(
     query: &TroubleshootQuery,
     lookback_hours: i64,
 ) -> Result<Vec<AuditRecord>> {
-    // TODO: Интеграция с Velum Audit Log API
-    // Пока возвращаем пустой список
-    Ok(Vec::new())
+    // Вычисляем дату начала периода
+    let date_from = Utc::now() - Duration::hours(lookback_hours);
+    
+    // Фильтр по project_id если есть
+    // Для Kubernetes ресурсов пока ищем по всем проектам
+    // В будущем можно связывать Kubernetes кластеры с проектами Velum
+    
+    use crate::models::audit_log::AuditLogFilter;
+    
+    let filter = AuditLogFilter {
+        project_id: None, // Все проекты
+        user_id: None,
+        username: None,
+        action: None,
+        object_type: None,
+        object_id: None,
+        level: None,
+        search: Some(format!("{} {}", query.kind, query.name)), // Поиск по имени ресурса
+        date_from: Some(date_from),
+        date_to: Some(Utc::now()),
+        limit: 50, // Последние 50 записей
+        offset: 0,
+        sort: "created".to_string(),
+        order: "desc".to_string(),
+    };
+    
+    match state.store.search_audit_logs(&filter).await {
+        Ok(result) => {
+            let records = result.records.iter().map(|r| {
+                AuditRecord {
+                    id: r.id,
+                    timestamp: r.created,
+                    user_id: r.user_id,
+                    username: r.username.clone(),
+                    action: r.action.to_string(),
+                    resource_kind: r.object_type.to_string(),
+                    resource_name: r.object_name.clone().unwrap_or_else(|| r.object_id.map(|id| id.to_string()).unwrap_or_default()),
+                    namespace: String::new(), // Audit log не хранит namespace
+                    description: r.description.clone(),
+                    level: r.level.to_string(),
+                }
+            }).collect();
+            
+            Ok(records)
+        }
+        Err(e) => {
+            // Если audit log недоступен, возвращаем пустой список
+            tracing::warn!("Failed to get audit logs: {}", e);
+            Ok(Vec::new())
+        }
+    }
 }
 
 /// Получить метрики ресурса
