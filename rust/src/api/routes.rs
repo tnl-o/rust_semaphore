@@ -1852,6 +1852,19 @@ pub fn api_routes() -> Router<Arc<AppState>> {
             "/api/kubernetes/troubleshoot",
             get(handlers::get_troubleshooting_report),
         )
+        // Kubernetes Runbook Integration
+        .route(
+            "/api/kubernetes/runbooks",
+            get(handlers::get_available_runbooks),
+        )
+        .route(
+            "/api/kubernetes/runbooks/execute",
+            post(handlers::execute_runbook),
+        )
+        .route(
+            "/api/kubernetes/runbooks/{task_id}/status",
+            get(handlers::get_runbook_status),
+        )
         .route(
             "/api/kubernetes/metrics/pods",
             get(handlers::list_pod_metrics),
