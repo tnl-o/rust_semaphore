@@ -212,7 +212,9 @@ sprints:
         title: "Inventory sync completion"
         priority: medium
         estimate: small
-        status: todo
+        status: in_progress
+        assignee: agent-3142
+        started_at: "2026-04-01T23:00:00Z"
         subtasks:
           - "Реализовать update inventory в inventory_sync.rs:447"
           - "Тесты sync flows"
@@ -936,7 +938,9 @@ task_index:
     title: "Inventory sync completion"
     priority: medium
     estimate: small
-    status: todo
+    status: in_progress
+    assignee: agent-3142
+    started_at: "2026-04-01T23:00:00Z"
   - sprint_id: S1
     sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
     task_id: P-08
