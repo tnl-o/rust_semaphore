@@ -58,7 +58,9 @@ sprints:
         title: "Добавить cargo audit в CI pipeline"
         priority: critical
         estimate: small
-        status: todo
+        status: in_progress
+        assignee: agent-6154
+        started_at: "2026-04-01T23:50:00+03:00"
         subtasks:
           - "Добавить job cargo-audit в .github/workflows/rust.yml"
           - "Настроить уведомления о новых уязвимостях"
@@ -859,7 +861,9 @@ task_index:
     title: "Добавить cargo audit в CI"
     priority: critical
     estimate: small
-    status: todo
+    status: in_progress
+    assignee: agent-6154
+    started_at: "2026-04-01T23:50:00+03:00"
   - sprint_id: S0
     sprint_title: "Спринт 0 — Critical Security Fixes (1-2 недели)"
     task_id: SEC-03
