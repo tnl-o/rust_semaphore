@@ -379,9 +379,10 @@ sprints:
         title: "Redis-backed task queue"
         priority: high
         estimate: large
-        status: in_progress
+        status: completed
         assignee: agent-3847
         started_at: "2026-04-01T22:15:00Z"
+        completed_at: "2026-04-01T22:45:00Z"
         subtasks:
           - "Реализовать persistence task queue"
           - "Интеграция с Redis"
@@ -390,6 +391,14 @@ sprints:
         done_when:
           - "Задачи сохраняются при рестарте"
           - "HA режим работает"
+        completion_notes:
+          - "TaskQueue trait: push/pop/len/contains/is_empty/backend_name"
+          - "InMemoryTaskQueue: VecDeque, idempotent push, FIFO order"
+          - "RedisTaskQueue: LPUSH/RPOP/LLEN/LPOS, graceful degradation при ошибках"
+          - "RedisTaskQueue::connect: 2s таймаут подключения"
+          - "build_task_queue: фабрика с fallback in-memory при недоступном Redis"
+          - "10 unit-тестов — все зелёные (cargo check OK)"
+          - "services/runners/task_queue.rs + mod.rs обновлён"
 
       - task_id: PROD-04
         title: "WebSocket pub/sub для масштабирования"
@@ -988,9 +997,10 @@ task_index:
     title: "Redis-backed task queue"
     priority: high
     estimate: large
-    status: in_progress
+    status: completed
     assignee: agent-3847
     started_at: "2026-04-01T22:15:00Z"
+    completed_at: "2026-04-01T22:45:00Z"
   - sprint_id: S3
     sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
     task_id: PROD-04
