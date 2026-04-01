@@ -36,7 +36,7 @@ sprints:
         title: "Обновить уязвимые зависимости"
         priority: critical
         estimate: small
-        status: todo
+        status: in_progress
         subtasks:
           - "quinn-proto: обновить до версии без CVE-2024-memory-safety"
           - "wasmtime: обновить до версии без CVE-6.x"
@@ -52,11 +52,12 @@ sprints:
         title: "Добавить cargo audit в CI pipeline"
         priority: critical
         estimate: small
-        status: todo
+        status: completed
         subtasks:
           - "Добавить job cargo-audit в .github/workflows/rust.yml"
           - "Настроить уведомления о новых уязвимостях"
           - "Включить Dependabot для зависимостей"
+          - "✅ job security-audit (cargo-audit) в rust.yml; .github/dependabot.yml для cargo и actions"
         done_when:
           - "CI запускает cargo audit на каждый PR"
           - "Dependabot настроен и активен"
@@ -235,14 +236,14 @@ sprints:
         title: "Актуализировать OpenAPI spec"
         priority: high
         estimate: small
-        status: in_progress
-        assignee: codex
+        status: completed
+        assignee: assistant
         subtasks:
           - "Добавить K8s WebSocket endpoints в spec"
           - "Сверить healthz/readyz и фактические route paths"
           - "Сверить auth, notifications, kubernetes observability endpoints"
           - "Проверить совместимость с api-docs.yml / openapi.yml"
-          - "Опционально: описать WS /api/kubernetes/events/stream и namespace events/stream"
+          - "✅ WS events stream (cluster + namespace); Health tag — /healthz, /readyz, /health/*"
         done_when:
           - "Спека покрывает новые/актуальные endpoints"
           - "Нет явных расхождений между routes и OpenAPI"
@@ -459,7 +460,8 @@ sprints:
         title: "Финальный quality gate"
         priority: critical
         estimate: small
-        status: todo
+        status: in_progress
+        assignee: assistant
         subtasks:
           - "Прогнать cargo test"
           - "Прогнать cargo clippy -- -D warnings"
@@ -520,9 +522,9 @@ sprints:
         status: completed
         subtasks:
           - "Обновить openapi.yml: тег Kubernetes WebSocket, exec и port-forward"
-          - "Остаток: при необходимости добавить events stream WS в спецификацию"
+          - "✅ events stream (cluster + namespace) и тег Health (/healthz, /readyz, /health/*)"
         done_when:
-          - "OpenAPI отражает опубликованные WS маршруты для exec/port-forward"
+          - "OpenAPI отражает опубликованные WS маршруты и события K8s"
 
       - task_id: AG-04
         title: "P-10: tarpaulin coverage в CI"
@@ -820,7 +822,7 @@ task_index:
     title: "Добавить cargo audit в CI"
     priority: critical
     estimate: small
-    status: todo
+    status: completed
   - sprint_id: S0
     sprint_title: "Спринт 0 — Critical Security Fixes (1-2 недели)"
     task_id: SEC-03
@@ -912,8 +914,8 @@ task_index:
     title: "Актуализировать OpenAPI spec"
     priority: high
     estimate: small
-    status: in_progress
-    assignee: codex
+    status: completed
+    assignee: assistant
   - sprint_id: S1
     sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
     task_id: K-01-sync
@@ -1011,7 +1013,8 @@ task_index:
     title: "Финальный quality gate"
     priority: critical
     estimate: small
-    status: todo
+    status: in_progress
+    assignee: assistant
   - sprint_id: S4
     sprint_title: "Спринт 4 — Release (1-2 недели)"
     task_id: D-05
