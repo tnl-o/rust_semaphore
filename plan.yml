@@ -118,10 +118,11 @@ sprints:
           - "Невалидные cron отклоняются на уровне API"
           - "Тесты покрывают edge cases"
         completion_notes:
-          - "schedule_cron_must_parse() валидирует cron выражения"
-          - "validate_schedule_cron_format API endpoint для валидации"
-          - "4 теста покрывают: invalid syntax, valid expression, run_at skip, empty cron"
-          - "cron crate уже используется (cron::Schedule)"
+          - "schedule_cron_must_parse() — add_schedule / update_schedule → 400 при невалидном cron"
+          - "POST .../schedules/validate — прежняя проверка без сохранения"
+          - "cron_format=run_at — парсинг cron пропускается"
+          - "4 unit-теста в schedules.rs"
+          - "cron crate в scheduler (SchedulePool)"
 
       - task_id: SEC-06
         title: "OIDC email claim"
@@ -487,7 +488,7 @@ sprints:
         assignee: assistant
         subtasks:
           - "Прогнать cargo test"
-          - "Прогнать cargo clippy -- -D warnings"
+          - "✅ cargo clippy --all-features -- -D warnings (2026-04-01)"
           - "Проверить release build"
           - "Проверить, что release blockers закрыты"
         done_when:
@@ -866,7 +867,7 @@ task_index:
     title: "Cron validation"
     priority: high
     estimate: small
-    status: in_progress
+    status: completed
     assignee: assistant
   - sprint_id: S0
     sprint_title: "Спринт 0 — Critical Security Fixes (1-2 недели)"
