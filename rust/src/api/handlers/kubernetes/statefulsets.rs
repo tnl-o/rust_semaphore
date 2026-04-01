@@ -236,8 +236,10 @@ pub async fn list_statefulset_pods(
         .collect::<Vec<_>>()
         .join(",");
 
-    let mut lp = ListParams::default();
-    lp.label_selector = Some(label_selector);
+    let lp = ListParams {
+        label_selector: Some(label_selector),
+        ..Default::default()
+    };
 
     let pod_list = pod_api
         .list(&lp)
@@ -360,7 +362,7 @@ fn statefulset_detail(sf: &StatefulSet) -> StatefulSetDetail {
         .unwrap_or_default();
 
     let service_name = spec
-        .and_then(|s| Some(s.service_name.clone()))
+        .map(|s| s.service_name.clone())
         .unwrap_or_default();
 
     let update_strategy = spec
