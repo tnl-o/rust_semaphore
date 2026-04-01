@@ -71,7 +71,7 @@ sprints:
         title: "JWT logout blacklist"
         priority: critical
         estimate: small
-        status: todo
+        status: in_progress
         subtasks:
           - "Реализовать Redis-backed token blacklist"
           - "Добавить проверку blacklist при валидации токена"
@@ -84,7 +84,7 @@ sprints:
         title: "Alert HMAC signature"
         priority: high
         estimate: small
-        status: todo
+        status: in_progress
         subtasks:
           - "Добавить X-Semaphore-Signature заголовок"
           - "Реализовать HMAC-SHA256 подпись webhook payload"
