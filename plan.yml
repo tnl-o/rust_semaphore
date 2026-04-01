@@ -128,7 +128,7 @@ sprints:
         title: "OIDC email claim"
         priority: medium
         estimate: small
-        status: todo
+        status: in_progress
         subtasks:
           - "Добавить email в AuthConfig"
           - "Извлекать email из OIDC claims"
