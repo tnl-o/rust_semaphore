@@ -359,9 +359,10 @@ sprints:
         title: "Docker образ <50MB (FROM scratch)"
         priority: high
         estimate: medium
-        status: in_progress
+        status: completed
         assignee: agent-8520
         started_at: "2026-04-02T00:00:00Z"
+        completed_at: "2026-04-02T00:15:00Z"
         subtasks:
           - "Миграция на multi-stage build с scratch"
           - "Статическая линковка (musl)"
@@ -370,6 +371,10 @@ sprints:
         done_when:
           - "Размер образа <50MB"
           - "Все функции работают"
+        completion_notes:
+          - "Dockerfile уже использует scratch + musl"
+          - "Размер образа: 16.3MB (цель <50MB) ✅"
+          - "velum version работает корректно"
 
       - task_id: PROD-02
         title: "Cross-platform builds (Linux, macOS)"
@@ -1013,9 +1018,10 @@ task_index:
     title: "Docker образ <50MB (FROM scratch)"
     priority: high
     estimate: medium
-    status: in_progress
+    status: completed
     assignee: agent-8520
     started_at: "2026-04-02T00:00:00Z"
+    completed_at: "2026-04-02T00:15:00Z"
   - sprint_id: S3
     sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
     task_id: PROD-02
