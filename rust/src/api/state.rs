@@ -9,6 +9,7 @@ use crate::cache::RedisCache;
 use crate::config::Config;
 use crate::db::Store;
 use crate::error::{Error, Result};
+use crate::pro::services::{new_subscription_service, SubscriptionService};
 use crate::services::metrics::MetricsManager;
 use crate::services::telegram_bot::TelegramBot;
 use dashmap::DashMap;
@@ -41,6 +42,8 @@ pub struct AppState {
     pub kubeconfigs: Arc<DashMap<String, String>>,
     /// Telegram bot для уведомлений
     pub telegram_bot: Option<Arc<TelegramBot>>,
+    /// PRO / лицензирование (community edition — без ограничений по умолчанию)
+    pub subscription: Arc<dyn SubscriptionService + Send + Sync>,
 }
 
 impl AppState {
@@ -51,7 +54,9 @@ impl AppState {
         cache: Option<Arc<RedisCache>>,
     ) -> Self {
         let telegram_bot = TelegramBot::new(&config);
-        
+        let subscription: Arc<dyn SubscriptionService + Send + Sync> =
+            Arc::from(new_subscription_service());
+
         Self {
             store: StoreWrapper::new(store),
             config,
@@ -72,6 +77,7 @@ impl AppState {
             token_blacklist: TokenBlacklist::new(),
             kubeconfigs: Arc::new(DashMap::new()),
             telegram_bot,
+            subscription,
         }
     }
 
