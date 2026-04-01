@@ -280,6 +280,7 @@ sprints:
           - "db/sql/managers: pagination, filtering, transactions"
           - "api/handlers: HTTP-level integration tests"
           - "kubernetes: client mocks integration"
+          - "✅ agent-7291 (2026-04-01): execute_task (template missing / approval pending / plan rejected); task_runner errors+lifecycle; MockStore terraform plans + update_task_status; Redis queue connect 2s + bounded test"
         done_when:
           - "Покрытие тестами >= 80%"
           - "Критические модули покрыты на 90%+"

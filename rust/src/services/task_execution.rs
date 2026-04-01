@@ -206,3 +206,86 @@ pub async fn execute_task(store: Arc<dyn Store + Send + Sync>, mut task: Task) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::db::MockStore;
+    use crate::db::store::{TaskManager, PlanApprovalManager};
+    use crate::models::{Task, Template, TerraformPlan};
+    use std::sync::Arc;
+
+    fn sample_task() -> Task {
+        Task {
+            id: 1,
+            project_id: 10,
+            template_id: 100,
+            ..Default::default()
+        }
+    }
+
+    #[tokio::test]
+    async fn execute_task_sets_error_when_template_missing() {
+        let ms = Arc::new(MockStore::new());
+        let store: Arc<dyn crate::db::store::Store + Send + Sync> = ms.clone();
+        let task = sample_task();
+        store.create_task(task.clone()).await.unwrap();
+
+        execute_task(store.clone(), task).await;
+
+        let saved = store.get_task(10, 1).await.unwrap();
+        assert_eq!(saved.status, TaskStatus::Error);
+        assert!(saved.end.is_some());
+    }
+
+    #[tokio::test]
+    async fn execute_task_waits_confirmation_when_plan_approval_required() {
+        let store: Arc<dyn crate::db::store::Store + Send + Sync> = Arc::new(MockStore::new());
+        let mut tpl = Template::default();
+        tpl.id = 100;
+        tpl.project_id = 10;
+        tpl.require_approval = true;
+        store.create_template(tpl).await.unwrap();
+
+        let task = sample_task();
+        store.create_task(task.clone()).await.unwrap();
+
+        execute_task(store.clone(), task).await;
+
+        let saved = store.get_task(10, 1).await.unwrap();
+        assert_eq!(saved.status, TaskStatus::WaitingConfirmation);
+    }
+
+    #[tokio::test]
+    async fn execute_task_stops_when_plan_rejected() {
+        let ms = Arc::new(MockStore::new());
+        let store: Arc<dyn crate::db::store::Store + Send + Sync> = ms.clone();
+        let mut tpl = Template::default();
+        tpl.id = 100;
+        tpl.project_id = 10;
+        tpl.require_approval = true;
+        store.create_template(tpl).await.unwrap();
+
+        ms.seed_terraform_plan(TerraformPlan {
+            id: 1,
+            task_id: 1,
+            project_id: 10,
+            plan_output: String::new(),
+            plan_json: None,
+            resources_added: 0,
+            resources_changed: 0,
+            resources_removed: 0,
+            status: "rejected".to_string(),
+            created_at: chrono::Utc::now(),
+            reviewed_at: None,
+            reviewed_by: None,
+            review_comment: None,
+        });
+
+        let task = sample_task();
+        store.create_task(task.clone()).await.unwrap();
+        execute_task(store, task).await;
+        let saved = ms.get_task(10, 1).await.unwrap();
+        assert_eq!(saved.status, TaskStatus::Error);
+    }
+}
