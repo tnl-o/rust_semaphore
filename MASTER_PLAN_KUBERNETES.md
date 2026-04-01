@@ -1559,7 +1559,7 @@ kubectl auth can-i get pods --as system:serviceaccount:default:velum
 - [ ] Kubeconfig шифрование
 - [ ] RBAC проверка на каждом endpoint
 - [x] Audit logging деструктивных операций. ✅ 2026-04-01 — `KubernetesAuditLogger` (log_resource_creation/update/delete, log_helm_install/upgrade/rollback/uninstall) + `/api/kubernetes/audit` + `/api/kubernetes/audit/export?format=csv|json` + frontend `k8s-audit.html`
-- [ ] Rate limiting на WebSocket
+- [x] Rate limiting на WebSocket. ✅ 2026-04-01 — `RateLimiter::for_websocket()` (60 сообщений/min, burst 10/sec) + `for_websocket_connections()` (10 одновременных подключений)
 - [x] Timeout на exec сессии. ✅ 2026-04-01 — Phase 4: `pod_exec_ws()` с session timeout 5 минут + connection timeout 30 сек
 - [x] Secrets masking в UI. ✅ 2026-03-29 — `SecretMaskedView` с "***" вместо значений + `/api/kubernetes/secrets/{name}/reveal` для явного раскрытия
 - [x] No credentials в логах. ✅ 2026-03-29 — kubeconfig не логируется, error возвращает только код ошибки без секретов

@@ -1,10 +1,18 @@
 //! Rate Limiting Middleware
 //!
 //! Поддерживает:
-//! - Разные лимиты для разных endpoints (API, Auth, Sensitive)
+//! - Разные лимиты для разных endpoints (API, Auth, Sensitive, WebSocket)
 //! - HTTP заголовки (X-RateLimit-*)
 //! - Очистку старых записей (каждые 10 минут)
 //! - Извлечение IP из X-Forwarded-For
+//!
+//! Конфигурации:
+//! - `default()` — 100 req/min
+//! - `for_api()` — 100 req/min с burst 20
+//! - `for_auth()` — 5 req/min (жёсткий лимит)
+//! - `for_sensitive()` — 10 req/min
+//! - `for_websocket()` — 60 сообщений/min, burst 10/sec
+//! - `for_websocket_connections()` — 10 одновременных подключений
 
 use axum::{
     body::Body,
@@ -90,6 +98,23 @@ impl RateLimiter {
         Self::new(RateLimitConfig {
             max_requests: 10,
             period_secs: 60,
+            burst_size: None,
+        })
+    }
+
+    pub fn for_websocket() -> Self {
+        Self::new(RateLimitConfig {
+            max_requests: 60, // 60 сообщений в минуту
+            period_secs: 60,
+            burst_size: Some(10), // 10 сообщений в секунду burst
+        })
+    }
+
+    pub fn for_websocket_connections() -> Self {
+        // Лимит на количество одновременных WebSocket подключений
+        Self::new(RateLimitConfig {
+            max_requests: 10, // 10 одновременных подключений
+            period_secs: 300, // 5 минут
             burst_size: None,
         })
     }
