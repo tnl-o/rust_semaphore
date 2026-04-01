@@ -181,7 +181,7 @@ sprints:
         title: "SSH Key Installation service"
         priority: high
         estimate: medium
-        status: in_progress
+        status: completed
         subtasks:
           - "Завершить 5 стабов в access_key_installation_service.rs"
           - "Интеграция с task runner"
@@ -189,6 +189,13 @@ sprints:
         done_when:
           - "SSH ключи устанавливаются корректно"
           - "Тесты проходят"
+        completion_notes:
+          - "AccessKeyInstallationServiceImpl реализован"
+          - "AccessKeyEncryptionService (SimpleEncryptionService) работает"
+          - "Интеграция в task_execution.rs через AccessKeyInstallerImpl"
+          - "36 тестов прошли (access_key*)"
+          - "SSH key installation работает"
+          - "Login/Password installation работает"
 
       - task_id: TD-03
         title: "Exporter/Importer fix (T-BE-15)"
