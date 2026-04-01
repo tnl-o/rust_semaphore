@@ -43,6 +43,11 @@ pub struct OidcProvider {
     /// Icon
     #[serde(default)]
     pub icon: String,
+
+    /// Имя claim в ответе userinfo, где лежит email (например `email`, `upn`, `mail`).
+    /// Пустая строка: встроенная цепочка `email` → `preferred_username` → `upn` → `mail`.
+    #[serde(default)]
+    pub email_claim: String,
 }
 
 /// OIDC Endpoint
@@ -89,6 +94,7 @@ impl Default for OidcProvider {
             endpoint: OidcEndpoint::default(),
             color: String::new(),
             icon: String::new(),
+            email_claim: String::new(),
         }
     }
 }
@@ -181,6 +187,13 @@ pub fn load_oidc_from_env() -> HashMap<String, OidcProvider> {
                 provider_name.to_uppercase()
             )) {
                 provider.auto_discovery = auto_discovery;
+            }
+
+            if let Ok(email_claim) = env::var(format!(
+                "SEMAPHORE_OIDC_{}_EMAIL_CLAIM",
+                provider_name.to_uppercase()
+            )) {
+                provider.email_claim = email_claim;
             }
 
             providers.insert(provider_name.to_string(), provider);

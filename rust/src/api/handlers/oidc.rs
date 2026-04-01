@@ -15,6 +15,7 @@ use std::sync::Arc;
 use crate::api::auth_local::LocalAuthService;
 use crate::api::middleware::ErrorResponse;
 use crate::api::state::AppState;
+use crate::config::config_oidc::OidcProvider;
 use crate::db::store::UserManager;
 use crate::error::Error;
 use oauth2::TokenResponse;
@@ -22,6 +23,28 @@ use oauth2::TokenResponse;
 // ============================================================================
 // API Handlers
 // ============================================================================
+
+/// Достаёт email из JSON userinfo: сначала провайдерский `email_claim`, затем стандартные поля.
+pub(crate) fn extract_oidc_email_from_userinfo(
+    userinfo: &serde_json::Value,
+    provider: &OidcProvider,
+) -> String {
+    fn claim_str(v: &serde_json::Value, key: &str) -> Option<String> {
+        v.get(key).and_then(|x| x.as_str().filter(|s| !s.is_empty()).map(str::to_string))
+    }
+
+    if !provider.email_claim.is_empty() {
+        if let Some(s) = claim_str(userinfo, provider.email_claim.as_str()) {
+            return s;
+        }
+    }
+    for key in ["email", "preferred_username", "upn", "mail"] {
+        if let Some(s) = claim_str(userinfo, key) {
+            return s;
+        }
+    }
+    String::new()
+}
 
 /// GET /api/auth/oidc/{provider} - Redirect на OIDC провайдер
 pub async fn oidc_login(
@@ -289,19 +312,16 @@ pub async fn oidc_callback(
             )
         })?;
 
-    let email = userinfo
-        .get("email")
-        .or_else(|| userinfo.get("preferred_username"))
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
+    let email = extract_oidc_email_from_userinfo(&userinfo, provider_config);
     let username = userinfo
         .get("preferred_username")
         .or_else(|| userinfo.get("email"))
+        .or_else(|| userinfo.get("sub"))
         .or_else(|| userinfo.get("name"))
         .and_then(|v| v.as_str())
-        .unwrap_or(&email)
-        .to_string();
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+        .unwrap_or_else(|| email.clone());
     let name = userinfo
         .get("name")
         .and_then(|v| v.as_str())
@@ -418,7 +438,7 @@ pub async fn get_login_metadata(
     Ok(Json(LoginMetadataResponse {
         oidc_providers,
         totp_enabled: state.config.auth.totp.enable,
-        email_enabled: false,      // TODO: добавить email в AuthConfig
+        email_enabled: state.config.auth.email_enabled,
         login_with_password: true, // Включаем форму username+password для локальной аутентификации
     }))
 }
@@ -481,5 +501,37 @@ mod tests {
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains("false"));
         assert!(json.contains("true"));
+    }
+
+    #[test]
+    fn test_extract_oidc_email_default_chain() {
+        let provider = OidcProvider::default();
+        let v = serde_json::json!({
+            "preferred_username": "u1",
+            "sub": "oidc-sub"
+        });
+        assert_eq!(extract_oidc_email_from_userinfo(&v, &provider), "u1");
+
+        let v2 = serde_json::json!({"upn": "user@contoso.com"});
+        assert_eq!(
+            extract_oidc_email_from_userinfo(&v2, &provider),
+            "user@contoso.com"
+        );
+    }
+
+    #[test]
+    fn test_extract_oidc_email_custom_claim() {
+        let provider = OidcProvider {
+            email_claim: "unique_name".to_string(),
+            ..Default::default()
+        };
+        let v = serde_json::json!({
+            "unique_name": "azure@example.com",
+            "email": "other@example.com"
+        });
+        assert_eq!(
+            extract_oidc_email_from_userinfo(&v, &provider),
+            "azure@example.com"
+        );
     }
 }

@@ -134,9 +134,10 @@ sprints:
         title: "OIDC email claim"
         priority: medium
         estimate: small
-        status: in_progress
+        status: completed
         assignee: agent-2847
         started_at: "2026-04-01T18:45:00Z"
+        completed_at: "2026-04-01T20:35:00Z"
         subtasks:
           - "Добавить email в AuthConfig"
           - "Извлекать email из OIDC claims"
@@ -144,6 +145,10 @@ sprints:
         done_when:
           - "Email корректно извлекается из OIDC"
           - "Документация обновлена"
+        completion_notes:
+          - "auth.email_enabled в AuthConfig; login metadata читает его."
+          - "OidcProvider.email_claim + SEMAPHORE_OIDC_<P>_EMAIL_CLAIM; цепочка email/preferred_username/upn/mail."
+          - "docs/technical/AUTH.md — раздел OIDC."
 
     sprint_done_when:
       - "SEC-01 завершён"
@@ -974,9 +979,10 @@ task_index:
     title: "OIDC email claim"
     priority: medium
     estimate: small
-    status: in_progress
+    status: completed
     assignee: agent-2847
     started_at: "2026-04-01T18:45:00Z"
+    completed_at: "2026-04-01T20:35:00Z"
   - sprint_id: S1
     sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
     task_id: TD-01
