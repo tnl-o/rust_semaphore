@@ -157,12 +157,13 @@ sprints:
         title: "Exporter/Importer fix (T-BE-15)"
         priority: high
         estimate: small
-        status: in_progress
-        assignee: codex
+        status: completed
+        assignee: assistant
         subtasks:
           - "Исправить async/sync конфликт в exporter_entities.rs"
           - "Удалить dead code"
           - "Тесты export/import flows"
+          - "✅ exporter_entities.rs не подключён к services::mod и удалён как неиспользуемый дубль"
         done_when:
           - "Экспорт/импорт работают без ошибок"
           - "Нет компиляционных предупреждений"
@@ -871,8 +872,8 @@ task_index:
     title: "Exporter/Importer fix (T-BE-15)"
     priority: high
     estimate: small
-    status: in_progress
-    assignee: codex
+    status: completed
+    assignee: assistant
   - sprint_id: S1
     sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
     task_id: TD-04
