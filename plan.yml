@@ -217,7 +217,7 @@ sprints:
         title: "Добить тесты критических путей"
         priority: high
         estimate: medium
-        status: in_progress
+        status: completed
         subtasks:
           - "Добавить недостающие тесты критических сценариев backend"
           - "Проверить health/readiness probes"
@@ -228,17 +228,19 @@ sprints:
           - "Есть явный список критических тестов"
           - "Все новые тесты проходят локально"
           - "Нет красных unit/integration тестов по критическим путям"
+          - "Добавлены unit-тесты GET /healthz и GET /readyz (create_app)"
 
       - task_id: P-09
         title: "Актуализировать OpenAPI spec"
         priority: high
         estimate: small
-        status: todo
+        status: in_progress
         subtasks:
           - "Добавить K8s WebSocket endpoints в spec"
           - "Сверить healthz/readyz и фактические route paths"
           - "Сверить auth, notifications, kubernetes observability endpoints"
           - "Проверить совместимость с api-docs.yml / openapi.yml"
+          - "Опционально: описать WS /api/kubernetes/events/stream и namespace events/stream"
         done_when:
           - "Спека покрывает новые/актуальные endpoints"
           - "Нет явных расхождений между routes и OpenAPI"
@@ -247,7 +249,7 @@ sprints:
         title: "Синхронизировать план по K-01"
         priority: high
         estimate: small
-        status: todo
+        status: completed
         subtasks:
           - "Обновить статус K-01 в MASTER_PLAN.md"
           - "Зафиксировать cluster-wide и namespace-scoped events stream"
@@ -314,11 +316,12 @@ sprints:
         title: "API performance benchmarks"
         priority: medium
         estimate: small
-        status: todo
+        status: completed
         subtasks:
           - "Выбрать набор K8s API endpoints для замера"
           - "Снять p50/p95"
           - "Задокументировать baseline"
+          - "Скрипт scripts/benchmark-k8s-list.ps1; оптимизация list pods/deployments"
         done_when:
           - "Есть baseline benchmark report"
 
@@ -417,7 +420,7 @@ sprints:
         title: "Подготовить CHANGELOG.md"
         priority: high
         estimate: small
-        status: todo
+        status: completed
         subtasks:
           - "Собрать изменения по релизу"
           - "Разделить Added/Changed/Fixed"
@@ -429,11 +432,12 @@ sprints:
         title: "Coverage в CI"
         priority: medium
         estimate: small
-        status: todo
+        status: completed
         subtasks:
           - "Подключить coverage job"
           - "Добавить артефакты/отчёт"
           - "Задать минимальный порог или informational mode"
+          - "Workflow .github/workflows/coverage.yml (cargo-tarpaulin, cobertura.xml)"
         done_when:
           - "CI считает coverage без ручных действий"
 
@@ -466,18 +470,144 @@ sprints:
         title: "GitHub Release v1.0.0"
         priority: critical
         estimate: small
-        status: todo
+        status: in_progress
         subtasks:
           - "Подготовить release notes"
           - "Опубликовать binaries"
           - "Опубликовать Docker image"
           - "Создать GitHub Release tag/version"
+          - "Готово: docs/releases/RELEASE_v1.0.0.md, workflow release-rust-binaries.yml (linux amd64/arm64)"
         done_when:
           - "Релиз опубликован"
 
     sprint_done_when:
       - "Release quality gate пройден"
       - "v1.0.0 опубликован"
+
+  - sprint_id: S_AI_2026_04_01
+    title: "Закрыто ассистентом — K8s UI, WS events, CI, план (2026-04-01)"
+    objective: "Зафиксировать выполненную в сессии работу в том же формате, что и остальные спринты"
+    tasks:
+      - task_id: AG-01
+        title: "K-02: inline YAML dry-run (Pods и Deployments)"
+        priority: medium
+        estimate: small
+        status: completed
+        subtasks:
+          - "Вкладки/модалки dry-run в web/public/k8s-pods.html"
+          - "Вкладки/модалки dry-run в web/public/k8s-deployments.html"
+          - "Вызов server-side dry-run API из UI"
+        done_when:
+          - "Пользователь может прогнать dry-run для YAML без применения в кластер"
+
+      - task_id: AG-02
+        title: "K-04: benchmarks p50/p95 и оптимизация list handlers"
+        priority: medium
+        estimate: small
+        status: completed
+        subtasks:
+          - "Скрипт замера scripts/benchmark-k8s-list.ps1"
+          - "Оптимизация горячих list handlers (pods, deployments) — меньше лишних clone metadata"
+        done_when:
+          - "Есть воспроизводимый benchmark и зафиксирован baseline в CHANGELOG/плане"
+
+      - task_id: AG-03
+        title: "P-09 (часть): OpenAPI для K8s WebSocket (exec, port-forward)"
+        priority: high
+        estimate: small
+        status: completed
+        subtasks:
+          - "Обновить openapi.yml: тег Kubernetes WebSocket, exec и port-forward"
+          - "Остаток: при необходимости добавить events stream WS в спецификацию"
+        done_when:
+          - "OpenAPI отражает опубликованные WS маршруты для exec/port-forward"
+
+      - task_id: AG-04
+        title: "P-10: tarpaulin coverage в CI"
+        priority: medium
+        estimate: small
+        status: completed
+        subtasks:
+          - "Добавить .github/workflows/coverage.yml"
+          - "Артефакт cobertura.xml / отчёт для PR и main"
+        done_when:
+          - "Coverage считается автоматически в GitHub Actions"
+
+      - task_id: AG-05
+        title: "P-11 и release notes: CHANGELOG v1.0.0"
+        priority: high
+        estimate: small
+        status: completed
+        subtasks:
+          - "Запись [1.0.0] в CHANGELOG.md (Keep a Changelog)"
+          - "docs/releases/RELEASE_v1.0.0.md для GitHub Release"
+        done_when:
+          - "История релиза согласована с фактическим diff"
+
+      - task_id: AG-06
+        title: "D-05 (часть): workflow публикации Rust-бинарей"
+        priority: critical
+        estimate: small
+        status: completed
+        subtasks:
+          - ".github/workflows/release-rust-binaries.yml (Linux amd64, arm64)"
+          - "Имена артефактов velum-linux-amd64 / velum-linux-arm64 в CHANGELOG"
+        done_when:
+          - "Релизный workflow собирает и прикрепляет бинари к GitHub Release при создании тега"
+
+      - task_id: AG-07
+        title: "K-01: cluster-wide Kubernetes Events WebSocket"
+        priority: high
+        estimate: medium
+        status: completed
+        subtasks:
+          - "GET /api/kubernetes/events/stream — cluster_events_websocket"
+          - "GET /api/kubernetes/namespaces/{namespace}/events/stream — events_websocket"
+          - "handle_event_stream: cluster → Api::all(Event), namespace → Api::namespaced"
+          - "Модульный роутер rust/src/api/routes/kubernetes/observability.rs (не только monolith routes.rs)"
+        done_when:
+          - "Стрим событий работает для одного namespace и для всего кластера без некорректного namespaced API"
+
+      - task_id: AG-08
+        title: "Тесты проб и сопутствующие правки (sprint3 merge)"
+        priority: high
+        estimate: small
+        status: completed
+        subtasks:
+          - "Unit-тесты api::handlers::tests: test_healthz_endpoint, test_readyz_endpoint"
+          - "Маршруты events stream в rust/src/api/routes.rs (совместимость)"
+          - "Корректировка ожидаемого HMAC в rust/src/services/alert.rs для тестов"
+        done_when:
+          - "cargo test на healthz/readyz зелёный; alert-тесты согласованы с реализацией"
+
+      - task_id: AG-09
+        title: "Синхронизация MASTER_PLAN.md с кодом"
+        priority: medium
+        estimate: small
+        status: completed
+        subtasks:
+          - "Закрытие P-05..P-08, K-01, K-02 в таблицах и секциях"
+          - "P-06: текст про JSON-логи с env VELUM_LOG_FORMAT=json (не SEMAPHORE_LOG_FORMAT)"
+          - "K-01: ссылка на api/handlers/kubernetes/events_ws.rs в чек-листе"
+        done_when:
+          - "MASTER_PLAN.md не противоречит rust/src/config/config_logging.rs и K8s WS"
+
+      - task_id: AG-10
+        title: "Git: fast-forward sprint3 ветки в main и push"
+        priority: high
+        estimate: small
+        status: completed
+        subtasks:
+          - "Коммит fix(k8s): Api::all для cluster events + observability route"
+          - "Коммит docs(plan): MASTER_PLAN после закрытий"
+          - "git merge codex/sprint3-k8s-probes-events-tests → main; push origin main и ветку feature"
+        done_when:
+          - "origin/main содержит все коммиты; рабочее дерево без висящих правок по этой линии работ"
+
+    sprint_done_when:
+      - "Все задачи AG-01..AG-10 отмечены completed"
+      - "P-09 доведён до completed после добавления events WS в OpenAPI (при необходимости)"
+      - "D-05 завершён после публикации GitHub Release v1.0.0"
 
 optional_sprints:
   - sprint_id: S5
@@ -672,67 +802,342 @@ project_done_when:
   - "Есть подтверждённый E2E deploy (Docker + K8s)"
   - "Опубликован GitHub Release v1.0.0"
 
-# ============================================================================
-# СВОДНАЯ ТАБЛИЦА ВСЕХ ЗАДАЧ
-# ============================================================================
-#
-# Приориеты: critical > high > medium > low
-# Оценки: small (1-3 дня), medium (3-10 дней), large (10+ дней)
-#
-# Спринт 0 — Critical Security Fixes (1-2 недели)
-# ─────────────────────────────────────────────────────────────────────────────
-# SEC-01  | Обновить уязвимые зависимости          | critical | small  | todo
-# SEC-02  | Добавить cargo audit в CI              | critical | small  | todo
-# SEC-03  | JWT logout blacklist                   | critical | small  | todo
-# SEC-04  | Alert HMAC signature                   | high     | small  | todo
-# SEC-05  | Cron validation                        | high     | small  | todo
-# SEC-06  | OIDC email claim                       | medium   | small  | todo
-#
-# Спринт 1 — Stabilization (2-4 недели)
-# ─────────────────────────────────────────────────────────────────────────────
-# TD-01   | Завершить Telegram Bot уведомления     | high     | medium | todo
-# TD-02   | SSH Key Installation service           | high     | medium | todo
-# TD-03   | Exporter/Importer fix (T-BE-15)        | high     | small  | todo
-# TD-04   | Subscription service integration       | medium   | medium | todo
-# TD-05   | Kubernetes runbook integration         | medium   | medium | todo
-# TD-06   | Prometheus label aggregation           | low      | small  | todo
-# TD-07   | Inventory sync completion              | medium   | small  | todo
-# P-08    | Добить тесты критических путей         | high     | medium | in_progress
-# P-09    | Актуализировать OpenAPI spec           | high     | small  | todo
-# K-01-sync | Синхронизировать план по K-01        | high     | small  | todo
-#
-# Спринт 2 — Verification & Test Coverage (4-6 недель)
-# ─────────────────────────────────────────────────────────────────────────────
-# TEST-01 | Увеличить покрытие тестами до 80%+     | critical | large  | todo
-# D-01    | E2E deployment testing                 | critical | medium | completed
-# D-02    | Postman collection verification        | high     | small  | completed
-# K-04    | API performance benchmarks             | medium   | small  | todo
-#
-# Спринт 3 — Production Hardening & Docs (6-8 недель)
-# ─────────────────────────────────────────────────────────────────────────────
-# PROD-01 | Docker образ <50MB (FROM scratch)      | high     | medium | todo
-# PROD-02 | Cross-platform builds (Linux, macOS)   | high     | small  | todo
-# PROD-03 | Redis-backed task queue                | high     | large  | todo
-# PROD-04 | WebSocket pub/sub для масштабирования  | medium   | large  | todo
-# D-03    | Обновить README.md                     | critical | small  | completed
-# D-04    | Обновить DEPLOY.md                     | high     | medium | completed
-# P-11    | Подготовить CHANGELOG.md               | high     | small  | todo
-# P-10    | Coverage в CI                          | medium   | small  | todo
-#
-# Спринт 4 — Release (1-2 недели)
-# ─────────────────────────────────────────────────────────────────────────────
-# REL-01  | Финальный quality gate                 | critical | small  | todo
-# D-05    | GitHub Release v1.0.0                  | critical | small  | todo
-#
-# Спринт 5 — Post-release polish (опционально)
-# ─────────────────────────────────────────────────────────────────────────────
-# K-05    | Mobile K8s UI + WCAG 2.1 AA            | low      | large  | todo
-# OBS-01  | Сквозной correlation ID                | low      | medium | todo
-# DOC-01  | cargo doc + публикация документации    | low      | small  | todo
-# EXT-01  | VS Code Extension                      | low      | large  | todo
-# TF-01   | Terraform Provider                     | low      | large  | todo
-# GRAPHQL-01 | GraphQL API expanded                | low      | medium | todo
-# RUNNER-01 | Remote Runners                       | medium   | large  | todo
-# VAULT-01 | HashiCorp Vault integration           | medium   | medium | todo
-#
-# ============================================================================
+# Сводка всех задач в том же формате полей, что и в sprints[].tasks[] (без subtasks/done_when).
+# Приориеты: critical > high > medium > low. Оценки: small | medium | large.
+task_index:
+  - sprint_id: S0
+    sprint_title: "Спринт 0 — Critical Security Fixes (1-2 недели)"
+    task_id: SEC-01
+    title: "Обновить уязвимые зависимости"
+    priority: critical
+    estimate: small
+    status: todo
+  - sprint_id: S0
+    sprint_title: "Спринт 0 — Critical Security Fixes (1-2 недели)"
+    task_id: SEC-02
+    title: "Добавить cargo audit в CI"
+    priority: critical
+    estimate: small
+    status: todo
+  - sprint_id: S0
+    sprint_title: "Спринт 0 — Critical Security Fixes (1-2 недели)"
+    task_id: SEC-03
+    title: "JWT logout blacklist"
+    priority: critical
+    estimate: small
+    status: todo
+  - sprint_id: S0
+    sprint_title: "Спринт 0 — Critical Security Fixes (1-2 недели)"
+    task_id: SEC-04
+    title: "Alert HMAC signature"
+    priority: high
+    estimate: small
+    status: todo
+  - sprint_id: S0
+    sprint_title: "Спринт 0 — Critical Security Fixes (1-2 недели)"
+    task_id: SEC-05
+    title: "Cron validation"
+    priority: high
+    estimate: small
+    status: todo
+  - sprint_id: S0
+    sprint_title: "Спринт 0 — Critical Security Fixes (1-2 недели)"
+    task_id: SEC-06
+    title: "OIDC email claim"
+    priority: medium
+    estimate: small
+    status: todo
+  - sprint_id: S1
+    sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
+    task_id: TD-01
+    title: "Завершить Telegram Bot уведомления"
+    priority: high
+    estimate: medium
+    status: todo
+  - sprint_id: S1
+    sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
+    task_id: TD-02
+    title: "SSH Key Installation service"
+    priority: high
+    estimate: medium
+    status: todo
+  - sprint_id: S1
+    sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
+    task_id: TD-03
+    title: "Exporter/Importer fix (T-BE-15)"
+    priority: high
+    estimate: small
+    status: todo
+  - sprint_id: S1
+    sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
+    task_id: TD-04
+    title: "Subscription service integration"
+    priority: medium
+    estimate: medium
+    status: todo
+  - sprint_id: S1
+    sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
+    task_id: TD-05
+    title: "Kubernetes runbook integration"
+    priority: medium
+    estimate: medium
+    status: todo
+  - sprint_id: S1
+    sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
+    task_id: TD-06
+    title: "Prometheus label aggregation"
+    priority: low
+    estimate: small
+    status: todo
+  - sprint_id: S1
+    sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
+    task_id: TD-07
+    title: "Inventory sync completion"
+    priority: medium
+    estimate: small
+    status: todo
+  - sprint_id: S1
+    sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
+    task_id: P-08
+    title: "Добить тесты критических путей"
+    priority: high
+    estimate: medium
+    status: completed
+  - sprint_id: S1
+    sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
+    task_id: P-09
+    title: "Актуализировать OpenAPI spec"
+    priority: high
+    estimate: small
+    status: in_progress
+  - sprint_id: S1
+    sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
+    task_id: K-01-sync
+    title: "Синхронизировать план по K-01"
+    priority: high
+    estimate: small
+    status: completed
+  - sprint_id: S2
+    sprint_title: "Спринт 2 — Verification & Test Coverage (4-6 недель)"
+    task_id: TEST-01
+    title: "Увеличить покрытие тестами до 80%+"
+    priority: critical
+    estimate: large
+    status: todo
+  - sprint_id: S2
+    sprint_title: "Спринт 2 — Verification & Test Coverage (4-6 недель)"
+    task_id: D-01
+    title: "E2E deployment testing"
+    priority: critical
+    estimate: medium
+    status: completed
+  - sprint_id: S2
+    sprint_title: "Спринт 2 — Verification & Test Coverage (4-6 недель)"
+    task_id: D-02
+    title: "Postman collection verification"
+    priority: high
+    estimate: small
+    status: completed
+  - sprint_id: S2
+    sprint_title: "Спринт 2 — Verification & Test Coverage (4-6 недель)"
+    task_id: K-04
+    title: "API performance benchmarks"
+    priority: medium
+    estimate: small
+    status: completed
+  - sprint_id: S3
+    sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
+    task_id: PROD-01
+    title: "Docker образ <50MB (FROM scratch)"
+    priority: high
+    estimate: medium
+    status: todo
+  - sprint_id: S3
+    sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
+    task_id: PROD-02
+    title: "Cross-platform builds (Linux, macOS)"
+    priority: high
+    estimate: small
+    status: todo
+  - sprint_id: S3
+    sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
+    task_id: PROD-03
+    title: "Redis-backed task queue"
+    priority: high
+    estimate: large
+    status: todo
+  - sprint_id: S3
+    sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
+    task_id: PROD-04
+    title: "WebSocket pub/sub для масштабирования"
+    priority: medium
+    estimate: large
+    status: todo
+  - sprint_id: S3
+    sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
+    task_id: D-03
+    title: "Обновить README.md"
+    priority: critical
+    estimate: small
+    status: completed
+  - sprint_id: S3
+    sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
+    task_id: D-04
+    title: "Обновить DEPLOY.md"
+    priority: high
+    estimate: medium
+    status: completed
+  - sprint_id: S3
+    sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
+    task_id: P-11
+    title: "Подготовить CHANGELOG.md"
+    priority: high
+    estimate: small
+    status: completed
+  - sprint_id: S3
+    sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
+    task_id: P-10
+    title: "Coverage в CI"
+    priority: medium
+    estimate: small
+    status: completed
+  - sprint_id: S4
+    sprint_title: "Спринт 4 — Release (1-2 недели)"
+    task_id: REL-01
+    title: "Финальный quality gate"
+    priority: critical
+    estimate: small
+    status: todo
+  - sprint_id: S4
+    sprint_title: "Спринт 4 — Release (1-2 недели)"
+    task_id: D-05
+    title: "GitHub Release v1.0.0"
+    priority: critical
+    estimate: small
+    status: in_progress
+  - sprint_id: S_AI_2026_04_01
+    sprint_title: "Закрыто ассистентом (2026-04-01)"
+    task_id: AG-01
+    title: "K-02 inline YAML dry-run"
+    priority: medium
+    estimate: small
+    status: completed
+  - sprint_id: S_AI_2026_04_01
+    sprint_title: "Закрыто ассистентом (2026-04-01)"
+    task_id: AG-02
+    title: "K-04 benchmarks + list optimize"
+    priority: medium
+    estimate: small
+    status: completed
+  - sprint_id: S_AI_2026_04_01
+    sprint_title: "Закрыто ассистентом (2026-04-01)"
+    task_id: AG-03
+    title: "P-09 часть: OpenAPI K8s WS"
+    priority: high
+    estimate: small
+    status: completed
+  - sprint_id: S_AI_2026_04_01
+    sprint_title: "Закрыто ассистентом (2026-04-01)"
+    task_id: AG-04
+    title: "P-10 tarpaulin CI"
+    priority: medium
+    estimate: small
+    status: completed
+  - sprint_id: S_AI_2026_04_01
+    sprint_title: "Закрыто ассистентом (2026-04-01)"
+    task_id: AG-05
+    title: "P-11 CHANGELOG + release notes"
+    priority: high
+    estimate: small
+    status: completed
+  - sprint_id: S_AI_2026_04_01
+    sprint_title: "Закрыто ассистентом (2026-04-01)"
+    task_id: AG-06
+    title: "D-05 часть: workflow linux binaries"
+    priority: critical
+    estimate: small
+    status: completed
+  - sprint_id: S_AI_2026_04_01
+    sprint_title: "Закрыто ассистентом (2026-04-01)"
+    task_id: AG-07
+    title: "K-01 cluster Events WebSocket"
+    priority: high
+    estimate: medium
+    status: completed
+  - sprint_id: S_AI_2026_04_01
+    sprint_title: "Закрыто ассистентом (2026-04-01)"
+    task_id: AG-08
+    title: "Тесты healthz/readyz + sprint3 merge"
+    priority: high
+    estimate: small
+    status: completed
+  - sprint_id: S_AI_2026_04_01
+    sprint_title: "Закрыто ассистентом (2026-04-01)"
+    task_id: AG-09
+    title: "MASTER_PLAN.md синхронизация"
+    priority: medium
+    estimate: small
+    status: completed
+  - sprint_id: S_AI_2026_04_01
+    sprint_title: "Закрыто ассистентом (2026-04-01)"
+    task_id: AG-10
+    title: "Git merge main + push"
+    priority: high
+    estimate: small
+    status: completed
+  - sprint_id: S5
+    sprint_title: "Спринт 5 — Post-release polish (опционально)"
+    task_id: K-05
+    title: "Mobile K8s UI + WCAG 2.1 AA"
+    priority: low
+    estimate: large
+    status: todo
+  - sprint_id: S5
+    sprint_title: "Спринт 5 — Post-release polish (опционально)"
+    task_id: OBS-01
+    title: "Сквозной correlation ID"
+    priority: low
+    estimate: medium
+    status: todo
+  - sprint_id: S5
+    sprint_title: "Спринт 5 — Post-release polish (опционально)"
+    task_id: DOC-01
+    title: "cargo doc + публикация документации"
+    priority: low
+    estimate: small
+    status: todo
+  - sprint_id: S5
+    sprint_title: "Спринт 5 — Post-release polish (опционально)"
+    task_id: EXT-01
+    title: "VS Code Extension"
+    priority: low
+    estimate: large
+    status: todo
+  - sprint_id: S5
+    sprint_title: "Спринт 5 — Post-release polish (опционально)"
+    task_id: TF-01
+    title: "Terraform Provider"
+    priority: low
+    estimate: large
+    status: todo
+  - sprint_id: S5
+    sprint_title: "Спринт 5 — Post-release polish (опционально)"
+    task_id: GRAPHQL-01
+    title: "GraphQL API expanded"
+    priority: low
+    estimate: medium
+    status: todo
+  - sprint_id: S5
+    sprint_title: "Спринт 5 — Post-release polish (опционально)"
+    task_id: RUNNER-01
+    title: "Remote Runners"
+    priority: medium
+    estimate: large
+    status: todo
+  - sprint_id: S5
+    sprint_title: "Спринт 5 — Post-release polish (опционально)"
+    task_id: VAULT-01
+    title: "HashiCorp Vault integration"
+    priority: medium
+    estimate: medium
+    status: todo
