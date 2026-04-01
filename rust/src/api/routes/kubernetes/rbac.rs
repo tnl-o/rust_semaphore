@@ -10,6 +10,8 @@ pub fn rbac_routes() -> Router<Arc<AppState>> {
     Router::new()
         // RBAC UX
         .route("/api/kubernetes/rbac/check", post(handlers::check_kubernetes_rbac))
+        .route("/api/kubernetes/rbac/check-action", get(handlers::check_rbac_action))
+        .route("/api/kubernetes/rbac/cache/clear", post(handlers::clear_rbac_cache))
         .route("/api/kubernetes/rbac/rules-review", post(handlers::post_self_subject_rules_review))
         .route("/api/kubernetes/namespaces/{name}/pod-security", get(handlers::get_namespace_pod_security))
         .route("/api/kubernetes/namespaces/{name}/pod-security", put(handlers::put_namespace_pod_security))

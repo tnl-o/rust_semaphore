@@ -1,15 +1,72 @@
 //! Kubernetes RBAC UX helpers
+//!
+//! SelfSubjectAccessReview с кэшированием (5 минут) для производительности
 
-use axum::{extract::State, Json};
+use axum::{extract::{State, Path, Query}, Json};
 use k8s_openapi::api::authorization::v1::{
     ResourceAttributes, SelfSubjectAccessReview, SelfSubjectAccessReviewSpec,
 };
 use kube::api::{Api, PostParams};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use std::collections::HashMap;
+use tokio::sync::RwLock;
+use tokio::time::{Duration, Instant};
 
 use crate::api::state::AppState;
 use crate::error::{Error, Result};
+
+// ── RBAC Cache ────────────────────────────────────────────────────
+
+/// Кэш для RBAC проверок (TTL 5 минут)
+pub struct RbacCache {
+    entries: RwLock<HashMap<String, CacheEntry>>,
+    ttl: Duration,
+}
+
+struct CacheEntry {
+    allowed: bool,
+    expires: Instant,
+}
+
+impl RbacCache {
+    pub fn new() -> Self {
+        Self {
+            entries: RwLock::new(HashMap::new()),
+            ttl: Duration::from_secs(300), // 5 минут
+        }
+    }
+
+    async fn get(&self, key: &str) -> Option<bool> {
+        let entries = self.entries.read().await;
+        entries.get(key).filter(|e| e.expires > Instant::now()).map(|e| e.allowed)
+    }
+
+    async fn set(&self, key: String, allowed: bool) {
+        let mut entries = self.entries.write().await;
+        entries.insert(key, CacheEntry {
+            allowed,
+            expires: Instant::now() + self.ttl,
+        });
+    }
+
+    pub async fn clear(&self) {
+        let mut entries = self.entries.write().await;
+        entries.clear();
+    }
+}
+
+// Глобальный кэш (ленивая инициализация)
+static mut RBAC_CACHE: Option<Arc<RbacCache>> = None;
+
+fn get_rbac_cache() -> Arc<RbacCache> {
+    unsafe {
+        if RBAC_CACHE.is_none() {
+            RBAC_CACHE = Some(Arc::new(RbacCache::new()));
+        }
+        RBAC_CACHE.clone().unwrap()
+    }
+}
 
 #[derive(Debug, Deserialize)]
 pub struct RbacCheckRequest {
@@ -56,6 +113,22 @@ async fn can_i(
     verb: &str,
     namespace: Option<&str>,
 ) -> Result<bool> {
+    // Создаём ключ для кэша
+    let cache_key = format!(
+        "{}:{}:{}:{}",
+        namespace.unwrap_or("_cluster"),
+        group,
+        resource,
+        verb
+    );
+
+    // Проверяем кэш
+    let cache = get_rbac_cache();
+    if let Some(allowed) = cache.get(&cache_key).await {
+        return Ok(allowed);
+    }
+
+    // Выполняем запрос к API
     let review = SelfSubjectAccessReview {
         metadata: Default::default(),
         spec: SelfSubjectAccessReviewSpec {
@@ -82,11 +155,16 @@ async fn can_i(
         .await
         .map_err(|e| Error::Kubernetes(format!("RBAC SelfSubjectAccessReview failed: {e}")))?;
 
-    Ok(created
+    let allowed = created
         .status
         .as_ref()
         .map(|s| s.allowed)
-        .unwrap_or(false))
+        .unwrap_or(false);
+
+    // Сохраняем в кэш
+    cache.set(cache_key, allowed).await;
+
+    Ok(allowed)
 }
 
 async fn check_resource(
@@ -234,4 +312,73 @@ pub async fn check_kubernetes_rbac(
             warning,
         },
     }))
+}
+
+// ── Quick RBAC Check Endpoint ────────────────────────────────────
+
+/// Запрос на проверку конкретного действия
+#[derive(Debug, Deserialize)]
+pub struct RbacActionCheck {
+    pub namespace: Option<String>,
+    pub group: Option<String>,
+    pub resource: String,
+    pub verb: String,
+}
+
+/// Ответ на проверку действия
+#[derive(Debug, Serialize)]
+pub struct RbacActionResponse {
+    pub allowed: bool,
+    pub namespace: Option<String>,
+    pub group: Option<String>,
+    pub resource: String,
+    pub verb: String,
+    pub cached: bool,
+}
+
+/// Быстрая проверка одного действия (resource + verb)
+/// GET /api/kubernetes/rbac/check-action?namespace=...&group=...&resource=...&verb=...
+pub async fn check_rbac_action(
+    State(state): State<Arc<AppState>>,
+    Query(payload): Query<RbacActionCheck>,
+) -> Result<Json<RbacActionResponse>> {
+    let client = state.kubernetes_client()?;
+    let review_api: Api<SelfSubjectAccessReview> = Api::all(client.raw().clone());
+    
+    // Проверяем, был ли результат в кэше
+    let cache_key = format!(
+        "{}:{}:{}:{}",
+        payload.namespace.as_deref().unwrap_or("_cluster"),
+        payload.group.as_deref().unwrap_or(""),
+        payload.resource,
+        payload.verb
+    );
+    
+    let cache = get_rbac_cache();
+    let cached = cache.get(&cache_key).await.is_some();
+    
+    let allowed = can_i(
+        &review_api,
+        payload.group.as_deref().unwrap_or(""),
+        &payload.resource,
+        &payload.verb,
+        payload.namespace.as_deref(),
+    ).await?;
+
+    Ok(Json(RbacActionResponse {
+        allowed,
+        namespace: payload.namespace,
+        group: payload.group,
+        resource: payload.resource,
+        verb: payload.verb,
+        cached,
+    }))
+}
+
+/// Очистка RBAC кэша
+/// POST /api/kubernetes/rbac/cache/clear
+pub async fn clear_rbac_cache() -> Result<Json<serde_json::Value>> {
+    let cache = get_rbac_cache();
+    cache.clear().await;
+    Ok(Json(serde_json::json!({"cleared": true, "message": "RBAC cache cleared"})))
 }

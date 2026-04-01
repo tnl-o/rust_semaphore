@@ -337,7 +337,7 @@ flowchart LR
 
 #### 2.8 RBAC-UX для фазы 2
 - [x] 403 от apiserver прокидывается как HTTP 403 + `K8S_FORBIDDEN` на всех эндпоинтах. ✅
-- [ ] SelfSubjectAccessReview / кэш `can-i` для скрытия кнопок мутаций. *(Phase 3)*
+- [x] SelfSubjectAccessReview / кэш `can-i` для скрытия кнопок мутаций. ✅ 2026-04-01 — Phase 3: RBAC кэш (5 мин TTL) + `/api/kubernetes/rbac/check-action` (быстрая проверка verb/resource) + frontend helpers (`checkRbac()`, `applyRbacVisibility()`)
 
 #### 2.9 Фронтенд
 - [x] Pods (`k8s-pods.html`), Deployments (`k8s-deploy.html`), DaemonSets (`k8s-daemonsets.html`), StatefulSets (`k8s-statefulsets.html`), Events (`k8s-events.html`). ✅ 2026-03-29

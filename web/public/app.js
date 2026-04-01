@@ -1082,11 +1082,73 @@ function renderSidebar() {
 
 document.addEventListener('DOMContentLoaded', () => { renderSidebar(); applyI18n(); });
 
+// ==================== RBAC Helpers ====================
+
+/**
+ * Проверка прав на действие с кэшированием (5 мин)
+ * @param {string} resource - ресурс (например, "pods", "deployments")
+ * @param {string} verb - действие (get, list, create, update, patch, delete)
+ * @param {string?} namespace - namespace (опционально)
+ * @param {string?} group - API group (опционально, например "apps", "batch")
+ * @returns {Promise<{allowed: boolean, cached: boolean}>}
+ */
+async function checkRbac(resource, verb, namespace = null, group = null) {
+    const params = new URLSearchParams();
+    params.set('resource', resource);
+    params.set('verb', verb);
+    if (namespace) params.set('namespace', namespace);
+    if (group) params.set('group', group);
+
+    const result = await api.get(`/kubernetes/rbac/check-action?${params.toString()}`);
+    return { allowed: result.allowed, cached: result.cached };
+}
+
+/**
+ * Проверка нескольких прав одновременно
+ * @param {Array<{resource, verb, namespace?, group?}>} checks
+ * @returns {Promise<Array<{allowed: boolean, cached: boolean}>>}
+ */
+async function checkRbacBatch(checks) {
+    return Promise.all(checks.map(c => checkRbac(c.resource, c.verb, c.namespace, c.group)));
+}
+
+/**
+ * Отобразить/скрыть элемент в зависимости от прав
+ * @param {string} selector - CSS селектор элемента
+ * @param {string} resource - ресурс
+ * @param {string} verb - действие
+ * @param {string?} namespace - namespace
+ * @param {string?} group - API group
+ */
+async function applyRbacVisibility(selector, resource, verb, namespace = null, group = null) {
+    const el = document.querySelector(selector);
+    if (!el) return;
+
+    const result = await checkRbac(resource, verb, namespace, group);
+    el.style.display = result.allowed ? '' : 'none';
+    el.setAttribute('data-rbac-hidden', !result.allowed);
+}
+
+/**
+ * Очистка RBAC кэша (для принудительного обновления прав)
+ */
+async function clearRbacCache() {
+    try {
+        await api.post('/kubernetes/rbac/cache/clear', {});
+    } catch (e) {
+        console.warn('Failed to clear RBAC cache:', e);
+    }
+}
+
 // ==================== Export ====================
 
 window.api = api;
 window.ui = ui;
 window.checkAuth = checkAuth;
+window.checkRbac = checkRbac;
+window.checkRbacBatch = checkRbacBatch;
+window.applyRbacVisibility = applyRbacVisibility;
+window.clearRbacCache = clearRbacCache;
 window.escapeHtml = escapeHtml;
 window.formatDate = formatDate;
 window.t = t;
