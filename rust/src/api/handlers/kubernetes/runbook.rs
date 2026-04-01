@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 use crate::api::state::AppState;
+use crate::api::extractors::AuthUser;
 use crate::db::store::{TaskManager, TemplateManager};
 use crate::error::{Error, Result};
 use crate::models::{Task, Template};
@@ -64,7 +65,7 @@ pub struct KubernetesContext {
 }
 
 /// Параметры для запуска задачи
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize, Default, Serialize)]
 pub struct RunbookTaskParams {
     /// Override arguments для ansible-playbook
     #[serde(default)]
@@ -252,6 +253,7 @@ pub struct RunbookResourceQuery {
 pub async fn execute_runbook(
     State(state): State<Arc<AppState>>,
     Path(project_id): Path<i32>,
+    user: AuthUser,
     Json(payload): Json<RunbookRequest>,
 ) -> Result<Json<RunbookResponse>> {
     // Проверяем существование шаблона
@@ -263,7 +265,10 @@ pub async fn execute_runbook(
     
     // Формируем аргументы с учётом Kubernetes контекста
     let arguments = build_runbook_arguments(&payload, &template.playbook);
-    
+
+    // Сериализуем task_params для params
+    let params_json = serde_json::to_string(&payload.task_params).unwrap_or_default();
+
     // Создаём задачу
     let task = Task {
         id: 0,
@@ -275,7 +280,7 @@ pub async fn execute_runbook(
         secret: None,
         arguments,
         git_branch: payload.task_params.git_branch.or(template.git_branch),
-        user_id: None, // TODO: получить из сессии
+        user_id: Some(user.user_id),
         integration_id: None,
         schedule_id: None,
         created: chrono::Utc::now(),
@@ -294,16 +299,20 @@ pub async fn execute_runbook(
         inventory_id: payload.task_params.inventory_id,
         repository_id: None,
         environment_id: payload.task_params.environment_id,
-        params: None, // TODO: добавить параметры
+        params: Some(serde_json::Value::String(params_json)),
     };
     
     // Сохраняем задачу
     let created_task = state.store.create_task(task).await
         .map_err(|e| Error::Other(format!("Failed to create task: {}", e)))?;
-    
-    // Запускаем задачу (отправляем в очередь)
-    // TODO: интеграция с task runner service
-    
+
+    // Запускаем задачу в фоне
+    let store_arc: Arc<dyn crate::db::store::Store + Send + Sync> = Arc::new(state.store.clone());
+    let task_to_run = created_task.clone();
+    tokio::spawn(async move {
+        crate::services::task_execution::execute_task(store_arc, task_to_run).await;
+    });
+
     Ok(Json(RunbookResponse {
         task_id: created_task.id,
         status: "waiting".to_string(),
