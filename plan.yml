@@ -1,0 +1,738 @@
+project: velum
+as_of: 2026-04-01
+goal: "Довести проект до production-ready и выпустить v1.0.0"
+status_summary:
+  feature_parity: "~97%"
+  kubernetes_ui: "~92%"
+  production_release_readiness: "~95%"
+principles:
+  - "Сначала закрыть блокеры релиза, потом nice-to-have"
+  - "Каждая задача должна завершаться проверкой"
+  - "Не смешивать feature work и release work в одном PR без причины"
+  - "Безопасность прежде всего: уязвимости закрываются немедленно"
+
+release_blockers:
+  - id: RB-01
+    title: "Полный green test run"
+  - id: RB-02
+    title: "E2E проверка deploy в Docker и Kubernetes"
+  - id: RB-03
+    title: "Актуальный OpenAPI"
+  - id: RB-04
+    title: "Финальная документация README/DEPLOY/CHANGELOG"
+  - id: RB-05
+    title: "Релиз v1.0.0"
+  - id: RB-06
+    title: "Безопасность: уязвимые зависимости"
+  - id: RB-07
+    title: "Критические TODO/FIXME в коде"
+
+sprints:
+  - sprint_id: S0
+    title: "Спринт 0 — Critical Security Fixes"
+    objective: "Закрыть критические уязвимости и проблемы безопасности перед релизом"
+    tasks:
+      - task_id: SEC-01
+        title: "Обновить уязвимые зависимости"
+        priority: critical
+        estimate: small
+        status: todo
+        subtasks:
+          - "quinn-proto: обновить до версии без CVE-2024-memory-safety"
+          - "wasmtime: обновить до версии без CVE-6.x"
+          - "protobuf: обновить до актуальной версии"
+          - "rsa: рассмотреть миграцию на ECDSA (Marvin Attack)"
+          - "fxhash: найти альтернативу (unmaintained)"
+          - "instant: найти альтернативу (unmaintained)"
+        done_when:
+          - "cargo audit не показывает критических уязвимостей"
+          - "Все зависимости обновлены без breaking changes"
+
+      - task_id: SEC-02
+        title: "Добавить cargo audit в CI pipeline"
+        priority: critical
+        estimate: small
+        status: todo
+        subtasks:
+          - "Добавить job cargo-audit в .github/workflows/rust.yml"
+          - "Настроить уведомления о новых уязвимостях"
+          - "Включить Dependabot для зависимостей"
+        done_when:
+          - "CI запускает cargo audit на каждый PR"
+          - "Dependabot настроен и активен"
+
+      - task_id: SEC-03
+        title: "JWT logout blacklist"
+        priority: critical
+        estimate: small
+        status: todo
+        subtasks:
+          - "Реализовать Redis-backed token blacklist"
+          - "Добавить проверку blacklist при валидации токена"
+          - "Настроить TTL для blacklist записей"
+        done_when:
+          - "JWT токены инвалидируются при logout"
+          - "Тесты покрывают сценарий logout+retry"
+
+      - task_id: SEC-04
+        title: "Alert HMAC signature"
+        priority: high
+        estimate: small
+        status: todo
+        subtasks:
+          - "Добавить X-Semaphore-Signature заголовок"
+          - "Реализовать HMAC-SHA256 подпись webhook payload"
+          - "Добавить timestamp для защиты от replay attacks"
+        done_when:
+          - "Webhooks подписываются корректно"
+          - "Тесты подтверждают валидацию подписи"
+
+      - task_id: SEC-05
+        title: "Cron validation"
+        priority: high
+        estimate: small
+        status: todo
+        subtasks:
+          - "Добавить cron crate в scheduler_pool.rs"
+          - "Валидировать cron выражения перед сохранением"
+          - "Добавить понятные ошибки при невалидном cron"
+        done_when:
+          - "Невалидные cron отклоняются на уровне API"
+          - "Тесты покрывают edge cases"
+
+      - task_id: SEC-06
+        title: "OIDC email claim"
+        priority: medium
+        estimate: small
+        status: todo
+        subtasks:
+          - "Добавить email в AuthConfig"
+          - "Извлекать email из OIDC claims"
+          - "Документировать настройку OIDC providers"
+        done_when:
+          - "Email корректно извлекается из OIDC"
+          - "Документация обновлена"
+
+    sprint_done_when:
+      - "SEC-01 завершён"
+      - "SEC-02 завершён"
+      - "SEC-03 завершён"
+      - "SEC-04 завершён"
+      - "cargo audit green"
+      - "Нет критических security issues"
+
+  - sprint_id: S1
+    title: "Спринт 1 — Stabilization"
+    objective: "Закрыть остатки по качеству и зафиксировать реальное состояние backend/API"
+    tasks:
+      - task_id: TD-01
+        title: "Завершить Telegram Bot уведомления"
+        priority: high
+        estimate: medium
+        status: todo
+        subtasks:
+          - "Реализовать 4 стаба в telegram_bot/mod.rs"
+          - "Интеграция с alert service"
+          - "Настройка уведомлений о задачах"
+          - "Тесты bot flows"
+        done_when:
+          - "Telegram бот отправляет уведомления"
+          - "Тесты проходят"
+
+      - task_id: TD-02
+        title: "SSH Key Installation service"
+        priority: high
+        estimate: medium
+        status: todo
+        subtasks:
+          - "Завершить 5 стабов в access_key_installation_service.rs"
+          - "Интеграция с task runner"
+          - "Тесты installation paths"
+        done_when:
+          - "SSH ключи устанавливаются корректно"
+          - "Тесты проходят"
+
+      - task_id: TD-03
+        title: "Exporter/Importer fix (T-BE-15)"
+        priority: high
+        estimate: small
+        status: todo
+        subtasks:
+          - "Исправить async/sync конфликт в exporter_entities.rs"
+          - "Удалить dead code"
+          - "Тесты export/import flows"
+        done_when:
+          - "Экспорт/импорт работают без ошибок"
+          - "Нет компиляционных предупреждений"
+
+      - task_id: TD-04
+        title: "Subscription service integration"
+        priority: medium
+        estimate: medium
+        status: todo
+        subtasks:
+          - "Интеграция в auth.rs:610"
+          - "Интеграция в user.rs:108,128"
+          - "Тесты subscription checks"
+        done_when:
+          - "PRO функции проверяют подписку"
+          - "Тесты проходят"
+
+      - task_id: TD-05
+        title: "Kubernetes runbook integration"
+        priority: medium
+        estimate: medium
+        status: todo
+        subtasks:
+          - "Реализовать user session в runbook.rs:278"
+          - "Добавить params поддержку runbook.rs:297"
+          - "Интеграция с task runner runbook.rs:305"
+        done_when:
+          - "Kubernetes runbooks работают"
+          - "Тесты проходят"
+
+      - task_id: TD-06
+        title: "Prometheus label aggregation"
+        priority: low
+        estimate: small
+        status: todo
+        subtasks:
+          - "Реализовать aggregate by label selectors"
+          - "Тесты метрик"
+        done_when:
+          - "Метрики агрегируются корректно"
+
+      - task_id: TD-07
+        title: "Inventory sync completion"
+        priority: medium
+        estimate: small
+        status: todo
+        subtasks:
+          - "Реализовать update inventory в inventory_sync.rs:447"
+          - "Тесты sync flows"
+        done_when:
+          - "Inventory sync работает полностью"
+
+      - task_id: P-08
+        title: "Добить тесты критических путей"
+        priority: high
+        estimate: medium
+        status: in_progress
+        subtasks:
+          - "Добавить недостающие тесты критических сценариев backend"
+          - "Проверить health/readiness probes"
+          - "Проверить access key install path"
+          - "Проверить webhook HMAC path"
+          - "Собрать список оставшихся непокрытых критических сценариев"
+        done_when:
+          - "Есть явный список критических тестов"
+          - "Все новые тесты проходят локально"
+          - "Нет красных unit/integration тестов по критическим путям"
+
+      - task_id: P-09
+        title: "Актуализировать OpenAPI spec"
+        priority: high
+        estimate: small
+        status: todo
+        subtasks:
+          - "Добавить K8s WebSocket endpoints в spec"
+          - "Сверить healthz/readyz и фактические route paths"
+          - "Сверить auth, notifications, kubernetes observability endpoints"
+          - "Проверить совместимость с api-docs.yml / openapi.yml"
+        done_when:
+          - "Спека покрывает новые/актуальные endpoints"
+          - "Нет явных расхождений между routes и OpenAPI"
+
+      - task_id: K-01-sync
+        title: "Синхронизировать план по K-01"
+        priority: high
+        estimate: small
+        status: todo
+        subtasks:
+          - "Обновить статус K-01 в MASTER_PLAN.md"
+          - "Зафиксировать cluster-wide и namespace-scoped events stream"
+        done_when:
+          - "План не противоречит фактическому коду"
+
+    sprint_done_when:
+      - "TD-01 завершён"
+      - "TD-02 завершён"
+      - "TD-03 завершён"
+      - "P-08 завершён"
+      - "P-09 завершён"
+      - "План отражает реальное состояние"
+
+  - sprint_id: S2
+    title: "Спринт 2 — Verification & Test Coverage"
+    objective: "Подтвердить, что проект реально разворачивается и работает в целевых средах, увеличить покрытие тестами"
+    tasks:
+      - task_id: TEST-01
+        title: "Увеличить покрытие тестами до 80%+"
+        priority: critical
+        estimate: large
+        status: todo
+        subtasks:
+          - "task_runner: logging.rs, lifecycle.rs, hooks.rs, details.rs"
+          - "db/sql/managers: pagination, filtering, transactions"
+          - "api/handlers: HTTP-level integration tests"
+          - "kubernetes: client mocks integration"
+        done_when:
+          - "Покрытие тестами >= 80%"
+          - "Критические модули покрыты на 90%+"
+
+      - task_id: D-01
+        title: "E2E deployment testing"
+        priority: critical
+        estimate: medium
+        status: completed
+        subtasks:
+          - "Проверить docker-compose сценарий"
+          - "Проверить cold start приложения"
+          - "Проверить login/health/metrics/основные CRUD paths"
+          - "Проверить Kubernetes deployment flow"
+          - "Проверить K8s UI ключевые страницы/ручки"
+          - "Собрать короткий отчёт: что прошло, что сломано"
+        done_when:
+          - "Есть воспроизводимый E2E сценарий"
+          - "Docker deploy проходит"
+          - "Kubernetes deploy проходит или есть короткий bug list"
+
+      - task_id: D-02
+        title: "Postman collection verification"
+        priority: high
+        estimate: small
+        status: completed
+        subtasks:
+          - "Прогнать коллекцию Postman"
+          - "Разделить ошибки на spec mismatch / auth / runtime bug"
+          - "Завести список дефектов по результату"
+        done_when:
+          - "Есть отчёт по покрытию коллекции"
+          - "Все критические endpoints подтверждены"
+
+      - task_id: K-04
+        title: "API performance benchmarks"
+        priority: medium
+        estimate: small
+        status: todo
+        subtasks:
+          - "Выбрать набор K8s API endpoints для замера"
+          - "Снять p50/p95"
+          - "Задокументировать baseline"
+        done_when:
+          - "Есть baseline benchmark report"
+
+    sprint_done_when:
+      - "TEST-01 завершён (80%+ coverage)"
+      - "E2E сценарий подтверждён"
+      - "Postman verification завершён"
+      - "Есть baseline по производительности"
+
+  - sprint_id: S3
+    title: "Спринт 3 — Production Hardening & Docs"
+    objective: "Подготовить проект к production использованию: оптимизация, документация, CI/CD"
+    tasks:
+      - task_id: PROD-01
+        title: "Docker образ <50MB (FROM scratch)"
+        priority: high
+        estimate: medium
+        status: todo
+        subtasks:
+          - "Миграция на multi-stage build с scratch"
+          - "Статическая линковка (musl)"
+          - "Удаление лишних файлов из образа"
+          - "Оптимизация слоёв"
+        done_when:
+          - "Размер образа <50MB"
+          - "Все функции работают"
+
+      - task_id: PROD-02
+        title: "Cross-platform builds (Linux, macOS)"
+        priority: high
+        estimate: small
+        status: todo
+        subtasks:
+          - "Настроить GitHub Actions для macOS"
+          - "Добавить cross-compilation для ARM64"
+          - "Публикация binaries для всех платформ"
+        done_when:
+          - "Linux amd64/arm64 binaries"
+          - "macOS amd64/arm64 binaries"
+          - "Автоматическая публикация в release"
+
+      - task_id: PROD-03
+        title: "Redis-backed task queue"
+        priority: high
+        estimate: large
+        status: todo
+        subtasks:
+          - "Реализовать persistence task queue"
+          - "Интеграция с Redis"
+          - "Миграция с in-memory"
+          - "Тесты failover сценариев"
+        done_when:
+          - "Задачи сохраняются при рестарте"
+          - "HA режим работает"
+
+      - task_id: PROD-04
+        title: "WebSocket pub/sub для масштабирования"
+        priority: medium
+        estimate: large
+        status: todo
+        subtasks:
+          - "Миграция на Redis pub/sub"
+          - "Поддержка >1000 клиентов"
+          - "Тесты нагрузки"
+        done_when:
+          - "WebSocket работает через Redis"
+          - "Нагрузочные тесты проходят"
+
+      - task_id: D-03
+        title: "Обновить README.md"
+        priority: critical
+        estimate: small
+        status: completed
+        subtasks:
+          - "Переписать quick start"
+          - "Обновить разделы по backend/API/K8s UI"
+          - "Обновить supported features"
+          - "Добавить health/metrics/OpenAPI/WS overview"
+        done_when:
+          - "README соответствует текущему продукту"
+
+      - task_id: D-04
+        title: "Обновить DEPLOY.md"
+        priority: high
+        estimate: medium
+        status: completed
+        subtasks:
+          - "Описать production deployment"
+          - "Описать env vars"
+          - "Описать probes/logging/metrics"
+          - "Описать Docker/K8s deployment path"
+        done_when:
+          - "DEPLOY.md достаточен для реального деплоя"
+
+      - task_id: P-11
+        title: "Подготовить CHANGELOG.md"
+        priority: high
+        estimate: small
+        status: todo
+        subtasks:
+          - "Собрать изменения по релизу"
+          - "Разделить Added/Changed/Fixed"
+          - "Сформировать запись для v1.0.0"
+        done_when:
+          - "CHANGELOG пригоден для релиза"
+
+      - task_id: P-10
+        title: "Coverage в CI"
+        priority: medium
+        estimate: small
+        status: todo
+        subtasks:
+          - "Подключить coverage job"
+          - "Добавить артефакты/отчёт"
+          - "Задать минимальный порог или informational mode"
+        done_when:
+          - "CI считает coverage без ручных действий"
+
+    sprint_done_when:
+      - "PROD-01 завершён (Docker <50MB)"
+      - "PROD-02 завершён (cross-platform)"
+      - "README готов"
+      - "DEPLOY.md готов"
+      - "CHANGELOG.md готов"
+      - "CI coverage job работает"
+
+  - sprint_id: S4
+    title: "Спринт 4 — Release"
+    objective: "Сделать финальную приёмку и выпустить v1.0.0"
+    tasks:
+      - task_id: REL-01
+        title: "Финальный quality gate"
+        priority: critical
+        estimate: small
+        status: todo
+        subtasks:
+          - "Прогнать cargo test"
+          - "Прогнать cargo clippy -- -D warnings"
+          - "Проверить release build"
+          - "Проверить, что release blockers закрыты"
+        done_when:
+          - "Все quality gates зелёные"
+
+      - task_id: D-05
+        title: "GitHub Release v1.0.0"
+        priority: critical
+        estimate: small
+        status: todo
+        subtasks:
+          - "Подготовить release notes"
+          - "Опубликовать binaries"
+          - "Опубликовать Docker image"
+          - "Создать GitHub Release tag/version"
+        done_when:
+          - "Релиз опубликован"
+
+    sprint_done_when:
+      - "Release quality gate пройден"
+      - "v1.0.0 опубликован"
+
+optional_sprints:
+  - sprint_id: S5
+    title: "Спринт 5 — Post-release polish"
+    objective: "Добрать необязательные, но полезные улучшения"
+    tasks:
+      - task_id: K-05
+        title: "Mobile K8s UI + WCAG 2.1 AA"
+        priority: low
+        estimate: large
+        status: todo
+        subtasks:
+          - "Mobile responsive design"
+          - "WCAG 2.1 AA compliance"
+          - "i18n (EN/RU/CN)"
+          - "Keyboard shortcuts"
+        done_when:
+          - "UI работает на мобильных"
+          - "Accessibility audit пройден"
+
+      - task_id: OBS-01
+        title: "Сквозной correlation ID"
+        priority: low
+        estimate: medium
+        status: todo
+        subtasks:
+          - "Добавить X-Request-ID middleware"
+          - "Логирование correlation ID"
+          - "Трассировка через сервисы"
+        done_when:
+          - "Каждый запрос имеет correlation ID"
+          - "Логи содержат correlation ID"
+
+      - task_id: DOC-01
+        title: "cargo doc + публикация документации"
+        priority: low
+        estimate: small
+        status: todo
+        subtasks:
+          - "Добавить документацию ко всем модулям"
+          - "Настроить публикацию на docs.rs"
+          - "Добавить примеры использования"
+        done_when:
+          - "cargo doc без предупреждений"
+          - "Документация опубликована"
+
+      - task_id: EXT-01
+        title: "VS Code Extension"
+        priority: low
+        estimate: large
+        status: todo
+        subtasks:
+          - "Создать extension scaffold"
+          - "Интеграция с Velum API"
+          - "Task templates IntelliSense"
+          - "Playbook snippets"
+        done_when:
+          - "Extension опубликован в Marketplace"
+          - "Базовые функции работают"
+
+      - task_id: TF-01
+        title: "Terraform Provider"
+        priority: low
+        estimate: large
+        status: todo
+        subtasks:
+          - "Создать provider scaffold"
+          - "Реализовать resources (project, template, key)"
+          - "Документация provider"
+          - "Публикация в Terraform Registry"
+        done_when:
+          - "Provider работает"
+          - "Опубликован в Registry"
+
+      - task_id: GRAPHQL-01
+        title: "GraphQL API expanded"
+        priority: low
+        estimate: medium
+        status: todo
+        subtasks:
+          - "Добавить Kubernetes queries"
+          - "Добавить subscriptions"
+          - "Оптимизация resolver'ов"
+        done_when:
+          - "GraphQL покрывает 80% REST API"
+          - "Subscriptions работают"
+
+      - task_id: RUNNER-01
+        title: "Remote Runners"
+        priority: medium
+        estimate: large
+        status: todo
+        subtasks:
+          - "Протокол регистрации раннеров"
+          - "Heartbeat механизм"
+          - "Task distribution"
+          - "Runner health monitoring"
+        done_when:
+          - "Remote runners подключаются"
+          - "Задачи выполняются на раннерах"
+
+      - task_id: VAULT-01
+        title: "HashiCorp Vault integration"
+        priority: medium
+        estimate: medium
+        status: todo
+        subtasks:
+          - "Vault secret storage backend"
+          - "Dynamic secrets"
+          - "Lease management"
+        done_when:
+          - "Secrets хранятся в Vault"
+          - "Dynamic secrets работают"
+
+    sprint_done_when:
+      - "K-05 завершён (опционально)"
+      - "EXT-01 завершён (опционально)"
+      - "TF-01 завершён (опционально)"
+
+recommended_execution_order:
+  - "S0 -> S1 -> S2 -> S3 -> S4"
+  - "S5 только после релиза"
+
+team_split:
+  - lane: "Security/Backend"
+    owns:
+      - "SEC-01"
+      - "SEC-02"
+      - "SEC-03"
+      - "SEC-04"
+      - "SEC-05"
+      - "SEC-06"
+      - "TD-01"
+      - "TD-02"
+      - "TD-03"
+  - lane: "Backend/API"
+    owns:
+      - "TD-04"
+      - "TD-05"
+      - "TD-06"
+      - "TD-07"
+      - "P-08"
+      - "P-09"
+      - "REL-01"
+  - lane: "Infra/QA"
+    owns:
+      - "TEST-01"
+      - "D-01"
+      - "D-02"
+      - "K-04"
+      - "P-10"
+      - "PROD-01"
+      - "PROD-02"
+      - "PROD-03"
+      - "PROD-04"
+  - lane: "Docs/Release"
+    owns:
+      - "D-03"
+      - "D-04"
+      - "P-11"
+      - "D-05"
+  - lane: "Frontend/UX"
+    owns:
+      - "K-05"
+  - lane: "Extensions/Integrations"
+    owns:
+      - "EXT-01"
+      - "TF-01"
+      - "GRAPHQL-01"
+      - "RUNNER-01"
+      - "VAULT-01"
+
+definition_of_done:
+  - "Код в main или через принятый PR"
+  - "Есть проверка или тест"
+  - "Документация обновлена, если поведение/интерфейс менялся"
+  - "Статус в MASTER_PLAN.md синхронизирован"
+
+project_done_when:
+  - "Все release_blockers закрыты (RB-01..RB-07)"
+  - "SEC-01: cargo audit green (0 уязвимостей)"
+  - "SEC-02: cargo audit в CI"
+  - "SEC-03: JWT blacklist реализован"
+  - "SEC-04: Alert HMAC signature работает"
+  - "TD-01: Telegram Bot уведомления работают"
+  - "TD-02: SSH Key Installation завершён"
+  - "TD-03: Exporter/Importer исправлен"
+  - "TEST-01: Покрытие тестами >= 80%"
+  - "README/DEPLOY/CHANGELOG актуальны"
+  - "cargo test green"
+  - "cargo clippy -- -D warnings green"
+  - "Есть подтверждённый E2E deploy (Docker + K8s)"
+  - "Опубликован GitHub Release v1.0.0"
+
+# ============================================================================
+# СВОДНАЯ ТАБЛИЦА ВСЕХ ЗАДАЧ
+# ============================================================================
+#
+# Приориеты: critical > high > medium > low
+# Оценки: small (1-3 дня), medium (3-10 дней), large (10+ дней)
+#
+# Спринт 0 — Critical Security Fixes (1-2 недели)
+# ─────────────────────────────────────────────────────────────────────────────
+# SEC-01  | Обновить уязвимые зависимости          | critical | small  | todo
+# SEC-02  | Добавить cargo audit в CI              | critical | small  | todo
+# SEC-03  | JWT logout blacklist                   | critical | small  | todo
+# SEC-04  | Alert HMAC signature                   | high     | small  | todo
+# SEC-05  | Cron validation                        | high     | small  | todo
+# SEC-06  | OIDC email claim                       | medium   | small  | todo
+#
+# Спринт 1 — Stabilization (2-4 недели)
+# ─────────────────────────────────────────────────────────────────────────────
+# TD-01   | Завершить Telegram Bot уведомления     | high     | medium | todo
+# TD-02   | SSH Key Installation service           | high     | medium | todo
+# TD-03   | Exporter/Importer fix (T-BE-15)        | high     | small  | todo
+# TD-04   | Subscription service integration       | medium   | medium | todo
+# TD-05   | Kubernetes runbook integration         | medium   | medium | todo
+# TD-06   | Prometheus label aggregation           | low      | small  | todo
+# TD-07   | Inventory sync completion              | medium   | small  | todo
+# P-08    | Добить тесты критических путей         | high     | medium | in_progress
+# P-09    | Актуализировать OpenAPI spec           | high     | small  | todo
+# K-01-sync | Синхронизировать план по K-01        | high     | small  | todo
+#
+# Спринт 2 — Verification & Test Coverage (4-6 недель)
+# ─────────────────────────────────────────────────────────────────────────────
+# TEST-01 | Увеличить покрытие тестами до 80%+     | critical | large  | todo
+# D-01    | E2E deployment testing                 | critical | medium | completed
+# D-02    | Postman collection verification        | high     | small  | completed
+# K-04    | API performance benchmarks             | medium   | small  | todo
+#
+# Спринт 3 — Production Hardening & Docs (6-8 недель)
+# ─────────────────────────────────────────────────────────────────────────────
+# PROD-01 | Docker образ <50MB (FROM scratch)      | high     | medium | todo
+# PROD-02 | Cross-platform builds (Linux, macOS)   | high     | small  | todo
+# PROD-03 | Redis-backed task queue                | high     | large  | todo
+# PROD-04 | WebSocket pub/sub для масштабирования  | medium   | large  | todo
+# D-03    | Обновить README.md                     | critical | small  | completed
+# D-04    | Обновить DEPLOY.md                     | high     | medium | completed
+# P-11    | Подготовить CHANGELOG.md               | high     | small  | todo
+# P-10    | Coverage в CI                          | medium   | small  | todo
+#
+# Спринт 4 — Release (1-2 недели)
+# ─────────────────────────────────────────────────────────────────────────────
+# REL-01  | Финальный quality gate                 | critical | small  | todo
+# D-05    | GitHub Release v1.0.0                  | critical | small  | todo
+#
+# Спринт 5 — Post-release polish (опционально)
+# ─────────────────────────────────────────────────────────────────────────────
+# K-05    | Mobile K8s UI + WCAG 2.1 AA            | low      | large  | todo
+# OBS-01  | Сквозной correlation ID                | low      | medium | todo
+# DOC-01  | cargo doc + публикация документации    | low      | small  | todo
+# EXT-01  | VS Code Extension                      | low      | large  | todo
+# TF-01   | Terraform Provider                     | low      | large  | todo
+# GRAPHQL-01 | GraphQL API expanded                | low      | medium | todo
+# RUNNER-01 | Remote Runners                       | medium   | large  | todo
+# VAULT-01 | HashiCorp Vault integration           | medium   | medium | todo
+#
+# ============================================================================
