@@ -181,7 +181,7 @@ sprints:
         title: "SSH Key Installation service"
         priority: high
         estimate: medium
-        status: todo
+        status: in_progress
         subtasks:
           - "Завершить 5 стабов в access_key_installation_service.rs"
           - "Интеграция с task runner"
