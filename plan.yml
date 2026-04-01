@@ -74,7 +74,9 @@ sprints:
         title: "JWT logout blacklist"
         priority: critical
         estimate: small
-        status: todo
+        status: in_progress
+        assignee: agent-4829
+        started_at: "2026-04-01T15:45:00Z"
         subtasks:
           - "Реализовать Redis-backed token blacklist"
           - "Добавить проверку blacklist при валидации токена"
@@ -876,7 +878,9 @@ task_index:
     title: "JWT logout blacklist"
     priority: critical
     estimate: small
-    status: todo
+    status: in_progress
+    assignee: agent-4829
+    started_at: "2026-04-01T15:45:00Z"
   - sprint_id: S0
     sprint_title: "Спринт 0 — Critical Security Fixes (1-2 недели)"
     task_id: SEC-04
