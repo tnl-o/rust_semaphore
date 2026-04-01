@@ -316,7 +316,7 @@ flowchart LR
 - [x] **Logs:** snapshot (`tail_lines`, `since_seconds`, `container`, `previous`). ✅ 2026-03-29
 - [x] **Evict:** `POST .../evict` через Eviction API (Policy/V1), обработка 429 при PDB. ✅ 2026-04-01 — backend `evict_pod()` в `workloads_k8s.rs` + frontend в `k8s-pods.html`
 - [x] **Exec:** WebSocket прокси + таймауты. ✅ 2026-04-01 — Phase 4: `pod_exec_ws()` с timeout сессии (5 мин) + heartbeat (30 сек) + confirm при подключении
-- [ ] **Port-forward.** *(Phase 4)*
+- [x] **Port-forward.** ✅ 2026-04-01 — Phase 4: `pod_portforward()` с connection timeout (30 сек) + session timeout (10 мин) + frontend в `k8s-pods.html` (WebSocket туннель к порту pod)
 - [ ] **YAML get/put.** *(backlog)*
 
 #### 2.3 Универсальный YAML / apply

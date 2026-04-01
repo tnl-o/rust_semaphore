@@ -153,6 +153,8 @@ pub async fn pod_portforward(
     Query(q): Query<PodPortForwardQuery>,
     ws: WebSocketUpgrade,
 ) -> impl IntoResponse {
+    use tokio::time::{timeout, Duration};
+    
     let kube_client = match state.kubernetes_client() {
         Ok(c) => c,
         Err(e) => return (StatusCode::SERVICE_UNAVAILABLE, Json(json!({"error": e.to_string()}))).into_response(),
@@ -160,10 +162,23 @@ pub async fn pod_portforward(
 
     ws.on_upgrade(move |socket| async move {
         let pods: Api<Pod> = Api::namespaced(kube_client.raw().clone(), &namespace);
-        match pods.portforward(&name, &[q.port]).await {
-            Ok(mut pf) => {
+        
+        // Connection timeout: 30 секунд
+        let pf_result = timeout(
+            Duration::from_secs(30),
+            pods.portforward(&name, &[q.port])
+        ).await;
+
+        match pf_result {
+            Ok(Ok(mut pf)) => {
                 match pf.take_stream(q.port) {
-                    Some(stream) => handle_portforward_socket(socket, stream).await,
+                    Some(stream) => {
+                        // Session timeout: 10 минут для port-forward
+                        let _ = timeout(
+                            Duration::from_secs(600),
+                            handle_portforward_socket(socket, stream)
+                        ).await;
+                    }
                     None => {
                         let mut ws = socket;
                         let _ = ws.send(Message::Text(
@@ -172,10 +187,16 @@ pub async fn pod_portforward(
                     }
                 }
             }
-            Err(e) => {
+            Ok(Err(e)) => {
                 let mut ws = socket;
                 let _ = ws.send(Message::Text(
                     format!("{{\"error\":\"{}\"}}", e).into()
+                )).await;
+            }
+            Err(_) => {
+                let mut ws = socket;
+                let _ = ws.send(Message::Text(
+                    "{\"error\":\"Connection timeout (30s)\"}".into()
                 )).await;
             }
         }
