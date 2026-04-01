@@ -5,6 +5,144 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 этот проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1] - 2026-04-01
+
+### 🔧 Bug Fixes
+
+#### Компиляция и предупреждения
+- **ambiguous_glob_reexports** — добавлен `#[allow(ambiguous_glob_reexports)]` для `daemonsets` и `statefulsets` модулей
+- **static_mut_refs** — замена `unsafe static mut Option` на `OnceCell<Arc<RbacCache>>` в RBAC кэше
+- **Clippy warnings** — исправлены предупреждения в `statefulsets.rs`:
+  - `ListParams` инициализация через struct syntax вместо мутации
+  - `and_then(|x| Some(y))` → `map(|x| y)` для `service_name`
+
+#### Code Quality
+- `cargo check`: 0 errors, 0 warnings
+- `cargo clippy --lib`: 0 errors, 0 warnings (было 6 warnings)
+- `cargo build --release`: успешно
+
+### Changed
+- **rust/src/api/handlers/kubernetes/mod.rs** — добавлены `#[allow(ambiguous_glob_reexports)]` атрибуты
+- **rust/src/api/handlers/kubernetes/rbac.rs** — безопасная инициализация кэша через `OnceCell`
+- **rust/src/api/handlers/kubernetes/statefulsets.rs** — clippy fixes
+
+---
+
+## [2.5.0] - 2026-04-01
+
+### 🎉 Kubernetes UI Release — Production Ready
+
+#### ✨ Добавлено
+
+##### Kubernetes Resources (Full CRUD)
+- **Pods**: list/get/delete, evict API (с обработкой 429 PDB), logs streaming, exec terminal
+- **Deployments**: scale, restart, **pause**, **resume**, **rollback**, detailed rollout history
+- **ReplicaSets, DaemonSets, StatefulSets**: полный CRUD + pods listing
+- **Services**: CRUD, EndpointSlices, headless badge, selector matching
+- **ConfigMaps**: CRUD, YAML editor, validate, references (Pods/Deployments/StatefulSets)
+- **Secrets**: CRUD, **masked view**, reveal endpoint, external secrets link
+- **NetworkPolicy**: CRUD, ingress/egress visualization, CNI note
+- **Ingress/IngressClass**: CRUD, TLS, annotations, rule-block design
+- **Gateway API**: read-only (Gateway, HTTPRoute, GRPCRoute)
+- **Storage**: PV, PVC, StorageClass CRUD, CSI snapshots, default badge
+- **RBAC**: ServiceAccounts, Roles, ClusterRoles, RoleBindings, ClusterRoleBindings
+- **Batch**: Jobs, CronJobs (suspend/resume), PriorityClass, PodDisruptionBudgets
+- **Advanced**: HPA, VPA (read-only), ResourceQuota, LimitRange, CRD, Custom Objects
+
+##### Observability
+- **Metrics API**: node/pod CPU/Memory, top nodes/pods, graceful degradation без metrics-server
+- **Events**: cluster-wide stream, fieldSelector фильтры, WebSocket streaming
+- **Topology**: Service → Deployment → Pods graph (SVG, label-matching)
+
+##### Helm Integration
+- **Repositories**: add/remove/update
+- **Charts**: search, values display
+- **Releases**: install, upgrade, rollback, uninstall, history, values editor
+
+##### Security Features
+- **Audit Logging**: `KubernetesAuditLogger` (log_resource_creation/update/delete, log_helm_install/upgrade/rollback/uninstall)
+- **Audit Export**: CSV/JSON export endpoint
+- **RBAC can-i кэш**: 5 мин TTL, `/api/kubernetes/rbac/check-action` endpoint
+- **Frontend helpers**: `checkRbac()`, `checkRbacBatch()`, `applyRbacVisibility()`
+- **Rate Limiting**: WebSocket 60/min, burst 10/sec, 10 concurrent connections
+- **Timeouts**: Exec session 5 мин + connection 30 сек, Port-forward 10 мин
+- **Secrets Masking**: `SecretMaskedView` с "***", reveal endpoint
+- **No credentials в логах**: error без kubeconfig и секретов
+
+##### Multi-Cluster
+- **Cluster Management**: add/remove/switch кластеров
+- **Cluster Switcher**: UI переключатель (`k8s-clusters.html`)
+- **Context Isolation**: cluster id в пути API
+
+##### Tools
+- **Apply/Diff**: YAML apply с `dry-run=server`, diff manifest, kubectl command generator
+- **Backup/Restore**: Velero read-only, backup runbook
+- **GitOps**: ArgoCD/Flux read-only integration
+- **Inventory Sync**: Ansible inventory ↔ Kubernetes nodes sync
+
+##### Frontend (33 страницы)
+- `k8s-pods.html` — Pods с logs/exec/port-forward/evict
+- `k8s-deployments.html` — Deployments с pause/resume/rollback/history
+- `k8s-services.html` — Services с EndpointSlices
+- `k8s-configmaps.html` — ConfigMaps с YAML редактором
+- `k8s-secrets.html` — Secrets с masking
+- `k8s-storage.html` — PV/PVC/StorageClass
+- `k8s-rbac.html` — RBAC resources
+- `k8s-helm.html` — Helm releases/repos/charts
+- `k8s-audit.html` — Audit log с export
+- `k8s-backup.html` — Backup/Restore
+- `k8s-gitops.html` — GitOps (ArgoCD/Flux)
+- `k8s-clusters.html` — Multi-cluster switcher
+- `k8s-apply.html` — YAML apply с dry-run и diff
+- `k8s-topology.html` — Topology visualization
+- `k8s-metrics.html`, `k8s-events.html`, `k8s-observability.html`
+- `k8s-jobs.html`, `k8s-cronjobs.html`
+- `k8s-ingress.html`, `k8s-networkpolicy.html`, `k8s-gateway.html`
+- `k8s-statefulsets.html`, `k8s-daemonsets.html`, `k8s-replicasets.html`
+- `k8s-hpa.html`, `k8s-crd.html`
+- `k8s-quota.html`, `k8s-limitrange.html`
+- `k8s-troubleshoot.html`, `k8s-runbooks.html`, `k8s-inventory-sync.html`
+
+##### Backend (Rust)
+- **kube-rs client**: kube 0.98, k8s-openapi 0.24, v1_30
+- **Axum REST API**: 60+ endpoints (`/api/kubernetes/...`)
+- **WebSocket streaming**: logs, events, exec, port-forward
+- **Routes декомпозиция**: 908 строк → 12 модулей
+  - `cluster.rs`, `namespaces.rs`, `workloads.rs`, `networking.rs`
+  - `config.rs`, `storage.rs`, `rbac.rs`, `batch.rs`
+  - `advanced.rs`, `observability.rs`, `helm.rs`, `integration.rs`, `apply.rs`
+- **RBAC Cache**: `RbacCache` с TTL 5 мин, `OnceCell` безопасная инициализация
+- **Error handling**: `Error::Http { status, message }` для HTTP ошибок
+
+#### 🔧 Fixed
+- **Exec WebSocket**: timeout сессии 5 мин + heartbeat 30 сек
+- **Port-forward**: connection timeout 30 сек + session timeout 10 мин
+- **Evict API**: обработка 429 Too Many Requests от PodDisruptionBudget
+- **RBAC check**: кэширование результатов can-i запросов
+
+#### 📊 Статистика
+- **Backend**: ~8000+ строк Rust
+- **Frontend**: ~5000+ строк Vanilla JS
+- **API endpoints**: 60+
+- **UI страницы**: 33
+- **Commit'ов**: 10+ за сессию
+- **Файлов изменено**: 50+
+- **Строк добавлено**: ~2000+
+- **Строк удалено**: ~1000+
+
+#### 📝 Документация
+- **MASTER_PLAN_KUBERNETES.md**: обновлён с отметками о завершении
+- **Security Checklist**: 6/7 задач ✅
+- **Phase 1-2 MVP Checklist**: 10/10 задач ✅
+- **README.md**: обновлена секция Kubernetes интеграции
+
+#### 🚀 Release
+- **Tag**: v2.5.0 (annotated)
+- **GitHub Release**: https://github.com/alexandervashurin/semaphore/releases/tag/v2.5.0
+- **Status**: Production Ready
+
+---
+
 ## [2.2.0] - 2026-03-22
 
 ### Added
