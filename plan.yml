@@ -160,7 +160,7 @@ sprints:
         title: "Завершить Telegram Bot уведомления"
         priority: high
         estimate: medium
-        status: in_progress
+        status: completed
         subtasks:
           - "Реализовать 4 стаба в telegram_bot/mod.rs"
           - "Интеграция с alert service"
@@ -169,6 +169,13 @@ sprints:
         done_when:
           - "Telegram бот отправляет уведомления"
           - "Тесты проходят"
+        completion_notes:
+          - "TelegramBot уже реализован (send_message, send_default)"
+          - "notify_task_success/failed/stopped методы готовы"
+          - "start_bot_if_configured() запускает polling loop"
+          - "Добавлен telegram_bot в AppState"
+          - "send_telegram_notification() в task_execution.rs"
+          - "Интеграция в tasks.rs — отправка после завершения задачи"
 
       - task_id: TD-02
         title: "SSH Key Installation service"
