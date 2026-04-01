@@ -159,9 +159,10 @@ sprints:
         title: "Завершить Telegram Bot уведомления"
         priority: high
         estimate: medium
-        status: in_progress
+        status: completed
         assignee: agent-4182
         started_at: "2026-04-02T12:00:00Z"
+        completed_at: "2026-04-02T12:45:00Z"
         subtasks:
           - "Реализовать 4 стаба в telegram_bot/mod.rs"
           - "Интеграция с alert service"
@@ -170,6 +171,10 @@ sprints:
         done_when:
           - "Telegram бот отправляет уведомления"
           - "Тесты проходят"
+        completion_notes:
+          - "OnceLock + init_notification_bot из start_bot_if_configured; после успешного update_task — notify_on_task_finished (Success/Error/Stopped)."
+          - "task_execution: клонирование template для LocalJob; уведомления только если задан токен и SEMAPHORE_TELEGRAM_CHAT_ID."
+          - "Unit-тест: task_duration_secs_from_task_times в telegram_bot."
 
       - task_id: TD-02
         title: "SSH Key Installation service"
@@ -956,9 +961,10 @@ task_index:
     title: "Завершить Telegram Bot уведомления"
     priority: high
     estimate: medium
-    status: in_progress
+    status: completed
     assignee: agent-4182
     started_at: "2026-04-02T12:00:00Z"
+    completed_at: "2026-04-02T12:45:00Z"
   - sprint_id: S1
     sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
     task_id: TD-02

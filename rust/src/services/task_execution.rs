@@ -164,7 +164,7 @@ pub async fn execute_task(store: Arc<dyn Store + Send + Sync>, mut task: Task) {
     let key_installer = AccessKeyInstallerImpl::new();
     let mut job = LocalJob::new(
         task.clone(),
-        template,
+        template.clone(),
         inventory,
         repository,
         environment,
@@ -197,13 +197,25 @@ pub async fn execute_task(store: Arc<dyn Store + Send + Sync>, mut task: Task) {
         Ok(()) => {
             info!("[task_runner] task {} completed successfully", task.id);
             task.status = TaskStatus::Success;
-            let _ = store.update_task(task).await;
         }
         Err(e) => {
             error!("[task_runner] task {} failed: {e}", task.id);
             task.status = TaskStatus::Error;
-            let _ = store.update_task(task).await;
         }
+    }
+    match store.update_task(task.clone()).await {
+        Ok(()) => {
+            crate::services::telegram_bot::notify_on_task_finished(
+                store.clone(),
+                &task,
+                &template,
+            )
+            .await;
+        }
+        Err(e) => error!(
+            "[task_runner] task {} failed to persist final status: {e}",
+            task.id
+        ),
     }
 }
 
