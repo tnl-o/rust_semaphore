@@ -156,7 +156,8 @@ sprints:
         title: "Exporter/Importer fix (T-BE-15)"
         priority: high
         estimate: small
-        status: todo
+        status: in_progress
+        assignee: codex
         subtasks:
           - "Исправить async/sync конфликт в exporter_entities.rs"
           - "Удалить dead code"
@@ -235,6 +236,7 @@ sprints:
         priority: high
         estimate: small
         status: in_progress
+        assignee: codex
         subtasks:
           - "Добавить K8s WebSocket endpoints в spec"
           - "Сверить healthz/readyz и фактические route paths"
@@ -867,7 +869,8 @@ task_index:
     title: "Exporter/Importer fix (T-BE-15)"
     priority: high
     estimate: small
-    status: todo
+    status: in_progress
+    assignee: codex
   - sprint_id: S1
     sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
     task_id: TD-04
@@ -910,6 +913,7 @@ task_index:
     priority: high
     estimate: small
     status: in_progress
+    assignee: codex
   - sprint_id: S1
     sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
     task_id: K-01-sync
