@@ -379,7 +379,9 @@ sprints:
         title: "Redis-backed task queue"
         priority: high
         estimate: large
-        status: todo
+        status: in_progress
+        assignee: agent-3847
+        started_at: "2026-04-01T22:15:00Z"
         subtasks:
           - "Реализовать persistence task queue"
           - "Интеграция с Redis"
@@ -986,7 +988,9 @@ task_index:
     title: "Redis-backed task queue"
     priority: high
     estimate: large
-    status: todo
+    status: in_progress
+    assignee: agent-3847
+    started_at: "2026-04-01T22:15:00Z"
   - sprint_id: S3
     sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
     task_id: PROD-04
