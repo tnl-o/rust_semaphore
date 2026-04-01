@@ -350,9 +350,7 @@ sprints:
         title: "Docker образ <50MB (FROM scratch)"
         priority: high
         estimate: medium
-        status: in_progress
-        assignee: agent-4821
-        started_at: "2026-04-01T21:25:34.6569612+03:00"
+        status: todo
         subtasks:
           - "Миграция на multi-stage build с scratch"
           - "Статическая линковка (musl)"
@@ -998,9 +996,7 @@ task_index:
     title: "Docker образ <50MB (FROM scratch)"
     priority: high
     estimate: medium
-    status: in_progress
-    assignee: agent-4821
-    started_at: "2026-04-01T21:25:34.6569612+03:00"
+    status: todo
   - sprint_id: S3
     sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
     task_id: PROD-02
