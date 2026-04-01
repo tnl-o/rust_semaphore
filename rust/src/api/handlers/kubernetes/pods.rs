@@ -223,3 +223,6 @@ where
         _ = pod_to_ws => {}
     }
 }
+
+// Re-export pod CRUD functions from workloads_k8s
+pub use super::workloads_k8s::{list_pods, get_pod, delete_pod, pod_logs, evict_pod, PodLogsQuery};

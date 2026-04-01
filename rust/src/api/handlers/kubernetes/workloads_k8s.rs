@@ -175,6 +175,51 @@ pub async fn pod_logs(
     Ok(Json(serde_json::json!({"logs": logs, "container": q.container})))
 }
 
+/// POST /api/kubernetes/namespaces/{namespace}/pods/{name}/evict
+/// 
+/// Evict pod using Kubernetes Eviction API (Policy/V1).
+/// Handles 429 Too Many Requests when PDB blocks the eviction.
+pub async fn evict_pod(
+    State(state): State<Arc<AppState>>,
+    Path((namespace, name)): Path<(String, String)>,
+) -> Result<Json<serde_json::Value>> {
+    use k8s_openapi::api::policy::v1::Eviction;
+    use kube::api::{DeleteParams, EvictParams};
+    use axum::http::StatusCode;
+    
+    let client = state.kubernetes_client()?;
+    let api: Api<Pod> = client.api(Some(&namespace));
+    
+    let evict_params = EvictParams {
+        delete_options: Some(DeleteParams {
+            grace_period_seconds: Some(30),
+            ..DeleteParams::default()
+        }),
+        ..EvictParams::default()
+    };
+    
+    match api.evict(&name, &evict_params).await {
+        Ok(_) => Ok(Json(serde_json::json!({
+            "evicted": true,
+            "name": name,
+            "namespace": namespace,
+            "message": "Pod evicted successfully"
+        }))),
+        Err(kube::Error::Api(api_err)) if api_err.code == 429 => {
+            // PDB is blocking the eviction
+            Err(Error::Http {
+                status: StatusCode::TOO_MANY_REQUESTS,
+                message: format!(
+                    "Eviction blocked by PodDisruptionBudget: {}. \
+                     The PDB requires more pods to be available before this one can be evicted.",
+                    name
+                ),
+            })
+        }
+        Err(e) => Err(Error::Kubernetes(e.to_string())),
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct PodLogsQuery {
     pub container: Option<String>,

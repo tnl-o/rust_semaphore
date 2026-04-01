@@ -314,7 +314,7 @@ flowchart LR
 #### 2.2 Pods: API и поведение
 - [x] **List/get/delete** с пагинацией, grace period, pod_ip, node_name, containers status. ✅ 2026-03-29
 - [x] **Logs:** snapshot (`tail_lines`, `since_seconds`, `container`, `previous`). ✅ 2026-03-29
-- [ ] **Evict:** `POST .../evict` через Eviction API (Policy/V1), обработка 429 при PDB. *(backlog)*
+- [x] **Evict:** `POST .../evict` через Eviction API (Policy/V1), обработка 429 при PDB. ✅ 2026-04-01 — backend `evict_pod()` в `workloads_k8s.rs` + frontend в `k8s-pods.html`
 - [ ] **Exec:** WebSocket прокси + таймауты. *(Phase 4)*
 - [ ] **Port-forward.** *(Phase 4)*
 - [ ] **YAML get/put.** *(backlog)*

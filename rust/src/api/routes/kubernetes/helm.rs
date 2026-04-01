@@ -1,0 +1,23 @@
+//! Kubernetes Helm маршруты — repos, charts, releases
+
+use crate::api::handlers;
+use axum::{routing::{get, post, put, delete}, Router};
+use std::sync::Arc;
+use crate::api::state::AppState;
+
+/// Маршруты для управления Helm
+pub fn helm_routes() -> Router<Arc<AppState>> {
+    Router::new()
+        .route("/api/kubernetes/helm/repos", get(handlers::list_helm_repos))
+        .route("/api/kubernetes/helm/repos", post(handlers::add_helm_repo))
+        .route("/api/kubernetes/helm/charts", get(handlers::search_helm_charts))
+        .route("/api/kubernetes/helm/charts/{repo}/{chart}", get(handlers::get_helm_chart))
+        .route("/api/kubernetes/helm/releases", get(handlers::list_helm_releases))
+        .route("/api/kubernetes/helm/releases", post(handlers::install_helm_chart))
+        .route("/api/kubernetes/helm/releases/{namespace}/{name}", get(handlers::get_helm_release_history))
+        .route("/api/kubernetes/helm/releases/{namespace}/{name}", put(handlers::upgrade_helm_release))
+        .route("/api/kubernetes/helm/releases/{namespace}/{name}/rollback", post(handlers::rollback_helm_release))
+        .route("/api/kubernetes/helm/releases/{namespace}/{name}", delete(handlers::uninstall_helm_release))
+        .route("/api/kubernetes/helm/releases/{namespace}/{name}/values", get(handlers::get_helm_release_values))
+        .route("/api/kubernetes/helm/releases/{namespace}/{name}/values", put(handlers::update_helm_release_values))
+}

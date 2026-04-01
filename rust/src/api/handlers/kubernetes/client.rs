@@ -27,6 +27,8 @@ pub struct KubeConfig {
     pub default_namespace: String,
     /// Таймаут запросов (секунды)
     pub timeout_secs: u64,
+    /// Лимит списка по умолчанию
+    pub list_default_limit: u32,
 }
 
 impl Default for KubeConfig {
@@ -36,6 +38,7 @@ impl Default for KubeConfig {
             context: None,
             default_namespace: "default".to_string(),
             timeout_secs: 30,
+            list_default_limit: 200,
         }
     }
 }

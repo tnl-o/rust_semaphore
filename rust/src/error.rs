@@ -58,6 +58,13 @@ pub enum Error {
     #[error("Ошибка Kubernetes: {0}")]
     Kubernetes(String),
 
+    /// HTTP ошибка с кодом статуса
+    #[error("HTTP ошибка {status}: {message}")]
+    Http {
+        status: axum::http::StatusCode,
+        message: String,
+    },
+
     /// Ошибка планировщика
     #[error("Ошибка планировщика: {0}")]
     Scheduler(String),
@@ -67,8 +74,8 @@ pub enum Error {
     NotImplemented(String),
 
     /// Ошибка reqwest
-    #[error("Ошибка HTTP: {0}")]
-    Http(#[from] reqwest::Error),
+    #[error("Ошибка HTTP клиента: {0}")]
+    Reqwest(#[from] reqwest::Error),
 
     /// Ошибка SystemTime
     #[error("Ошибка времени: {0}")]
@@ -95,7 +102,9 @@ impl Error {
                 StatusCode::INTERNAL_SERVER_ERROR
             }
             Error::Json(_) => StatusCode::BAD_REQUEST,
-            Error::Git(_) | Error::Http(_) => StatusCode::BAD_GATEWAY,
+            Error::Git(_) => StatusCode::BAD_GATEWAY,
+            Error::Http { status, .. } => *status,
+            Error::Reqwest(_) => StatusCode::BAD_GATEWAY,
             Error::WebSocket(_)
             | Error::Kubernetes(_)
             | Error::Scheduler(_)
@@ -115,6 +124,8 @@ impl Error {
             Error::Database(_) => "DATABASE_ERROR",
             Error::Json(_) => "INVALID_JSON",
             Error::Kubernetes(_) => "KUBERNETES_ERROR",
+            Error::Http { .. } => "HTTP_ERROR",
+            Error::Reqwest(_) => "HTTP_CLIENT_ERROR",
             Error::Other(_) => "INTERNAL_ERROR",
             _ => "INTERNAL_ERROR",
         }

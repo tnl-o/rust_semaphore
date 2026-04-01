@@ -15,7 +15,23 @@
       "Bash(mkdir *)",
       "Bash(mv *)",
       "Bash(wc *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(xargs *)",
+      "Bash(sleep *)",
+      "Bash(ss *)",
+      "Bash(pkill *)",
+      "Bash(./velum.sh *)",
+      "Bash(curl *)",
+      "Bash(git tag *)",
+      "Bash(cp *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(./rust/target/release/velum *)",
+      "Bash(cd *)",
+      "Bash(head *)",
+      "Bash(ps *)",
+      "Bash(nohup *)",
+      "Bash(echo *)"
     ]
   },
   "$version": 3

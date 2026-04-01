@@ -539,6 +539,9 @@ function renderPodsTable() {
                 <button class="tbl-icon-btn" title="Port Forward" onclick="openPortForward(${JSON.stringify(pod.name)})">
                     <i class="fa-solid fa-network-wired"></i>
                 </button>
+                <button class="tbl-icon-btn" title="Evict" onclick="confirmEvict(${JSON.stringify(pod.name)})">
+                    <i class="fa-solid fa-person-walking-arrow-right"></i>
+                </button>
                 <button class="tbl-icon-btn danger" title="Удалить" onclick="confirmDelete(${JSON.stringify(pod.name)})">
                     <i class="fa-solid fa-trash"></i>
                 </button>
@@ -706,6 +709,37 @@ async function deletePod(podName) {
         document.getElementById('podDetailOverlay').style.display = 'none';
     } catch (e) {
         alert(`Ошибка удаления Pod: ${e.message || String(e)}`);
+    }
+}
+
+// ── Evict pod ──────────────────────────────────────────────────────────────
+function confirmEvict(podName) {
+    if (!confirm(`Evict Pod "${podName}"?\n\nPod будет корректно завершён и перезапущен. Если PodDisruptionBudget блокирует операцию, будет показана ошибка.`)) return;
+    evictPod(podName);
+}
+
+async function evictPod(podName) {
+    try {
+        const response = await api.post(
+            `/kubernetes/clusters/${encodeURIComponent(currentClusterId)}/namespaces/${encodeURIComponent(currentNamespace)}/pods/${encodeURIComponent(podName)}/evict`,
+            {}
+        );
+        // Show success message
+        const msg = response.message || 'Pod evicted successfully';
+        alert(`✓ ${msg}`);
+        // Remove from cache and re-render
+        podsCache = podsCache.filter(p => p.name !== podName);
+        renderPodsTable();
+        // Close detail panel if open
+        document.getElementById('podDetailOverlay').style.display = 'none';
+    } catch (e) {
+        // Handle PDB blocking (429)
+        const errorMsg = e.message || String(e);
+        if (errorMsg.includes('429') || errorMsg.includes('PodDisruptionBudget')) {
+            alert(`⚠ Eviction заблокирован PodDisruptionBudget:\n\n${errorMsg}`);
+        } else {
+            alert(`Ошибка Evict Pod: ${errorMsg}`);
+        }
     }
 }
 
