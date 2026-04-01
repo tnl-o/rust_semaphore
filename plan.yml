@@ -433,7 +433,9 @@ sprints:
         title: "WebSocket pub/sub для масштабирования"
         priority: medium
         estimate: large
-        status: todo
+        status: in_progress
+        assignee: agent-6174
+        started_at: "2026-04-02T01:00:00Z"
         subtasks:
           - "Миграция на Redis pub/sub"
           - "Поддержка >1000 клиентов"
@@ -1057,7 +1059,9 @@ task_index:
     title: "WebSocket pub/sub для масштабирования"
     priority: medium
     estimate: large
-    status: todo
+    status: in_progress
+    assignee: agent-6174
+    started_at: "2026-04-02T01:00:00Z"
   - sprint_id: S3
     sprint_title: "Спринт 3 — Production Hardening & Docs (6-8 недель)"
     task_id: D-03
