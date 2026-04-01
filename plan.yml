@@ -461,7 +461,9 @@ sprints:
         title: "Финальный quality gate"
         priority: critical
         estimate: small
-        status: todo
+        status: in_progress
+        assignee: agent-4821
+        started_at: "2026-04-01T21:00:00Z"
         subtasks:
           - "Прогнать cargo test"
           - "Прогнать cargo clippy -- -D warnings"
@@ -1015,7 +1017,9 @@ task_index:
     title: "Финальный quality gate"
     priority: critical
     estimate: small
-    status: todo
+    status: in_progress
+    assignee: agent-4821
+    started_at: "2026-04-01T21:00:00Z"
   - sprint_id: S4
     sprint_title: "Спринт 4 — Release (1-2 недели)"
     task_id: D-05
