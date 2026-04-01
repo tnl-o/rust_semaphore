@@ -113,9 +113,10 @@ sprints:
         title: "Cron validation"
         priority: high
         estimate: small
-        status: in_progress
+        status: completed
         assignee: agent-5290
         started_at: "2026-04-01T21:00:00Z"
+        completed_at: "2026-04-01T22:00:00Z"
         subtasks:
           - "Добавить cron crate в scheduler_pool.rs"
           - "Валидировать cron выражения перед сохранением"
@@ -123,6 +124,11 @@ sprints:
         done_when:
           - "Невалидные cron отклоняются на уровне API"
           - "Тесты покрывают edge cases"
+        completion_notes:
+          - "POST/PUT schedule: validate_schedule_before_save — 400 INVALID_SCHEDULE; run_at: RFC3339; cron: пустой отклоняется."
+          - "Планировщик: 5 полей из UI → префикс \"0 \" для cron crate; пустой cron + run_at пропускается в SchedulePool."
+          - "Эндпоинт validate: SchedulePool::validate_cron_for_storage."
+          - "Тесты: scheduler (5 полей, пустой cron) + schedules::tests (4 кейса)."
 
       - task_id: SEC-06
         title: "OIDC email claim"
@@ -929,9 +935,10 @@ task_index:
     title: "Cron validation"
     priority: high
     estimate: small
-    status: in_progress
+    status: completed
     assignee: agent-5290
     started_at: "2026-04-01T21:00:00Z"
+    completed_at: "2026-04-01T22:00:00Z"
   - sprint_id: S0
     sprint_title: "Спринт 0 — Critical Security Fixes (1-2 недели)"
     task_id: SEC-06
