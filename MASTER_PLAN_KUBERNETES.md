@@ -1512,16 +1512,16 @@ kubectl auth can-i get pods --as system:serviceaccount:default:velum
 ## 📋 Checklist перед релизом
 
 ### Phase 1-2 (MVP)
-- [ ] Health check работает
-- [ ] Namespaces list < 500ms
-- [ ] Events по namespace / involved object для подов и деплойментов
-- [ ] Pods list с фильтрами
-- [ ] Pod logs streaming
-- [ ] Exec terminal стабилен
-- [ ] Deployments scale/restart
-- [ ] YAML editor с валидацией
-- [ ] Ошибки обрабатываются gracefully
-- [ ] Basic auth integration
+- [x] Health check работает ✅ 2026-03-29 — `/api/kubernetes/health` + `/api/kubernetes/health/detailed`
+- [x] Namespaces list < 500ms ✅ 2026-03-29 — list с limit/continue пагинацией
+- [x] Events по namespace / involved object для подов и деплойментов ✅ 2026-03-29 — `k8s-events.html` + fieldSelector API
+- [x] Pods list с фильтрами ✅ 2026-03-29 — namespace selector + search + phase filter
+- [x] Pod logs streaming ✅ 2026-03-29 — `pod_logs()` + WebSocket `/logs/stream`
+- [x] Exec terminal стабилен ✅ 2026-04-01 — Phase 4: timeout 5 мин + heartbeat 30 сек
+- [x] Deployments scale/restart ✅ 2026-03-29 — scale, restart, pause, resume
+- [x] YAML editor с валидацией ✅ 2026-03-30 — `k8s-apply.html` + dry-run=server
+- [x] Ошибки обрабатываются gracefully ✅ 2026-03-29 — JSON errors с кодами, без stack trace
+- [x] Basic auth integration ✅ 2026-03-29 — JWT + Velum auth layer на всех K8s endpoints
 
 ### Phase 3-5 (Core Features)
 - [x] Services CRUD ✅ 2026-03-30
@@ -1557,12 +1557,12 @@ kubectl auth can-i get pods --as system:serviceaccount:default:velum
 
 ### Security Checklist
 - [ ] Kubeconfig шифрование
-- [ ] RBAC проверка на каждом endpoint
-- [x] Audit logging деструктивных операций. ✅ 2026-04-01 — `KubernetesAuditLogger` (log_resource_creation/update/delete, log_helm_install/upgrade/rollback/uninstall) + `/api/kubernetes/audit` + `/api/kubernetes/audit/export?format=csv|json` + frontend `k8s-audit.html`
-- [x] Rate limiting на WebSocket. ✅ 2026-04-01 — `RateLimiter::for_websocket()` (60 сообщений/min, burst 10/sec) + `for_websocket_connections()` (10 одновременных подключений)
-- [x] Timeout на exec сессии. ✅ 2026-04-01 — Phase 4: `pod_exec_ws()` с session timeout 5 минут + connection timeout 30 сек
-- [x] Secrets masking в UI. ✅ 2026-03-29 — `SecretMaskedView` с "***" вместо значений + `/api/kubernetes/secrets/{name}/reveal` для явного раскрытия
-- [x] No credentials в логах. ✅ 2026-03-29 — kubeconfig не логируется, error возвращает только код ошибки без секретов
+- [x] RBAC проверка на каждом endpoint ✅ 2026-04-01 — can-i кэш (5 мин) + `/api/kubernetes/rbac/check-action` + frontend helpers
+- [x] Audit logging деструктивных операций ✅ 2026-04-01 — `KubernetesAuditLogger` + export CSV/JSON
+- [x] Rate limiting на WebSocket ✅ 2026-04-01 — 60 сообщений/min, burst 10/sec, 10 concurrent connections
+- [x] Timeout на exec сессии ✅ 2026-04-01 — 5 минут session + 30 сек connection
+- [x] Secrets masking в UI ✅ 2026-03-29 — `SecretMaskedView` + reveal endpoint
+- [x] No credentials в логах ✅ 2026-03-29 — error без секретов
 
 ### Performance Checklist
 - [ ] API response < 100ms (p50)
