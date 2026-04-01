@@ -217,7 +217,9 @@ sprints:
         title: "Subscription service integration"
         priority: medium
         estimate: medium
-        status: todo
+        status: in_progress
+        assignee: agent-9156
+        started_at: "2026-04-02T05:00:00Z"
         subtasks:
           - "Интеграция в auth.rs:610"
           - "Интеграция в user.rs:108,128"
@@ -1010,7 +1012,9 @@ task_index:
     title: "Subscription service integration"
     priority: medium
     estimate: medium
-    status: todo
+    status: in_progress
+    assignee: agent-9156
+    started_at: "2026-04-02T05:00:00Z"
   - sprint_id: S1
     sprint_title: "Спринт 1 — Stabilization (2-4 недели)"
     task_id: TD-05
