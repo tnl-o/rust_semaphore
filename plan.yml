@@ -800,13 +800,21 @@ optional_sprints:
         title: "cargo doc + публикация документации"
         priority: low
         estimate: small
-        status: in_progress
+        status: completed
         assignee: agent-6842
         started_at: "2026-04-02T17:00:00Z"
+        completed_at: "2026-04-02T17:45:00Z"
         subtasks:
           - "Добавить документацию ко всем модулям"
           - "Настроить публикацию на docs.rs"
           - "Добавить примеры использования"
+        completion_notes:
+          - "lib.rs: расширенная документация с примерами (server startup, Kubernetes client)"
+          - "Исправлены 7 warnings cargo doc (URL, HTML tags)"
+          - ".github/workflows/docs.yml: workflow для публикации на GitHub Pages"
+          - "docs/README.md: документация по использованию"
+          - "cargo doc --no-deps: 0 warnings"
+          - "cargo clippy -- -D warnings: 0 warnings"
         done_when:
           - "cargo doc без предупреждений"
           - "Документация опубликована"
@@ -1352,9 +1360,10 @@ task_index:
     title: "cargo doc + публикация документации"
     priority: low
     estimate: small
-    status: in_progress
+    status: completed
     assignee: agent-6842
     started_at: "2026-04-02T17:00:00Z"
+    completed_at: "2026-04-02T17:45:00Z"
   - sprint_id: S5
     sprint_title: "Спринт 5 — Post-release polish (опционально)"
     task_id: EXT-01
