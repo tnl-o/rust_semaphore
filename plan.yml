@@ -752,14 +752,21 @@ optional_sprints:
         title: "Mobile K8s UI + WCAG 2.1 AA"
         priority: low
         estimate: large
-        status: in_progress
+        status: completed
         assignee: agent-4217
         started_at: "2026-04-02T15:00:00Z"
+        completed_at: "2026-04-02T16:30:00Z"
         subtasks:
           - "Mobile responsive design"
           - "WCAG 2.1 AA compliance"
           - "i18n (EN/RU/CN)"
           - "Keyboard shortcuts"
+        completion_notes:
+          - "styles.css: +520 строк (mobile breakpoints, WCAG, i18n, keyboard shortcuts)"
+          - "accessibility.js: новый файл (480 строк) — mobile menu, i18n translations, keyboard shortcuts"
+          - "k8s-pods.html, k8s-deployments.html, k8s-clusters.html: обновлены с ARIA и mobile support"
+          - "docs/guides/ACCESSIBILITY.md: полная документация по accessibility"
+          - "cargo check: 0 warnings"
         done_when:
           - "UI работает на мобильных"
           - "Accessibility audit пройден"
@@ -1297,9 +1304,10 @@ task_index:
     title: "Mobile K8s UI + WCAG 2.1 AA"
     priority: low
     estimate: large
-    status: in_progress
+    status: completed
     assignee: agent-4217
     started_at: "2026-04-02T15:00:00Z"
+    completed_at: "2026-04-02T16:30:00Z"
   - sprint_id: S5
     sprint_title: "Спринт 5 — Post-release polish (опционально)"
     task_id: OBS-01
