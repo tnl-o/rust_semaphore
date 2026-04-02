@@ -775,9 +775,10 @@ optional_sprints:
         title: "Сквозной correlation ID"
         priority: low
         estimate: medium
-        status: in_progress
+        status: completed
         assignee: agent-5731
         started_at: "2026-04-02T11:05:00Z"
+        completed_at: "2026-04-02T11:25:00Z"
         subtasks:
           - "Добавить X-Request-ID middleware"
           - "Логирование correlation ID"
@@ -785,6 +786,15 @@ optional_sprints:
         done_when:
           - "Каждый запрос имеет correlation ID"
           - "Логи содержат correlation ID"
+        completion_notes:
+          - "Создан rust/src/api/middleware/correlation_id.rs"
+          - "correlation_id_middleware: читает X-Request-ID / X-Correlation-ID или генерирует UUID"
+          - "Validation: ASCII printable, len 1..=128"
+          - "CorrelationId extension: доступна в handlers через Extension<CorrelationId>"
+          - "Span.record(correlation_id): виден в tracing logs для всех дочерних span'ов"
+          - "Response header X-Request-ID: клиент получает correlation ID обратно"
+          - "Применён в api/mod.rs между security_headers и trace_id_middleware"
+          - "11 unit-тестов; cargo clippy -- -D warnings: 0 warnings"
 
       - task_id: DOC-01
         title: "cargo doc + публикация документации"
@@ -1316,9 +1326,10 @@ task_index:
     title: "Сквозной correlation ID"
     priority: low
     estimate: medium
-    status: in_progress
+    status: completed
     assignee: agent-5731
     started_at: "2026-04-02T11:05:00Z"
+    completed_at: "2026-04-02T11:25:00Z"
   - sprint_id: S5
     sprint_title: "Спринт 5 — Post-release polish (опционально)"
     task_id: DOC-01

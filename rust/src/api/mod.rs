@@ -142,6 +142,7 @@ pub fn create_app(store: Arc<dyn crate::db::Store + Send + Sync>) -> Router {
         .merge(routes::static_routes())
         // Middleware (порядок: последний layer применяется первым)
         .layer(axum_middleware::from_fn(middleware::security_headers))
+        .layer(axum_middleware::from_fn(middleware::correlation_id_middleware))
         .layer(axum_middleware::from_fn(middleware::trace_id_middleware))
         .layer(TraceLayer::new_for_http())
         .layer(cors)
