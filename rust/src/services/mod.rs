@@ -32,6 +32,7 @@ pub mod task_pool_types;
 pub mod task_runner;
 pub mod telegram_bot;
 pub mod totp;
+pub mod vault;
 pub mod webhook;
 pub mod workflow_executor;
 

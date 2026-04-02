@@ -860,9 +860,10 @@ optional_sprints:
         title: "HashiCorp Vault integration"
         priority: medium
         estimate: medium
-        status: in_progress
+        status: completed
         assignee: agent-6291
         started_at: "2026-04-02T10:30:00Z"
+        completed_at: "2026-04-02T11:00:00Z"
         subtasks:
           - "Vault secret storage backend"
           - "Dynamic secrets"
@@ -870,6 +871,14 @@ optional_sprints:
         done_when:
           - "Secrets хранятся в Vault"
           - "Dynamic secrets работают"
+        completion_notes:
+          - "Создан модуль rust/src/services/vault.rs"
+          - "VaultConfig: Token и AppRole аутентификация, namespace, timeout, kv_mount"
+          - "VaultClient: get_secret, put_secret, delete_secret (latest + specific versions), list_secrets"
+          - "Dynamic secrets: generate_dynamic_secret (database/aws/любой engine)"
+          - "Lease management: lookup_lease, renew_lease, revoke_lease, revoke_lease_prefix"
+          - "VaultHealthStatus: Active/Standby/DrSecondary/NotInitialized/Sealed/Unknown"
+          - "12 unit-тестов — cargo test зелёный, cargo clippy -- -D warnings: 0 warnings"
 
     sprint_done_when:
       - "K-05 завершён (опционально)"
@@ -1347,9 +1356,10 @@ task_index:
     title: "HashiCorp Vault integration"
     priority: medium
     estimate: medium
-    status: in_progress
+    status: completed
     assignee: agent-6291
     started_at: "2026-04-02T10:30:00Z"
+    completed_at: "2026-04-02T11:00:00Z"
 
 # ============================================================================
 # МАШИНОЧИТАЕМАЯ ИНФОРМАЦИЯ О ПРОЕКТЕ
