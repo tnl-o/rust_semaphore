@@ -775,7 +775,9 @@ optional_sprints:
         title: "Сквозной correlation ID"
         priority: low
         estimate: medium
-        status: todo
+        status: in_progress
+        assignee: agent-5731
+        started_at: "2026-04-02T11:05:00Z"
         subtasks:
           - "Добавить X-Request-ID middleware"
           - "Логирование correlation ID"
@@ -1314,7 +1316,9 @@ task_index:
     title: "Сквозной correlation ID"
     priority: low
     estimate: medium
-    status: todo
+    status: in_progress
+    assignee: agent-5731
+    started_at: "2026-04-02T11:05:00Z"
   - sprint_id: S5
     sprint_title: "Спринт 5 — Post-release polish (опционально)"
     task_id: DOC-01
