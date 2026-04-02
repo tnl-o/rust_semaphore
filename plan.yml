@@ -815,7 +815,9 @@ optional_sprints:
         title: "VS Code Extension"
         priority: low
         estimate: large
-        status: todo
+        status: in_progress
+        assignee: agent-3521
+        started_at: "2026-04-02T12:15:00Z"
         subtasks:
           - "Создать extension scaffold"
           - "Интеграция с Velum API"
@@ -1359,7 +1361,9 @@ task_index:
     title: "VS Code Extension"
     priority: low
     estimate: large
-    status: todo
+    status: in_progress
+    assignee: agent-3521
+    started_at: "2026-04-02T12:15:00Z"
   - sprint_id: S5
     sprint_title: "Спринт 5 — Post-release polish (опционально)"
     task_id: TF-01
